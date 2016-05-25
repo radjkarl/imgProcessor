@@ -4,10 +4,10 @@
 *~
 doc/
 *.pyc
-*.PNG
-*.jpg
-*.tif
-*.tiff
+#*.PNG
+#*.jpg
+#*.tif
+#*.tiff
 *.npy
 
 build/
