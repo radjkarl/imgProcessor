@@ -57,19 +57,30 @@ def _calc(arr, out, ksize,every):
    
 
 if __name__ == '__main__':
+    import sys
     import pylab as plt
-    s = (500,700)
-    a = np.fromfunction(lambda x,y: 5*np.sin(0.1*x)+4*np.cos(0.01*y), s)
-    #add noise
-    a+= np.random.rand(*s)
+    import imgProcessor
+    from imgProcessor.imgIO import imread
+    from fancytools.os.PathStr import PathStr
+    
+    p = PathStr(imgProcessor.__file__).dirname().join(
+                'media', 'electroluminescence')
+    
+    img = imread(p.join('EL_module_orig.PNG'), 'gray')
+
     #add nans
-    a[300:310]=np.nan
-    a[:,300:400]=np.nan
+    img[300:310]=np.nan
+    img[:,110:130]=np.nan
 
-    b = fastNaNmedianFilter(a,90,3)
-
-    plt.figure('in')
-    plt.imshow(a, interpolation='none')
-    plt.figure('out')
-    plt.imshow(b, interpolation='none')
-    plt.show()
+    bg = fastNaNmedianFilter(img,40,5)
+    
+    if 'no_window' not in sys.argv:
+        plt.figure('image')
+        plt.imshow(img, interpolation='none')
+        plt.figure('background')
+        plt.imshow(bg, interpolation='none')
+    
+        plt.figure('difference')
+        plt.imshow(img-bg, interpolation='none')
+        
+        plt.show()

@@ -71,6 +71,7 @@ def interpolateCircular2dStructuredIDW(grid, mask, kernel=15, power=2,
 
 
 if __name__ == '__main__':
+    import sys
     from matplotlib import pyplot as plt
     
     #this is part or a point spread function
@@ -125,16 +126,17 @@ if __name__ == '__main__':
     cy =  s[1]//2+1
     fit = interpolateCircular2dStructuredIDW(
         arr.copy(), mask, fr=1, fphi=0.2, cx=cx, cy=cy)
-    
-    plt.figure('original')
-    plt.imshow(arr, interpolation='none')
-    plt.colorbar()
-    
-    plt.figure('fit')
-    plt.imshow(fit, interpolation='none')
-    plt.colorbar()
-    
-    plt.show()
+
+    if 'no_window' not in sys.argv:
+        plt.figure('original')
+        plt.imshow(arr, interpolation='none')
+        plt.colorbar()
+        
+        plt.figure('fit')
+        plt.imshow(fit, interpolation='none')
+        plt.colorbar()
+        
+        plt.show()
     
 
     

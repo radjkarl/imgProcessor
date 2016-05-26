@@ -35,6 +35,7 @@ def removeSinglePixels(img):
 
 
 if __name__ == '__main__':
+    import sys
     import numpy as np
     import pylab as plt
     
@@ -43,10 +44,11 @@ if __name__ == '__main__':
     arr2 = arr.copy()
     removeSinglePixels(arr2)
 
-    plt.figure(1)
-    plt.imshow(arr, interpolation='none')
-
-    plt.figure(2)
-    plt.imshow(arr2, interpolation='none')
+    if 'no_window' not in sys.argv:
+        plt.figure(1)
+        plt.imshow(arr, interpolation='none')
     
-    plt.show()
+        plt.figure(2)
+        plt.imshow(arr2, interpolation='none')
+        
+        plt.show()

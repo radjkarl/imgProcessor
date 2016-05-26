@@ -70,16 +70,18 @@ def _calc(img, ksizeX, ksizeY, blurred, std):
 
 
 if __name__ == '__main__':
+    import sys
     from matplotlib import pyplot as plt
     
     img = np.random.rand(100,100)
     std = standardDeviation2d(img, ksize=11)
     
-    plt.figure('input')
-    plt.imshow(img)
-    
-    plt.figure('standard deviation')
-    plt.imshow(std)
-    
-    plt.show()
+    if 'no_window' not in sys.argv:
+        plt.figure('input')
+        plt.imshow(img)
+        
+        plt.figure('standard deviation')
+        plt.imshow(std)
+        
+        plt.show()
     

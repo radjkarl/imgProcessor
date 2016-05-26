@@ -71,5 +71,29 @@ def _calc(img, out, thresh, min_increase, max_length):
 
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+#     import doctest
+#     doctest.testmod()
+    import sys
+    import pylab as plt
+    from fancytools.os.PathStr import PathStr
+    import imgProcessor
+    from imgProcessor.imgIO import imread
+    from scipy.ndimage.filters import maximum_filter
+
+    p = PathStr(imgProcessor.__file__).dirname().join(
+                'media', 'electroluminescence')
+
+
+    img = imread(p.join('EL_cell_cracked.png'), 'gray')
+    
+    bn = maximum_filter(#<-- make lines bold
+            localizedMaximum(-img, thresh=30, min_increase=10, max_length=10)
+            ,3)
+
+    if 'no_window' not in sys.argv:
+        plt.figure('image')
+        plt.imshow(img)
+        plt.colorbar()
+        plt.figure('binarized')
+        plt.imshow(bn)        
+        plt.show()

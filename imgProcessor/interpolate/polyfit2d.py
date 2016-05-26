@@ -43,6 +43,7 @@ def polyfit2dGrid(arr, mask, order=3, copy=False):
     
 
 if __name__ == '__main__':
+    import sys
     import matplotlib.pyplot as plt
 
     shape=100,100
@@ -55,19 +56,20 @@ if __name__ == '__main__':
 
     arrout = polyfit2dGrid(arrin.copy(), mask)
 
-    plt.figure('original - structured data')
-    plt.imshow(arr)
-    plt.colorbar()
-
-    plt.figure('input')
-    plt.imshow(arrin)
-    plt.colorbar()
-
-    plt.figure('fit')
-    plt.imshow(arrout)
-    plt.colorbar()
-
-    plt.show()
+    if 'no_window' not in sys.argv:
+        plt.figure('original - structured data')
+        plt.imshow(arr)
+        plt.colorbar()
+    
+        plt.figure('input')
+        plt.imshow(arrin)
+        plt.colorbar()
+    
+        plt.figure('fit')
+        plt.imshow(arrout)
+        plt.colorbar()
+    
+        plt.show()
     
     
     # Generate Data...
@@ -85,9 +87,9 @@ if __name__ == '__main__':
                          np.linspace(y.min(), y.max(), ny))
     zz = polyval2d(xx, yy, m)
 
-    # Plot
-    plt.figure('unstructured data')
-
-    plt.imshow(zz, extent=(x.min(), y.max(), x.max(), y.min()))
-    plt.scatter(x, y, c=z)
-    plt.show()
+    if 'no_window' not in sys.argv:
+        plt.figure('unstructured data')
+    
+        plt.imshow(zz, extent=(x.min(), y.max(), x.max(), y.min()))
+        plt.scatter(x, y, c=z)
+        plt.show()

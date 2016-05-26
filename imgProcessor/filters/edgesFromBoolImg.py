@@ -28,12 +28,15 @@ def _calc(arr, out):
 
 if __name__ == '__main__':
     import pylab as plt
+    import sys
     a = np.zeros((10,10), dtype=bool)
     a[:,5:]=True
     a[5:,:]=True
     b = edgesFromBoolImg(a)
-    plt.figure('in')
-    plt.imshow(a, interpolation='none')
-    plt.figure('out')
-    plt.imshow(b, interpolation='none')
-    plt.show()
+    
+    if 'no_window' not in sys.argv:
+        plt.figure('in')
+        plt.imshow(a, interpolation='none')
+        plt.figure('out')
+        plt.imshow(b, interpolation='none')
+        plt.show()

@@ -33,7 +33,9 @@ setup(
 	install_requires= [
                        'scikit-image',
                        'numpy',
-                       'scipy'
+                       'scipy',
+                       'numba',
+                       'transforms3d'
                        #opencv // cv2  # to be installed manually
                        ], 
 	classifiers		= [

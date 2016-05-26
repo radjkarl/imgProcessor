@@ -30,6 +30,7 @@ def medianThreshold(img, threshold=0.1, size=3, condition='>', copy=True):
 
 
 if __name__ == '__main__':
+    import sys
     import pylab as plt
     from fancytools.os.PathStr import PathStr
     import imgProcessor
@@ -39,10 +40,12 @@ if __name__ == '__main__':
                 'media', 'electroluminescence', 'EL_module_orig.PNG'))
     
     med,ind = medianThreshold(img)
-    plt.figure('original')
-    plt.imshow(img)
-    plt.figure('filtered')
-    plt.imshow(med)
-    plt.figure('filtered indices')
-    plt.imshow(ind)
-    plt.show()
+    
+    if 'no_window' not in sys.argv:
+        plt.figure('original')
+        plt.imshow(img)
+        plt.figure('filtered')
+        plt.imshow(med)
+        plt.figure('filtered indices')
+        plt.imshow(ind)
+        plt.show()

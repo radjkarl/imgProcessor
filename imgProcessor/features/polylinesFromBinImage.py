@@ -177,6 +177,7 @@ def _populateContoursArray(img, contours, minimum_cluster_size):
 
 
 if __name__ == '__main__':
+    import sys
     import pylab as plt
     import cv2
     s0,s1 = 100,100
@@ -192,17 +193,18 @@ if __name__ == '__main__':
     arr += np.random.rand(s0,s1)>0.95
     contours = polylinesFromBinImage(arr)
 
-    plt.figure(0)
-    plt.imshow(arr, interpolation='none')
-
-    plt.figure(1)
-    for n, c in enumerate(contours):
-        if len(c)>1:
-            x = c[:,0]
-            y = c[:,1]
-            plt.plot(x,y, linewidth=3)
-            plt.text(x[-1], y[-1], str(n+1))
-    plt.imshow(arr, interpolation='none')
-    plt.set_cmap('gray')
-    plt.show()    
-
+    if 'no_window' not in sys.argv:
+        plt.figure(0)
+        plt.imshow(arr, interpolation='none')
+    
+        plt.figure(1)
+        for n, c in enumerate(contours):
+            if len(c)>1:
+                x = c[:,0]
+                y = c[:,1]
+                plt.plot(x,y, linewidth=3)
+                plt.text(x[-1], y[-1], str(n+1))
+        plt.imshow(arr, interpolation='none')
+        plt.set_cmap('gray')
+        plt.show()    
+    

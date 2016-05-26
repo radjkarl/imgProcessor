@@ -44,24 +44,28 @@ def tiltFactor((x, y), f, tilt, rot):
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
+    import sys
         
     param = {'cx':50, 
              'cy':50,
              'tilt':-0.5}
-    arr = np.fromfunction(lambda x,y: vignetting((x,y), **param), (100,150))
+    vig = np.fromfunction(lambda x,y: vignetting((x,y), **param), (100,150))
     
-    plt.figure('vignetting')
-    plt.imshow(arr)
-    plt.colorbar()
+
 
     param = {'f':100,
              'rot':2,
              'tilt':0.1}
-    arr = np.fromfunction(lambda x,y: tiltFactor((x,y), **param), (100,150))
+    tilt = np.fromfunction(lambda x,y: tiltFactor((x,y), **param), (100,150))
 
-    plt.figure('tilt factor only')
-    plt.imshow(arr)
-    plt.colorbar()
+    if 'no_window' not in sys.argv:
+        plt.figure('vignetting')
+        plt.imshow(vig)
+        plt.colorbar()
 
-    plt.show()
+        plt.figure('tilt factor only')
+        plt.imshow(tilt)
+        plt.colorbar()
+    
+        plt.show()
     
