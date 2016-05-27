@@ -1,0 +1,400 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.features.polylinesFromBinImage &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.features.polylinesFromBinImage</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.features.polylinesFromBinImage</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="kn">import</span> <span class="n">maximum_filter</span>
+<span class="kn">from</span> <span class="nn">skimage.morphology</span> <span class="kn">import</span> <span class="n">skeletonize</span>
+<span class="kn">from</span> <span class="nn">skimage.morphology</span> <span class="kn">import</span> <span class="n">remove_small_objects</span>
+
+
+<span class="n">NEIGHBOURS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="c">#direct</span>
+                       <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="c">#diagonals</span>
+                       <span class="p">],</span>    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="polylinesFromBinImage"><a class="viewcode-back" href="../../../imgProcessor.features.html#imgProcessor.features.polylinesFromBinImage.polylinesFromBinImage">[docs]</a><span class="k">def</span> <span class="nf">polylinesFromBinImage</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">minimum_cluster_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> 
+                         <span class="n">remove_small_obj_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                         <span class="n">reconnect_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                         <span class="n">max_n_contours</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_len_contour</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                         <span class="n">copy</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    return a list of arrays of un-branching contours</span>
+<span class="sd">    </span>
+<span class="sd">    img -&gt; (boolean) array </span>
+<span class="sd">    </span>
+<span class="sd">    optional:</span>
+<span class="sd">    ---------</span>
+<span class="sd">    minimum_cluster_size -&gt; minimum number of pixels connected together to build a contour</span>
+
+<span class="sd">    ##search_kernel_size -&gt; TODO</span>
+<span class="sd">    ##min_search_kernel_moment -&gt; TODO</span>
+<span class="sd">    </span>
+<span class="sd">    numeric:</span>
+<span class="sd">    -------------</span>
+<span class="sd">    max_n_contours -&gt; maximum number of possible contours in img</span>
+<span class="sd">    max_len_contour -&gt; maximum contour length</span>
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">assert</span> <span class="n">minimum_cluster_size</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="k">assert</span> <span class="n">reconnect_size</span><span class="o">%</span><span class="mi">2</span><span class="p">,</span><span class="s">&#39;ksize needs to be odd&#39;</span>
+
+    <span class="c">#assert search_kernel_size == 0 or search_kernel_size &gt; 2 and search_kernel_size%2, &#39;kernel size needs to be odd&#39;</span>
+    <span class="c">#assume array size parameters, is not given:</span>
+    <span class="k">if</span> <span class="n">max_n_contours</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">max_n_contours</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_len_contour</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">max_len_contour</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+    <span class="c">#array containing coord. of all contours:</span>
+    <span class="n">contours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">max_n_contours</span><span class="p">,</span><span class="n">max_len_contour</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> 
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span><span class="c"># if not search_kernel_size else np.float32)</span>
+
+
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">copy</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">remove_small_obj_size</span><span class="p">:</span>
+        <span class="n">remove_small_objects</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">remove_small_obj_size</span><span class="p">,</span> 
+                         <span class="n">connectivity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">in_place</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reconnect_size</span><span class="p">:</span>
+        <span class="c">#remove gaps</span>
+        <span class="n">maximum_filter</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="n">reconnect_size</span><span class="p">,</span><span class="n">output</span><span class="o">=</span><span class="n">img</span><span class="p">)</span>
+        <span class="c">#reduce contour width to 1</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">skeletonize</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+    <span class="n">n_contours</span> <span class="o">=</span> <span class="n">_populateContoursArray</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">minimum_cluster_size</span><span class="p">)</span>
+    <span class="n">contours</span> <span class="o">=</span> <span class="n">contours</span><span class="p">[:</span><span class="n">n_contours</span><span class="p">]</span>
+    
+    <span class="n">l</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contours</span><span class="p">:</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">_getValidInd</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">ind</span><span class="p">)</span>
+        <span class="c">#remove all empty spaces:</span>
+        <span class="n">l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">l</span></div>
+
+
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_getValidInd</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">ind</span><span class="p">):</span>
+    <span class="c">#only return indices of points that change the contours behaviour</span>
+    <span class="c">#all successive points will be removed</span>
+    <span class="n">gx</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">px</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">py</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">px</span><span class="o">-</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">py</span><span class="o">-</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c">#first point:</span>
+    <span class="n">ind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="bp">True</span>
+    <span class="c">#for all following points:</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">gx</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">c</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c">#last point</span>
+            <span class="n">ind</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="bp">True</span>
+            <span class="k">break</span>
+        <span class="n">npx</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">npy</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ndx</span> <span class="o">=</span> <span class="n">npx</span><span class="o">-</span><span class="n">px</span>
+        <span class="n">ndy</span> <span class="o">=</span> <span class="n">npy</span><span class="o">-</span><span class="n">py</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ndx</span> <span class="o">==</span> <span class="n">dx</span> <span class="ow">and</span> <span class="n">ndy</span> <span class="o">==</span> <span class="n">dy</span><span class="p">):</span>
+            <span class="c">#valid new point</span>
+            <span class="n">ind</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="bp">True</span>
+
+            <span class="n">dx</span> <span class="o">=</span> <span class="n">ndx</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="n">ndy</span>
+        <span class="n">px</span> <span class="o">=</span> <span class="n">npx</span>
+        <span class="n">py</span> <span class="o">=</span> <span class="n">npy</span>
+
+
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_populateContoursArray</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">minimum_cluster_size</span><span class="p">):</span>
+    <span class="c"># fill [contours]</span>
+    <span class="c"># a contour is only build by connected clusters</span>
+    <span class="n">gx</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">gy</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">c0</span> <span class="o">=</span> <span class="n">contours</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">contours</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">gx</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">gy</span><span class="p">):</span>
+            
+            <span class="c">#found initial point:</span>
+            <span class="k">if</span> <span class="n">img</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]:</span>
+                <span class="n">i_init</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="n">j_init</span> <span class="o">=</span> <span class="n">j</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">img</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">contours</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
+                <span class="n">contours</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="n">pos</span> <span class="o">+=</span> <span class="mi">1</span>
+                
+                <span class="c">#goto both directions</span>
+                <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">i_init</span>
+                    <span class="n">j</span> <span class="o">=</span> <span class="n">j_init</span>
+                    
+                    <span class="k">while</span> <span class="n">found</span><span class="p">:</span>
+                        <span class="c">#try to find all neighbouring points     </span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="bp">False</span>
+
+                        <span class="k">for</span> <span class="n">neigh</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+                            <span class="n">ii</span><span class="p">,</span><span class="n">jj</span> <span class="o">=</span> <span class="n">NEIGHBOURS</span><span class="p">[</span><span class="n">neigh</span><span class="p">]</span>
+                            <span class="n">i2</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="n">ii</span>
+                            <span class="n">j2</span> <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="n">jj</span> 
+                            <span class="c">#out of boundary:</span>
+                            <span class="k">if</span> <span class="n">i2</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">j2</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i2</span> <span class="o">&gt;=</span> <span class="n">gx</span> <span class="ow">or</span> <span class="n">j2</span> <span class="o">&gt;=</span> <span class="n">gy</span><span class="p">:</span>
+                                <span class="k">continue</span>
+                             
+                            <span class="k">if</span> <span class="n">img</span><span class="p">[</span><span class="n">i2</span><span class="p">,</span><span class="n">j2</span><span class="p">]:</span>
+                                <span class="c">#found new neighbour:</span>
+                                <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
+                                <span class="n">i</span> <span class="o">=</span> <span class="n">i2</span>
+                                <span class="n">j</span> <span class="o">=</span> <span class="n">j2</span>
+                                <span class="n">img</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+                                <span class="k">break</span>
+
+                        <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+                            <span class="c">#save x,y position of current contour point:</span>
+                            <span class="n">contours</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
+                            <span class="n">contours</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+                            <span class="n">pos</span> <span class="o">+=</span> <span class="mi">1</span>
+                            <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="n">c1</span><span class="p">:</span>
+                                <span class="c">#contour too long</span>
+                                <span class="k">break</span>
+
+                    <span class="c">#contour too small:</span>
+                    <span class="k">if</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="n">minimum_cluster_size</span><span class="p">:</span>
+                        <span class="n">n</span><span class="o">-=</span><span class="mi">1</span>
+                    <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="c">#contours array is filled - i have to stop here:</span>
+                    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">c0</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">n</span>
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="kn">import</span> <span class="nn">cv2</span>
+    <span class="n">s0</span><span class="p">,</span><span class="n">s1</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span><span class="mi">100</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">s0</span><span class="p">,</span><span class="n">s1</span><span class="p">))</span>
+    <span class="c">#draw shape:</span>
+    <span class="n">arr</span><span class="p">[</span><span class="mi">10</span><span class="p">:</span><span class="mi">70</span><span class="p">,</span><span class="mi">20</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">arr</span><span class="p">[</span><span class="mi">30</span><span class="p">,</span><span class="mi">2</span><span class="p">:</span><span class="mi">99</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+    <span class="c">#ellipse</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">ellipse</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">20</span><span class="p">),</span> <span class="p">(</span><span class="mi">30</span><span class="p">,</span><span class="mi">30</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c">#remove few points from ellipse:</span>
+    <span class="n">arr</span><span class="p">[</span><span class="mi">30</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span><span class="mi">30</span><span class="p">:</span><span class="mi">50</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span><span class="o">&gt;</span><span class="mf">0.2</span>
+    <span class="c">#add noise</span>
+    <span class="n">arr</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">s0</span><span class="p">,</span><span class="n">s1</span><span class="p">)</span><span class="o">&gt;</span><span class="mf">0.95</span>
+    <span class="n">contours</span> <span class="o">=</span> <span class="n">polylinesFromBinImage</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">&#39;no_window&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">)</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">contours</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">c</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">c</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">set_cmap</span><span class="p">(</span><span class="s">&#39;gray&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>    
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

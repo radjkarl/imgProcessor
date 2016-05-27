@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="next" title="imgProcessor.camera package" href="imgProcessor.camera.html"/>
+        <link rel="prev" title="Welcome to imgProcessor’s documentation!" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">imgProcessor package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>imgProcessor package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor">
+<span id="imgprocessor-package"></span><h1>imgProcessor package<a class="headerlink" href="#module-imgProcessor" title="Permalink to this headline">¶</a></h1>
+<p>An image processing library based on OpenCV, numpy, scipy and skimage.</p>
+<p>It includes (amongst other things) filters, interpolations, camera calibration, feature detectors,
+signal-to-noise estimations</p>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.camera.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.camera.html#module-imgProcessor.camera.CameraCalibration">imgProcessor.camera.CameraCalibration module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.camera.html#module-imgProcessor.camera.DarkCurrentMap">imgProcessor.camera.DarkCurrentMap module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.camera.html#module-imgProcessor.camera.FlatFieldFromImgFit">imgProcessor.camera.FlatFieldFromImgFit module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.camera.html#module-imgProcessor.camera.LensDistortion">imgProcessor.camera.LensDistortion module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.camera.html#module-imgProcessor.camera.NoiseLevelFunction">imgProcessor.camera.NoiseLevelFunction module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.camera.html#module-imgProcessor.camera.PerspectiveCorrection">imgProcessor.camera.PerspectiveCorrection module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.camera.html#module-imgProcessor.camera.flatFieldFromCalibration">imgProcessor.camera.flatFieldFromCalibration module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.equations.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.equations.html#module-imgProcessor.equations.defocusThroughDepth">imgProcessor.equations.defocusThroughDepth module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.equations.html#module-imgProcessor.equations.gaussian">imgProcessor.equations.gaussian module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.equations.html#imgprocessor-equations-gaussian2d-module">imgProcessor.equations.gaussian2d module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.equations.html#module-imgProcessor.equations.poisson">imgProcessor.equations.poisson module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.equations.html#imgprocessor-equations-vignetting-module">imgProcessor.equations.vignetting module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.features.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.features.html#module-imgProcessor.features.PatternRecognition">imgProcessor.features.PatternRecognition module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.features.html#module-imgProcessor.features.QuadDetection">imgProcessor.features.QuadDetection module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.features.html#module-imgProcessor.features.SingleTimeEffectDetection">imgProcessor.features.SingleTimeEffectDetection module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.features.html#module-imgProcessor.features.hog">imgProcessor.features.hog module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.features.html#module-imgProcessor.features.minimumLineInArray">imgProcessor.features.minimumLineInArray module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.features.html#module-imgProcessor.features.polylinesFromBinImage">imgProcessor.features.polylinesFromBinImage module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.filters.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.filters.html#module-imgProcessor.filters.FourierFilter">imgProcessor.filters.FourierFilter module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.filters.html#module-imgProcessor.filters.edgesFromBoolImg">imgProcessor.filters.edgesFromBoolImg module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.filters.html#module-imgProcessor.filters.fastNaNmedianFilter">imgProcessor.filters.fastNaNmedianFilter module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.filters.html#module-imgProcessor.filters.localizedMaximum">imgProcessor.filters.localizedMaximum module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.filters.html#module-imgProcessor.filters.medianThreshold">imgProcessor.filters.medianThreshold module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.filters.html#module-imgProcessor.filters.removeSinglePixels">imgProcessor.filters.removeSinglePixels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.filters.html#module-imgProcessor.filters.standardDeviation">imgProcessor.filters.standardDeviation module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.interpolate.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.interpolate.html#module-imgProcessor.interpolate.interpolate2dStructuredIDW">imgProcessor.interpolate.interpolate2dStructuredIDW module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.interpolate.html#module-imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW">imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.interpolate.html#module-imgProcessor.interpolate.interpolate2dUnstructuredIDW">imgProcessor.interpolate.interpolate2dUnstructuredIDW module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.interpolate.html#module-imgProcessor.interpolate.interpolateCircular2dStructuredIDW">imgProcessor.interpolate.interpolateCircular2dStructuredIDW module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.interpolate.html#module-imgProcessor.interpolate.polyfit2d">imgProcessor.interpolate.polyfit2d module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.measure.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.SNR.html">imgProcessor.measure.SNR package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.SNR.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.SNR.html#module-imgProcessor.measure.SNR.SNR">imgProcessor.measure.SNR.SNR module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.SNR.html#module-imgProcessor.measure.SNR.SNR_IEC">imgProcessor.measure.SNR.SNR_IEC module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.SNR.html#module-imgProcessor.measure.SNR.SNRaverage">imgProcessor.measure.SNR.SNRaverage module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.sharpness.html">imgProcessor.measure.sharpness package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.sharpness.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.sharpness.html#module-imgProcessor.measure.sharpness.SharpnessfromPoints">imgProcessor.measure.sharpness.SharpnessfromPoints module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.sharpness.html#module-imgProcessor.measure.sharpness.parameters">imgProcessor.measure.sharpness.parameters module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.measure.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.measure.html#module-imgProcessor.measure.FitHistogramPeaks">imgProcessor.measure.FitHistogramPeaks module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.render.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.render.html#module-imgProcessor.render.closestConnectedDistance">imgProcessor.render.closestConnectedDistance module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.render.html#module-imgProcessor.render.closestDirectDistance">imgProcessor.render.closestDirectDistance module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.transform.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.transform.html#module-imgProcessor.transform.PerspectiveTransformation">imgProcessor.transform.PerspectiveTransformation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.transform.html#module-imgProcessor.transform.StitchImages">imgProcessor.transform.StitchImages module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.transform.html#module-imgProcessor.transform.alignImageAlongLine">imgProcessor.transform.alignImageAlongLine module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.transform.html#module-imgProcessor.transform.equalizeImage">imgProcessor.transform.equalizeImage module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.transform.html#module-imgProcessor.transform.imgAverage">imgProcessor.transform.imgAverage module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.transform.html#module-imgProcessor.transform.linearBlend">imgProcessor.transform.linearBlend module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.utils.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.utils.html#module-imgProcessor.utils.baseClasses">imgProcessor.utils.baseClasses module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.utils.html#module-imgProcessor.utils.calcAspectRatioFromCorners">imgProcessor.utils.calcAspectRatioFromCorners module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.utils.html#module-imgProcessor.utils.decompHomography">imgProcessor.utils.decompHomography module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.utils.html#module-imgProcessor.utils.genericCameraMatrix">imgProcessor.utils.genericCameraMatrix module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.utils.html#imgprocessor-utils-imgpointtoworldcoord-module">imgProcessor.utils.imgPointToWorldCoord module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.utils.html#module-imgProcessor.utils.sortCorners">imgProcessor.utils.sortCorners module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.utils.html#module-imgProcessor.utils.speed_GPU_vs_CPU">imgProcessor.utils.speed_GPU_vs_CPU module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.utils.html#module-imgProcessor.utils.webcamTakePhotos">imgProcessor.utils.webcamTakePhotos module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.exceptions">
+<span id="imgprocessor-exceptions-module"></span><h2>imgProcessor.exceptions module<a class="headerlink" href="#module-imgProcessor.exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="imgProcessor.exceptions.EnoughImages">
+<em class="property">exception </em><code class="descclassname">imgProcessor.exceptions.</code><code class="descname">EnoughImages</code><a class="reference internal" href="_modules/imgProcessor/exceptions.html#EnoughImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.exceptions.EnoughImages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="imgProcessor.exceptions.NothingFound">
+<em class="property">exception </em><code class="descclassname">imgProcessor.exceptions.</code><code class="descname">NothingFound</code><a class="reference internal" href="_modules/imgProcessor/exceptions.html#NothingFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.exceptions.NothingFound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.imgIO">
+<span id="imgprocessor-imgio-module"></span><h2>imgProcessor.imgIO module<a class="headerlink" href="#module-imgProcessor.imgIO" title="Permalink to this headline">¶</a></h2>
+<p>various image input/output routines</p>
+<dl class="function">
+<dt id="imgProcessor.imgIO.imread">
+<code class="descclassname">imgProcessor.imgIO.</code><code class="descname">imread</code><span class="sig-paren">(</span><em>img</em>, <em>color=None</em>, <em>dtype=None</em>, <em>ignore_order=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/imgIO.html#imread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.imgIO.imread" title="Permalink to this definition">¶</a></dt>
+<dd><p>dtype = &#8216;noUint&#8217;, uint8, float, &#8216;float&#8217;, ...</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.imgIO.imwrite">
+<code class="descclassname">imgProcessor.imgIO.</code><code class="descname">imwrite</code><span class="sig-paren">(</span><em>name</em>, <em>arr</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/imgIO.html#imwrite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.imgIO.imwrite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.imgIO.out">
+<code class="descclassname">imgProcessor.imgIO.</code><code class="descname">out</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/imgIO.html#out"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.imgIO.out" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.imgIO.out3d">
+<code class="descclassname">imgProcessor.imgIO.</code><code class="descname">out3d</code><span class="sig-paren">(</span><em>sf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/imgIO.html#out3d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.imgIO.out3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>for surface plots
+sf = 3darray[i,j,x,y,z]</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.signal">
+<span id="imgprocessor-signal-module"></span><h2>imgProcessor.signal module<a class="headerlink" href="#module-imgProcessor.signal" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.signal.getBackgroundPeak">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">getBackgroundPeak</code><span class="sig-paren">(</span><em>fitParams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#getBackgroundPeak"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.getBackgroundPeak" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.getBackgroundRange">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">getBackgroundRange</code><span class="sig-paren">(</span><em>fitParams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#getBackgroundRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.getBackgroundRange" title="Permalink to this definition">¶</a></dt>
+<dd><p>return minimum, average, maximum of the background peak</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.getSignalMinimum">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">getSignalMinimum</code><span class="sig-paren">(</span><em>fitParams</em>, <em>n_std=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#getSignalMinimum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.getSignalMinimum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.getSignalParameters">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">getSignalParameters</code><span class="sig-paren">(</span><em>fitParams</em>, <em>n_std=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#getSignalParameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.getSignalParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>return minimum, average, maximum of the signal peak</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.getSignalPeak">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">getSignalPeak</code><span class="sig-paren">(</span><em>fitParams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#getSignalPeak"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.getSignalPeak" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.hasBackground">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">hasBackground</code><span class="sig-paren">(</span><em>fitParams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#hasBackground"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.hasBackground" title="Permalink to this definition">¶</a></dt>
+<dd><p>compare the height of putative bg and signal peak
+if ratio if too height assume there is no background</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.scaleParams">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">scaleParams</code><span class="sig-paren">(</span><em>img</em>, <em>fitParams=None</em>, <em>backgroundToZero=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#scaleParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.scaleParams" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.scaleParamsFromReference">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">scaleParamsFromReference</code><span class="sig-paren">(</span><em>img</em>, <em>reference</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#scaleParamsFromReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.scaleParamsFromReference" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.scaleSignal">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">scaleSignal</code><span class="sig-paren">(</span><em>img</em>, <em>fitParams=None</em>, <em>backgroundToZero=False</em>, <em>reference=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#scaleSignal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.scaleSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>scale the image between...</p>
+<p>backgroundToZero=True -&gt; 0 (average background) and 1 (maximum signal)
+backgroundToZero=False -&gt; signal+-3std</p>
+<p>reference -&gt; reference image &#8211; scale image to fit this one</p>
+<p>returns:
+scaled image</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.signalMinimum">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">signalMinimum</code><span class="sig-paren">(</span><em>img</em>, <em>fitParams=None</em>, <em>n_std=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#signalMinimum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.signalMinimum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.signalPeakIndex">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">signalPeakIndex</code><span class="sig-paren">(</span><em>fitParams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#signalPeakIndex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.signalPeakIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.signal.signalRange">
+<code class="descclassname">imgProcessor.signal.</code><code class="descname">signalRange</code><span class="sig-paren">(</span><em>img</em>, <em>fitParams=None</em>, <em>nSigma=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/signal.html#signalRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.signal.signalRange" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.tests">
+<span id="imgprocessor-tests-module"></span><h2>imgProcessor.tests module<a class="headerlink" href="#module-imgProcessor.tests" title="Permalink to this headline">¶</a></h2>
+<p>Run all submodules as __main__ and execute their test procedure</p>
+<p>Note there is a bug in pkgutil.walk_packages
+excluding all modules that have the same name as modules in
+the standard library, see
+<a class="reference external" href="http://bugs.python.org/issue14787">http://bugs.python.org/issue14787</a>
+that&#8217;s why &#8216;os&#8217; and &#8216;utils&#8217; are not tested at the moment</p>
+</div>
+<div class="section" id="module-imgProcessor.transformations">
+<span id="imgprocessor-transformations-module"></span><h2>imgProcessor.transformations module<a class="headerlink" href="#module-imgProcessor.transformations" title="Permalink to this headline">¶</a></h2>
+<p>various image transformation functions</p>
+<dl class="function">
+<dt id="imgProcessor.transformations.isColor">
+<code class="descclassname">imgProcessor.transformations.</code><code class="descname">isColor</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transformations.html#isColor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transformations.isColor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.transformations.rot90">
+<code class="descclassname">imgProcessor.transformations.</code><code class="descname">rot90</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transformations.html#rot90"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transformations.rot90" title="Permalink to this definition">¶</a></dt>
+<dd><p>rotate one or multiple grayscale or color images 90 degrees</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.transformations.toColor">
+<code class="descclassname">imgProcessor.transformations.</code><code class="descname">toColor</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transformations.html#toColor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transformations.toColor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.transformations.toFloatArray">
+<code class="descclassname">imgProcessor.transformations.</code><code class="descname">toFloatArray</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transformations.html#toFloatArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transformations.toFloatArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>transform an unsigned integer array into a
+float array of the right size</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.transformations.toGray">
+<code class="descclassname">imgProcessor.transformations.</code><code class="descname">toGray</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transformations.html#toGray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transformations.toGray" title="Permalink to this definition">¶</a></dt>
+<dd><p>weights see
+<a class="reference external" href="https://en.wikipedia.org/wiki/Grayscale#Colorimetric_.28luminance-prese">https://en.wikipedia.org/wiki/Grayscale#Colorimetric_.28luminance-prese</a>
+<a class="reference external" href="http://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html#cvtcolor">http://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html#cvtcolor</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.transformations.toNoUintArray">
+<code class="descclassname">imgProcessor.transformations.</code><code class="descname">toNoUintArray</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transformations.html#toNoUintArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transformations.toNoUintArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>cast array to the next higher integer array
+if dtype=unsigned integer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.transformations.toUIntArray">
+<code class="descclassname">imgProcessor.transformations.</code><code class="descname">toUIntArray</code><span class="sig-paren">(</span><em>img</em>, <em>dtype=None</em>, <em>cutNegative=True</em>, <em>cutHigh=True</em>, <em>range=None</em>, <em>copy=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transformations.html#toUIntArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transformations.toUIntArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>transform a float to an unsigned integer array of a fitting dtype
+adds an offset, to get rid of negative values</p>
+<p>range = (min, max) - scale values between given range</p>
+<p>cutNegative - all values &lt;0 will be set to 0
+cutHigh - set to False to rather scale values to fit</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.transformations.transpose">
+<code class="descclassname">imgProcessor.transformations.</code><code class="descname">transpose</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transformations.html#transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transformations.transpose" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.camera.html" class="btn btn-neutral float-right" title="imgProcessor.camera package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to imgProcessor’s documentation!" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

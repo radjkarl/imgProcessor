@@ -1,0 +1,269 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.SingleTimeEffectDetection &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.SingleTimeEffectDetection</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.SingleTimeEffectDetection</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">scipy.ndimage.measurements</span> <span class="kn">import</span> <span class="n">label</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">imgProcessor.cameraCalibration.NoiseLevelFunction</span> <span class="kn">import</span> <span class="n">oneImageNLF</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.filters.removeSinglePixels</span> <span class="kn">import</span> <span class="n">removeSinglePixels</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+
+
+
+<div class="viewcode-block" id="SingleTimeEffectDetection"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.SingleTimeEffectDetection.SingleTimeEffectDetection">[docs]</a><span class="k">class</span> <span class="nc">SingleTimeEffectDetection</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Detect and remove Single-time-effects (STE) using min. 2 equivalent images</span>
+<span class="sd">    public attributes:</span>
+<span class="sd">    </span>
+<span class="sd">    .mask_clean --&gt; STE-free indices </span>
+<span class="sd">    .mask_STE   --&gt; STE indices (only avail. if save_ste_indices=True)</span>
+<span class="sd">    .noSTE      --&gt; STE free image</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="SingleTimeEffectDetection.__init__"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.SingleTimeEffectDetection.SingleTimeEffectDetection.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">noise_level_function</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nStd</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
+                 <span class="n">save_ste_indices</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_ste_indices</span> <span class="o">=</span> <span class="n">save_ste_indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_STE</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="n">i1</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;gray&#39;</span><span class="p">)</span>
+        <span class="n">i2</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">images</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">&#39;gray&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">save_ste_indices</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask_STE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">i1</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        
+        <span class="c">#MINIMUM OF BOTH IMAGES:  </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noSTE</span> <span class="o">=</span> <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">noise_level_function</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">noise_level_function</span> <span class="o">=</span> <span class="n">oneImageNLF</span><span class="p">(</span><span class="n">m</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_level_function</span> <span class="o">=</span> <span class="n">noise_level_function</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">noise_level_function</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">*</span><span class="n">nStd</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addImage</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">images</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addImage</span><span class="p">(</span><span class="n">imread</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s">&#39;gray&#39;</span><span class="p">))</span></div>
+
+          
+<div class="viewcode-block" id="SingleTimeEffectDetection.addImage"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.SingleTimeEffectDetection.SingleTimeEffectDetection.addImage">[docs]</a>    <span class="k">def</span> <span class="nf">addImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_diff</span> <span class="o">=</span> <span class="n">diff</span> <span class="o">=</span> <span class="n">image</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">noSTE</span>
+        
+        <span class="n">ste</span> <span class="o">=</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span>  
+        <span class="n">removeSinglePixels</span><span class="p">(</span><span class="n">ste</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_clean</span> <span class="o">=</span> <span class="n">clean</span> <span class="o">=</span> <span class="o">~</span><span class="n">ste</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noSTE</span><span class="p">[</span><span class="n">clean</span><span class="p">]</span> <span class="o">+=</span> <span class="n">diff</span><span class="p">[</span><span class="n">clean</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_ste_indices</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask_STE</span> <span class="o">+=</span> <span class="n">ste</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="SingleTimeEffectDetection.countSTE"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.SingleTimeEffectDetection.SingleTimeEffectDetection.countSTE">[docs]</a>    <span class="k">def</span> <span class="nf">countSTE</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; </span>
+<span class="sd">        return number of found STE</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_STE</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span></div>
+    
+    
+<div class="viewcode-block" id="SingleTimeEffectDetection.relativeAreaSTE"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.SingleTimeEffectDetection.SingleTimeEffectDetection.relativeAreaSTE">[docs]</a>    <span class="k">def</span> <span class="nf">relativeAreaSTE</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        return STE area - relative to image area</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">noSTE</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_STE</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="SingleTimeEffectDetection.intensityDistributionSTE"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.SingleTimeEffectDetection.SingleTimeEffectDetection.intensityDistributionSTE">[docs]</a>    <span class="k">def</span> <span class="nf">intensityDistributionSTE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        return distribution of STE intensity</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_diff</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_STE</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="nb">range</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

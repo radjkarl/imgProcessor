@@ -1,0 +1,460 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.cameraCalibration.NoiseLevelFunction &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.cameraCalibration.NoiseLevelFunction</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.cameraCalibration.NoiseLevelFunction</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="kn">import</span> <span class="n">median_filter</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">UnivariateSpline</span>
+
+
+
+<div class="viewcode-block" id="estimateFromImages"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.NoiseLevelFunction.estimateFromImages">[docs]</a><span class="k">def</span> <span class="nf">estimateFromImages</span><span class="p">(</span><span class="n">imgs1</span><span class="p">,</span> <span class="n">imgs2</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mn_mx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    estimate the noise level function as stDev over image intensity</span>
+<span class="sd">    from a set of 2 image groups </span>
+<span class="sd">    images at the same position have to show</span>
+<span class="sd">    the identical setup, so</span>
+<span class="sd">    imgs1[i] - imgs2[i] = noise</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">imgs2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">imgs2</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">imgs1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs1</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">imgs2</span><span class="p">)</span>
+    
+    <span class="n">y_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">imgs1</span><span class="p">),</span><span class="n">nbins</span><span class="p">))</span>
+    <span class="n">w_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">imgs1</span><span class="p">),</span><span class="n">nbins</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="n">mn_mx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;estimating min and max image value&#39;</span><span class="p">)</span>
+        <span class="n">mn</span> <span class="o">=</span> <span class="mf">1e6</span>
+        <span class="n">mx</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1e6</span>
+        <span class="c">#get min and max image value checking all first images:         </span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">i1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">imgs1</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs1</span><span class="p">))</span>
+            <span class="n">i1</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">i1</span><span class="p">)</span>
+            <span class="n">mmn</span><span class="p">,</span> <span class="n">mmx</span> <span class="o">=</span> <span class="n">_getMinMax</span><span class="p">(</span><span class="n">i1</span><span class="p">)</span>
+            <span class="n">mn</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">mn</span><span class="p">,</span> <span class="n">mmn</span><span class="p">)</span>
+            <span class="n">mx</span> <span class="o">=</span> <span class="n">mx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">mx</span><span class="p">,</span> <span class="n">mmx</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;--&gt; min(</span><span class="si">%s</span><span class="s">), max(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">mn</span><span class="p">,</span><span class="n">mx</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mn</span><span class="p">,</span><span class="n">mx</span> <span class="o">=</span> <span class="n">mn_mx</span>
+    
+    <span class="n">x</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;get noise level function&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,(</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">imgs1</span><span class="p">,</span><span class="n">imgs2</span><span class="p">)):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">imgs1</span><span class="p">)))</span>
+
+        <span class="n">i1</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">i1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">i2</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">i2</span><span class="p">)</span>
+    
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">weights</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">calcNLF</span><span class="p">(</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">mn_mx_nbins</span><span class="o">=</span><span class="p">(</span><span class="n">mn</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">nbins</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">y_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="n">w_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">weights</span>
+        
+    <span class="c">#filter empty places:</span>
+    <span class="n">filledPos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w_vals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span>
+    <span class="n">w_vals</span> <span class="o">=</span> <span class="n">w_vals</span><span class="p">[:,</span><span class="n">filledPos</span><span class="p">]</span>
+    <span class="n">y_vals</span> <span class="o">=</span> <span class="n">y_vals</span><span class="p">[:,</span><span class="n">filledPos</span><span class="p">]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">filledPos</span><span class="p">]</span>
+
+    <span class="n">y_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">y_vals</span><span class="p">),</span> 
+                       <span class="n">weights</span><span class="o">=</span><span class="n">w_vals</span><span class="p">,</span>
+                        <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="n">w_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w_vals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">w_vals</span> <span class="o">/=</span> <span class="n">w_vals</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="n">fitParams</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">_evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_avg</span><span class="p">,</span> <span class="n">w_vals</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">y_avg</span><span class="p">,</span> <span class="n">y_vals</span><span class="p">,</span> <span class="n">w_vals</span><span class="p">,</span> <span class="n">fitParams</span><span class="p">,</span><span class="n">i</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    get the parameters of the, needed by &#39;function&#39;</span>
+<span class="sd">    through curve fitting</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">_validI</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+    <span class="n">xx</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">y</span><span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">fitParams</span> <span class="o">=</span> <span class="n">_fit</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="c">#bound noise fn to min defined y value:</span>
+        <span class="n">minY</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">xx</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">fitParams</span><span class="p">)</span>
+        <span class="n">fitParams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">fitParams</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">minY</span><span class="p">)</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">minY</span><span class="o">=</span><span class="n">minY</span><span class="p">:</span> <span class="n">boundedFunction</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">*</span><span class="n">fitParams</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;couldn&#39;t fit noise function with filtered indices&quot;</span><span class="p">)</span>
+        <span class="n">fitParams</span> <span class="o">=</span> <span class="bp">None</span> 
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">smooth</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+    <span class="k">return</span>  <span class="n">fitParams</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">i</span>  
+
+
+<div class="viewcode-block" id="boundedFunction"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.NoiseLevelFunction.boundedFunction">[docs]</a><span class="k">def</span> <span class="nf">boundedFunction</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">minY</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    limit [function] to a minimum y value </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">y</span><span class="p">),</span><span class="n">minY</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="function"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.NoiseLevelFunction.function">[docs]</a><span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    general square root function</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">invalid</span><span class="o">=</span><span class="s">&#39;ignore&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ay</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">ax</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span></div>
+
+
+<span class="k">def</span> <span class="nf">_validI</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    return indices that have enough data points and are not erroneous </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c">#density filter:</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="c">#filter outliers:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="n">max_gradient</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">grad</span><span class="p">)</span>
+        <span class="n">i</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">grad</span><span class="o">&gt;</span><span class="n">max_gradient</span><span class="p">]</span><span class="o">=</span><span class="bp">False</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">return</span> <span class="n">i</span>
+  
+    
+<span class="k">def</span> <span class="nf">_fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="n">popt</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">check_finite</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">popt</span>
+     
+
+<div class="viewcode-block" id="smooth"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.NoiseLevelFunction.smooth">[docs]</a><span class="k">def</span> <span class="nf">smooth</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">weights</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    in case the NLF cannot be described by </span>
+<span class="sd">    a square root function</span>
+<span class="sd">    express it as a group of smoothed splines</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">UnivariateSpline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span></div>
+    
+    
+<div class="viewcode-block" id="oneImageNLF"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.NoiseLevelFunction.oneImageNLF">[docs]</a><span class="k">def</span> <span class="nf">oneImageNLF</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">img2</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">signal</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> 
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Estimate the NLF from one or two images of the same kind</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">signal</span> <span class="o">=</span> <span class="n">calcNLF</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">img2</span><span class="p">,</span> <span class="n">signal</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fn</span><span class="p">,</span> <span class="n">signal</span></div>
+    
+
+<span class="k">def</span> <span class="nf">_getMinMax</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Get the a range of image intensities</span>
+<span class="sd">    that most pixels are in with</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">av</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="c">#define range for segmentation:</span>
+    <span class="n">mn</span> <span class="o">=</span> <span class="n">av</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">std</span>
+    <span class="n">mx</span> <span class="o">=</span> <span class="n">av</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">std</span>
+
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">mn</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span><span class="n">mx</span><span class="p">)</span>
+
+ 
+<div class="viewcode-block" id="calcNLF"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.NoiseLevelFunction.calcNLF">[docs]</a><span class="k">def</span> <span class="nf">calcNLF</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">img2</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">signal</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mn_mx_nbins</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">averageFn</span><span class="o">=</span><span class="s">&#39;AAD&#39;</span><span class="p">,</span>
+             <span class="n">signalFromMultipleImages</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the noise level function (NLF) as f(intensity)</span>
+<span class="sd">    using one or two image.</span>
+<span class="sd">    The approach for this work is published in JPV##########</span>
+<span class="sd">    </span>
+<span class="sd">    img2 - 2nd image taken under same conditions</span>
+<span class="sd">           used to estimate noise via image difference</span>
+<span class="sd">    </span>
+<span class="sd">    signalFromMultipleImages - whether the signal is an average of multiple</span>
+<span class="sd">        images and not just got from one median filtered image</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c">#CONSTANTS:</span>
+    <span class="c">#factor Root mead square to average-absolute-difference:</span>
+    <span class="n">F_RMS2AAD</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">**-</span><span class="mf">0.5</span> 
+    <span class="n">F_NOISE_WITH_MEDIAN</span> <span class="o">=</span> <span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="mi">3</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">N_BINS</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">MEDIAN_KERNEL_SIZE</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="k">def</span> <span class="nf">_averageAbsoluteDeviation</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">d</span><span class="p">))</span><span class="o">*</span><span class="n">F_RMS2AAD</span>
+    <span class="k">def</span> <span class="nf">_rootMeanSquare</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">d</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">**</span><span class="mf">0.5</span>
+
+    <span class="k">if</span> <span class="n">averageFn</span> <span class="o">==</span> <span class="s">&#39;AAD&#39;</span><span class="p">:</span>
+        <span class="n">averageFn</span> <span class="o">=</span> <span class="n">_averageAbsoluteDeviation</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">averageFn</span> <span class="o">=</span> <span class="n">_rootMeanSquare</span>
+    
+    <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>  
+      
+    <span class="k">if</span> <span class="n">img2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">signal</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">signal</span> <span class="o">=</span> <span class="n">median_filter</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">MEDIAN_KERNEL_SIZE</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">signalFromMultipleImages</span><span class="p">:</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">img</span> <span class="o">-</span> <span class="n">signal</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#difference between the filtered and original image:     </span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">img</span> <span class="o">-</span> <span class="n">signal</span><span class="p">)</span><span class="o">*</span><span class="n">F_NOISE_WITH_MEDIAN</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">img2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">img2</span><span class="p">)</span>
+        <span class="c">#2**0.5 because noise is subtracted by noise</span>
+        <span class="c">#and variance of sum = sum of variance:</span>
+        <span class="c">#var(immg1-img2)~2*var(img)</span>
+        <span class="c">#std(2*var) = 2**0.5*var**0.5</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">img</span><span class="o">-</span><span class="n">img2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="k">if</span> <span class="n">signal</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">signal</span> <span class="o">=</span> <span class="n">median_filter</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">img</span><span class="o">+</span><span class="n">img2</span><span class="p">),</span> <span class="n">MEDIAN_KERNEL_SIZE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mn_mx_nbins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">mn</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">nbins</span> <span class="o">=</span> <span class="n">mn_mx_nbins</span>
+        <span class="n">min_len</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mn</span><span class="p">,</span> <span class="n">mx</span> <span class="o">=</span> <span class="n">_getMinMax</span><span class="p">(</span><span class="n">signal</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">min_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mf">1e-3</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">min_len</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">min_len</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="c">#number of bins/different intensity ranges to analyse:</span>
+        <span class="n">nbins</span> <span class="o">=</span> <span class="n">N_BINS</span>
+        <span class="k">if</span> <span class="n">mx</span> <span class="o">-</span> <span class="n">mn</span> <span class="o">&lt;</span> <span class="n">nbins</span><span class="p">:</span>
+            <span class="n">nbins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">mx</span> <span class="o">-</span> <span class="n">mn</span><span class="p">)</span>
+    <span class="c">#bin width:</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="p">(</span><span class="n">mx</span><span class="o">-</span><span class="n">mn</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">nbins</span><span class="p">)</span>
+    
+    <span class="c">#empty arrays:</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">nbins</span><span class="p">)</span>
+    <span class="n">set_x</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">set_x</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">nbins</span><span class="p">)</span>
+    <span class="c">#give bins with more samples more weight:</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">nbins</span><span class="p">)</span>
+
+    <span class="c">#cur step:</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">mn</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">nbins</span><span class="p">):</span>
+        <span class="c">#get indices of all pixel with in a bin:</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">signal</span><span class="o">&gt;=</span><span class="n">m</span><span class="p">,</span> <span class="n">signal</span><span class="o">&lt;=</span><span class="n">m</span><span class="o">+</span><span class="n">step</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">+=</span> <span class="n">step</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">diff</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="n">ld</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ld</span> <span class="o">&gt;=</span> <span class="n">min_len</span><span class="p">:</span>
+            <span class="n">weights</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">ld</span>
+            <span class="c">#average absolute deviation (AAD),</span>
+            <span class="c">#scaled to RMS:</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">averageFn</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">set_x</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">step</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">signal</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">imgProcessor</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="kn">from</span> <span class="nn">fancytools.os.PathStr</span> <span class="kn">import</span> <span class="n">PathStr</span>
+    <span class="c">#extract the noise level function from one image:</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">PathStr</span><span class="p">(</span><span class="n">imgProcessor</span><span class="o">.</span><span class="n">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">dirname</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="s">&#39;media&#39;</span><span class="p">,</span> <span class="s">&#39;electroluminescence&#39;</span><span class="p">,</span><span class="s">&#39;EL_module_orig.PNG&#39;</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="s">&#39;gray&#39;</span><span class="p">)</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">oneImageNLF</span><span class="p">(</span><span class="n">img</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span><span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">fn</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

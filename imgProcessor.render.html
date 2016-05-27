@@ -1,0 +1,275 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.render package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor package" href="imgProcessor.html"/>
+        <link rel="next" title="imgProcessor.transform package" href="imgProcessor.transform.html"/>
+        <link rel="prev" title="imgProcessor.measure.sharpness package" href="imgProcessor.measure.sharpness.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">imgProcessor.render package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.render.closestConnectedDistance">imgProcessor.render.closestConnectedDistance module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.render.closestDirectDistance">imgProcessor.render.closestDirectDistance module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+    <li>imgProcessor.render package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.render.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.render">
+<span id="imgprocessor-render-package"></span><h1>imgProcessor.render package<a class="headerlink" href="#module-imgProcessor.render" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.render.closestConnectedDistance">
+<span id="imgprocessor-render-closestconnecteddistance-module"></span><h2>imgProcessor.render.closestConnectedDistance module<a class="headerlink" href="#module-imgProcessor.render.closestConnectedDistance" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.render.closestConnectedDistance.closestConnectedDistance">
+<code class="descclassname">imgProcessor.render.closestConnectedDistance.</code><code class="descname">closestConnectedDistance</code><span class="sig-paren">(</span><em>target</em>, <em>walls=None</em>, <em>max_len_border_line=500</em>, <em>max_n_path=100</em>, <em>concentrate_every_n_pixel=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/render/closestConnectedDistance.html#closestConnectedDistance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.render.closestConnectedDistance.closestConnectedDistance" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns an array with contains the closest distance from every pixel
+the next position where target == 1</p>
+<p>[walls] binary 2darray - e.g. walls in a labyrinth that have to be surrounded in order to get to the target</p>
+<p>[target] binary 2darray - positions given by 1</p>
+<dl class="docutils">
+<dt>[concentrate_every_n_pixel] often the distance of neighbour pixels is similar</dt>
+<dd><blockquote class="first">
+<div>to speed up calculation set this value to e.g. 3 to calculate only
+the distance for every 3. pixel and interpolate in between</div></blockquote>
+<p class="last">recommended are values up to 3-5</p>
+</dd>
+</dl>
+<p>[max_len_border_line]
+this function calculates distances travelled using region growth
+e.g.</p>
+<p>0123
+1123
+2223
+3333</p>
+<p>the last steps (e.g. for all steps 3 border_line=7) are stored in an array of limited
+length defined in &#8216;max_len_border_line&#8217;</p>
+<p>[max_n_path]
+how many paths are possible between every pixel and the target
+only needed if fast==False</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.render.closestDirectDistance">
+<span id="imgprocessor-render-closestdirectdistance-module"></span><h2>imgProcessor.render.closestDirectDistance module<a class="headerlink" href="#module-imgProcessor.render.closestDirectDistance" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.render.closestDirectDistance.closestDirectDistance">
+<code class="descclassname">imgProcessor.render.closestDirectDistance.</code><code class="descname">closestDirectDistance</code><span class="sig-paren">(</span><em>arr</em>, <em>ksize=30</em>, <em>dtype=&lt;type 'numpy.uint16'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/render/closestDirectDistance.html#closestDirectDistance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.render.closestDirectDistance.closestDirectDistance" title="Permalink to this definition">¶</a></dt>
+<dd><p>return an array with contains the closest distance to the next positive
+value given in arr  within a given kernel size</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.transform.html" class="btn btn-neutral float-right" title="imgProcessor.transform package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imgProcessor.measure.sharpness.html" class="btn btn-neutral" title="imgProcessor.measure.sharpness package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

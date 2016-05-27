@@ -1,0 +1,352 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.cameraCalibration.DarkCurrentMap &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.cameraCalibration.DarkCurrentMap</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.cameraCalibration.DarkCurrentMap</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">from</span> <span class="nn">fancytools.math.MaskedMovingAverage</span> <span class="kn">import</span> <span class="n">MaskedMovingAverage</span>
+<span class="kn">from</span> <span class="nn">fancytools.math.linRegressUsingMasked2dArrays</span> <span class="kn">import</span> <span class="n">linRegressUsingMasked2dArrays</span>
+
+<span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.SingleTimeEffectDetection</span> <span class="kn">import</span> <span class="n">SingleTimeEffectDetection</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.baseClasses</span> <span class="kn">import</span> <span class="n">Iteratives</span>
+
+
+
+<div class="viewcode-block" id="DarkCurrentMap"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.DarkCurrentMap">[docs]</a><span class="k">class</span> <span class="nc">DarkCurrentMap</span><span class="p">(</span><span class="n">Iteratives</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Averages given background images</span>
+<span class="sd">    removing single time effects</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+<div class="viewcode-block" id="DarkCurrentMap.__init__"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.DarkCurrentMap.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">twoImages</span><span class="p">,</span> <span class="n">noise_level_function</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                 <span class="n">calcVariance</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Iteratives</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">twoImages</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;need at least 2 images&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">det</span> <span class="o">=</span> <span class="n">SingleTimeEffectDetection</span><span class="p">(</span><span class="n">twoImages</span><span class="p">,</span> <span class="n">noise_level_function</span><span class="p">,</span> <span class="n">nStd</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_map</span> <span class="o">=</span> <span class="n">MaskedMovingAverage</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">twoImages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">calcVariance</span><span class="o">=</span><span class="n">calcVariance</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_map</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det</span><span class="o">.</span><span class="n">noSTE</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DarkCurrentMap.addImg"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.DarkCurrentMap.addImg">[docs]</a>    <span class="k">def</span> <span class="nf">addImg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">raiseIfConvergence</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_map</span><span class="o">.</span><span class="n">update</span><span class="p">(</span> <span class="n">img</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">det</span><span class="o">.</span><span class="n">addImage</span><span class="p">(</span><span class="n">img</span><span class="p">)</span><span class="o">.</span><span class="n">mask_clean</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="n">raiseIfConvergence</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkConvergence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fine</span><span class="o">.</span><span class="n">var</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DarkCurrentMap.map"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.DarkCurrentMap.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map</span><span class="o">.</span><span class="n">avg</span></div>
+    
+    
+<div class="viewcode-block" id="DarkCurrentMap.uncertaintyMap"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.DarkCurrentMap.uncertaintyMap">[docs]</a>    <span class="k">def</span> <span class="nf">uncertaintyMap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map</span><span class="o">.</span><span class="n">var</span><span class="o">**</span><span class="mf">0.5</span></div>
+
+
+<div class="viewcode-block" id="DarkCurrentMap.uncertainty"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.DarkCurrentMap.uncertainty">[docs]</a>    <span class="k">def</span> <span class="nf">uncertainty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_map</span><span class="o">.</span><span class="n">var</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span></div></div>
+
+
+
+<div class="viewcode-block" id="averageSameExpTimes"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.averageSameExpTimes">[docs]</a><span class="k">def</span> <span class="nf">averageSameExpTimes</span><span class="p">(</span><span class="n">imgs_path</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    average background images with same exposure time</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">firsts</span> <span class="o">=</span> <span class="n">imgs_path</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">imgs</span> <span class="o">=</span> <span class="n">imgs_path</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">firsts</span><span class="p">):</span>
+        <span class="n">firsts</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">imread</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">DarkCurrentMap</span><span class="p">(</span><span class="n">firsts</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">imgs</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addImg</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">map</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="getLinearityFunction"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.getLinearityFunction">[docs]</a><span class="k">def</span> <span class="nf">getLinearityFunction</span><span class="p">(</span><span class="n">expTimes</span><span class="p">,</span> <span class="n">imgs</span><span class="p">,</span> <span class="n">mxIntensity</span><span class="o">=</span><span class="mi">64000</span><span class="p">,</span> 
+                         <span class="n">min_ascent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+                         <span class="c">#maxExpTime=36000</span>
+                         <span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    returns offset, ascent </span>
+<span class="sd">    of image(expTime) = offset + ascent*expTime</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">ascent</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">linRegressUsingMasked2dArrays</span><span class="p">(</span><span class="n">expTimes</span><span class="p">,</span> <span class="n">imgs</span><span class="p">,</span> <span class="n">imgs</span> <span class="o">&gt;</span> <span class="n">mxIntensity</span><span class="p">)</span>
+    
+    <span class="n">ascent</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ascent</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c">#TODO: calculate min ascent from noise function</span>
+    <span class="c">#remove low frequent noise:</span>
+    <span class="k">if</span> <span class="n">min_ascent</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">ascent</span><span class="o">&lt;</span><span class="n">min_ascent</span>
+        <span class="c">#last - worked, but next seem to be better</span>
+        <span class="n">offset</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">expTimes</span><span class="p">)</span><span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">expTimes</span><span class="p">))</span> <span class="p">)</span><span class="o">*</span><span class="n">ascent</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">ascent</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c">#TODO: REMOVE??#########</span>
+<span class="c">#     maxExpTime_ = (mxIntensity-offset)/ascent</span>
+<span class="c">#     maxExpTime_[maxExpTime_&lt;0]=0</span>
+<span class="c">#     maxExpTime_[maxExpTime_&gt;maxExpTime]=0</span>
+    <span class="k">return</span> <span class="n">offset</span><span class="p">,</span> <span class="n">ascent</span><span class="p">,</span> <span class="n">error</span><span class="c">#, maxExpTime_</span></div>
+
+
+<div class="viewcode-block" id="sortForSameExpTime"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.sortForSameExpTime">[docs]</a><span class="k">def</span> <span class="nf">sortForSameExpTime</span><span class="p">(</span><span class="n">expTimes</span><span class="p">,</span> <span class="n">img_paths</span><span class="p">,</span> <span class="n">excludeSingleImg</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    return image paths sorted for same exposure time</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">e</span><span class="p">,</span><span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">expTimes</span><span class="p">,</span> <span class="n">img_paths</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">e</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;have only one image of exposure time </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">key</span>
+            <span class="k">print</span> <span class="s">&#39;excluding that one&#39;</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">d</span><span class="o">.</span><span class="n">values</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="getDarkCurrentAverages"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.getDarkCurrentAverages">[docs]</a><span class="k">def</span> <span class="nf">getDarkCurrentAverages</span><span class="p">(</span><span class="n">exposuretimes</span><span class="p">,</span> <span class="n">imgs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    return exposure times, image averages for each exposure time</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">imgs_p</span> <span class="o">=</span> <span class="n">sortForSameExpTime</span><span class="p">(</span><span class="n">exposuretimes</span><span class="p">,</span> <span class="n">imgs</span><span class="p">)</span>
+    <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">imgs_p</span><span class="p">:</span>
+        <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">averageSameExpTimes</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">imgs</span></div>
+
+
+<div class="viewcode-block" id="getDarkCurrentFunction"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.DarkCurrentMap.getDarkCurrentFunction">[docs]</a><span class="k">def</span> <span class="nf">getDarkCurrentFunction</span><span class="p">(</span><span class="n">exposuretimes</span><span class="p">,</span> <span class="n">imgs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    get dark current function from given images and exposure times</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">exposuretimes</span><span class="p">,</span> <span class="n">imgs</span> <span class="o">=</span> <span class="n">getDarkCurrentAverages</span><span class="p">(</span><span class="n">exposuretimes</span><span class="p">,</span> <span class="n">imgs</span><span class="p">)</span>
+    <span class="n">offs</span><span class="p">,</span> <span class="n">ascent</span><span class="p">,</span> <span class="n">rmse</span> <span class="o">=</span> <span class="n">getLinearityFunction</span><span class="p">(</span><span class="n">exposuretimes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">imgs</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> 
+    <span class="k">return</span> <span class="n">offs</span><span class="p">,</span> <span class="n">ascent</span><span class="p">,</span> <span class="n">rmse</span></div>
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    
+    <span class="c">#generate some random images for the following exposure times:</span>
+    <span class="n">exposuretimes</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span><span class="o">*</span><span class="mi">3</span>
+    <span class="k">print</span> <span class="s">&#39;exposure times:, &#39;</span><span class="p">,</span> <span class="n">exposuretimes</span>
+    <span class="n">offs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">,(</span><span class="mi">30</span><span class="p">,</span><span class="mi">100</span><span class="p">))</span>
+    <span class="n">ascent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">,(</span><span class="mi">30</span><span class="p">,</span><span class="mi">100</span><span class="p">))</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">,(</span><span class="mi">30</span><span class="p">,</span><span class="mi">100</span><span class="p">))</span>
+    <span class="c">#calculate every image as function of exposure time</span>
+    <span class="c">#and add noise:</span>
+    <span class="n">imgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">offs</span><span class="o">+</span><span class="n">t</span><span class="o">*</span><span class="n">ascent</span><span class="o">+</span><span class="n">noise</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">exposuretimes</span><span class="p">]</span>
+    
+    <span class="n">offs2</span><span class="p">,</span><span class="n">ascent2</span><span class="p">,</span><span class="n">rmse</span> <span class="o">=</span> <span class="n">getDarkCurrentFunction</span><span class="p">(</span><span class="n">exposuretimes</span><span class="p">,</span> <span class="n">imgs</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&quot;image 1&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">imgs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&quot;image 5&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">imgs</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>    
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&quot;calculated image 1&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">offs2</span><span class="o">+</span><span class="n">exposuretimes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">ascent2</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&quot;calculated image 5&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">offs2</span><span class="o">+</span><span class="n">exposuretimes</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">*</span><span class="n">ascent2</span><span class="p">)</span> 
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

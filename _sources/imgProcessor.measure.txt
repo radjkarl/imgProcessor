@@ -1,0 +1,28 @@
+imgProcessor.measure package
+============================
+
+.. automodule:: imgProcessor.measure
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    imgProcessor.measure.SNR
+    imgProcessor.measure.sharpness
+
+Submodules
+----------
+
+imgProcessor.measure.FitHistogramPeaks module
+---------------------------------------------
+
+.. automodule:: imgProcessor.measure.FitHistogramPeaks
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

@@ -1,0 +1,244 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.spatial.closestDirectDistance &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.spatial.closestDirectDistance</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.spatial.closestDirectDistance</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
+
+
+<div class="viewcode-block" id="closestDirectDistance"><a class="viewcode-back" href="../../../imgProcessor.spatial.html#imgProcessor.spatial.closestDirectDistance.closestDirectDistance">[docs]</a><span class="k">def</span> <span class="nf">closestDirectDistance</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">ksize</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    return an array with contains the closest distance to the next positive</span>
+<span class="sd">    value given in arr  within a given kernel size</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">_calc</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span><span class="n">ksize</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+    
+
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_calc</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">ksize</span><span class="p">):</span>
+    <span class="n">s0</span><span class="p">,</span><span class="n">s1</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">min_dist0</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">ksize</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">s0</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">s1</span><span class="p">):</span> 
+            <span class="k">if</span> <span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">min_dist</span> <span class="o">=</span> <span class="n">min_dist0</span>
+                <span class="c">#for every pixel</span>
+                <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="o">-</span><span class="n">ksize</span><span class="p">,</span><span class="n">ksize</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="o">-</span><span class="n">ksize</span><span class="p">,</span><span class="n">ksize</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                        <span class="c">#find closest busbar within kernel size</span>
+                        <span class="k">if</span> <span class="n">ii</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">jj</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">continue</span>
+                        <span class="n">xi</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span><span class="n">ii</span>
+                        <span class="n">yi</span> <span class="o">=</span> <span class="n">j</span> <span class="o">+</span><span class="n">jj</span>
+                        <span class="c">#if within image</span>
+                        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">xi</span> <span class="o">&lt;</span> <span class="n">s0</span>  <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">yi</span> <span class="o">&lt;</span> <span class="n">s1</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">arr</span><span class="p">[</span><span class="n">xi</span><span class="p">,</span><span class="n">yi</span><span class="p">]:</span>
+                                <span class="n">dist</span> <span class="o">=</span> <span class="p">(</span><span class="n">ii</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">jj</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+                                <span class="k">if</span> <span class="n">dist</span> <span class="o">&lt;</span> <span class="n">min_dist</span><span class="p">:</span>
+                                    <span class="n">min_dist</span> <span class="o">=</span> <span class="n">dist</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_dist</span>
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    
+    <span class="n">size</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span><span class="mi">100</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">size</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.99</span>
+    
+    <span class="n">out</span> <span class="o">=</span> <span class="n">closestDirectDistance</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

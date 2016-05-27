@@ -1,0 +1,68 @@
+imgProcessor.filters package
+============================
+
+.. automodule:: imgProcessor.filters
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.filters.FourierFilter module
+-----------------------------------------
+
+.. automodule:: imgProcessor.filters.FourierFilter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.filters.edgesFromBoolImg module
+--------------------------------------------
+
+.. automodule:: imgProcessor.filters.edgesFromBoolImg
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.filters.fastNaNmedianFilter module
+-----------------------------------------------
+
+.. automodule:: imgProcessor.filters.fastNaNmedianFilter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.filters.localizedMaximum module
+--------------------------------------------
+
+.. automodule:: imgProcessor.filters.localizedMaximum
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.filters.medianThreshold module
+-------------------------------------------
+
+.. automodule:: imgProcessor.filters.medianThreshold
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.filters.removeSinglePixels module
+----------------------------------------------
+
+.. automodule:: imgProcessor.filters.removeSinglePixels
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.filters.standardDeviation module
+---------------------------------------------
+
+.. automodule:: imgProcessor.filters.standardDeviation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

@@ -1,0 +1,362 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.transform package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor package" href="imgProcessor.html"/>
+        <link rel="next" title="imgProcessor.utils package" href="imgProcessor.utils.html"/>
+        <link rel="prev" title="imgProcessor.render package" href="imgProcessor.render.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">imgProcessor.transform package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.transform.PerspectiveTransformation">imgProcessor.transform.PerspectiveTransformation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.transform.StitchImages">imgProcessor.transform.StitchImages module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.transform.alignImageAlongLine">imgProcessor.transform.alignImageAlongLine module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.transform.equalizeImage">imgProcessor.transform.equalizeImage module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.transform.imgAverage">imgProcessor.transform.imgAverage module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.transform.linearBlend">imgProcessor.transform.linearBlend module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+    <li>imgProcessor.transform package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.transform.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.transform">
+<span id="imgprocessor-transform-package"></span><h1>imgProcessor.transform package<a class="headerlink" href="#module-imgProcessor.transform" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.transform.PerspectiveTransformation">
+<span id="imgprocessor-transform-perspectivetransformation-module"></span><h2>imgProcessor.transform.PerspectiveTransformation module<a class="headerlink" href="#module-imgProcessor.transform.PerspectiveTransformation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation">
+<em class="property">class </em><code class="descclassname">imgProcessor.transform.PerspectiveTransformation.</code><code class="descname">PerspectiveTransformation</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/PerspectiveTransformation.html#PerspectiveTransformation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>fit or add an image to the first image of this display
+using perspective transformations</p>
+<dl class="method">
+<dt id="imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.addDir">
+<code class="descname">addDir</code><span class="sig-paren">(</span><em>image_dir</em>, <em>img_filter=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/PerspectiveTransformation.html#PerspectiveTransformation.addDir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.addDir" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;param image_dir -&gt; &#8216;directory&#8217; containing all images
+&#64;param img_filter -&gt; &#8216;JPG&#8217;; None-&gt;Take all images</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.addImg">
+<code class="descname">addImg</code><span class="sig-paren">(</span><em>img</em>, <em>overlap=None</em>, <em>direction='bottom'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/PerspectiveTransformation.html#PerspectiveTransformation.addImg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.addImg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.filterMatches">
+<code class="descname">filterMatches</code><span class="sig-paren">(</span><em>matches</em>, <em>ratio=0.75</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/PerspectiveTransformation.html#PerspectiveTransformation.filterMatches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.filterMatches" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.findDimensions">
+<code class="descname">findDimensions</code><span class="sig-paren">(</span><em>image</em>, <em>homography</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/PerspectiveTransformation.html#PerspectiveTransformation.findDimensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.findDimensions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.fitImg">
+<code class="descname">fitImg</code><span class="sig-paren">(</span><em>img_rgb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/PerspectiveTransformation.html#PerspectiveTransformation.fitImg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.fitImg" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit perspective and size of the input image to the base image</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.imageDistance">
+<code class="descname">imageDistance</code><span class="sig-paren">(</span><em>matches</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/PerspectiveTransformation.html#PerspectiveTransformation.imageDistance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.PerspectiveTransformation.PerspectiveTransformation.imageDistance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.transform.StitchImages">
+<span id="imgprocessor-transform-stitchimages-module"></span><h2>imgProcessor.transform.StitchImages module<a class="headerlink" href="#module-imgProcessor.transform.StitchImages" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.transform.StitchImages.StitchImages">
+<em class="property">class </em><code class="descclassname">imgProcessor.transform.StitchImages.</code><code class="descname">StitchImages</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/StitchImages.html#StitchImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.StitchImages.StitchImages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="imgProcessor.transform.StitchImages.StitchImages.addImg">
+<code class="descname">addImg</code><span class="sig-paren">(</span><em>img</em>, <em>side='bottom'</em>, <em>overlap=50</em>, <em>overlapDeviation=0</em>, <em>rotation=0</em>, <em>rotationDeviation=0</em>, <em>backgroundColor=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/StitchImages.html#StitchImages.addImg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.StitchImages.StitchImages.addImg" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;param side: &#8216;left&#8217;, &#8216;right&#8217;, &#8216;top&#8217;, &#8216;bottom&#8217;, default side is &#8216;bottom&#8217;
+&#64;param overlap: overlap guess in pixels of both images
+&#64;param overLapDeviation uncertainty of overlap -&gt; overlap in range(ov-deviation, ov+deviation)
+&#64;param rotation: max. rotational error between images
+&#64;param rotationDeviation: same as overLapDeviation, but for rotation
+&#64;param backgroundColor: if not None, treat this value as transparent within the stitching area</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imgProcessor.transform.StitchImages.StitchImages.lastParams">
+<code class="descname">lastParams</code><a class="headerlink" href="#imgProcessor.transform.StitchImages.StitchImages.lastParams" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.transform.alignImageAlongLine">
+<span id="imgprocessor-transform-alignimagealongline-module"></span><h2>imgProcessor.transform.alignImageAlongLine module<a class="headerlink" href="#module-imgProcessor.transform.alignImageAlongLine" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.transform.alignImageAlongLine.alignImageAlongLine">
+<code class="descclassname">imgProcessor.transform.alignImageAlongLine.</code><code class="descname">alignImageAlongLine</code><span class="sig-paren">(</span><em>img</em>, <em>line</em>, <em>height=15</em>, <em>length=None</em>, <em>fast=False</em>, <em>borderValue=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/alignImageAlongLine.html#alignImageAlongLine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.alignImageAlongLine.alignImageAlongLine" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a sub image aligned along given line</p>
+<p>&#64;param img -  numpy.2darray input image to get subimage from
+&#64;param line - list of 2 points [x0,y0,x1,y1])
+&#64;param height - height of output array in y
+&#64;param length - width of output array
+&#64;param fast - speed up calculation using nearest neighbour interpolation
+&#64;returns transformed image as numpy.2darray with found line as in the middle</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.transform.equalizeImage">
+<span id="imgprocessor-transform-equalizeimage-module"></span><h2>imgProcessor.transform.equalizeImage module<a class="headerlink" href="#module-imgProcessor.transform.equalizeImage" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.transform.equalizeImage.equalizeImage">
+<code class="descclassname">imgProcessor.transform.equalizeImage.</code><code class="descname">equalizeImage</code><span class="sig-paren">(</span><em>img</em>, <em>save_path=None</em>, <em>name_additive='_eqHist'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/equalizeImage.html#equalizeImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.equalizeImage.equalizeImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equalize the histogram (contrast) of an image
+works with RGB/multi-channel images
+and flat-arrays</p>
+<p>&#64;param img  - image_path or np.array
+&#64;param save_path if given output images will be saved there
+&#64;param name_additive if given this additive will be appended to output images</p>
+<p>&#64;return output images if input images are numpy.arrays and no save_path is given
+&#64;return None elsewise</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.transform.imgAverage">
+<span id="imgprocessor-transform-imgaverage-module"></span><h2>imgProcessor.transform.imgAverage module<a class="headerlink" href="#module-imgProcessor.transform.imgAverage" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.transform.imgAverage.imgAverage">
+<code class="descclassname">imgProcessor.transform.imgAverage.</code><code class="descname">imgAverage</code><span class="sig-paren">(</span><em>images</em>, <em>copy=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/imgAverage.html#imgAverage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.imgAverage.imgAverage" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns an image average</p>
+<p>works on many, also unloaded images
+minimises RAM usage</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.transform.linearBlend">
+<span id="imgprocessor-transform-linearblend-module"></span><h2>imgProcessor.transform.linearBlend module<a class="headerlink" href="#module-imgProcessor.transform.linearBlend" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.transform.linearBlend.linearBlend">
+<code class="descclassname">imgProcessor.transform.linearBlend.</code><code class="descname">linearBlend</code><span class="sig-paren">(</span><em>img1</em>, <em>img2</em>, <em>overlap</em>, <em>backgroundColor=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/transform/linearBlend.html#linearBlend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.transform.linearBlend.linearBlend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stitch 2 images vertically together.
+Smooth the overlap area of both images with a linear fade from img1 to img2</p>
+<p>&#64;param img1: numpy.2dArray
+&#64;param img2: numpy.2dArray of the same shape[1,2] as img1
+&#64;param overlap: number of pixels both images overlap
+&#64;returns: stitched-image</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.utils.html" class="btn btn-neutral float-right" title="imgProcessor.utils package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imgProcessor.render.html" class="btn btn-neutral" title="imgProcessor.render package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

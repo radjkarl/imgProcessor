@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.equations.vignetting &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.equations.vignetting</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.equations.vignetting</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="guessVignettingParam"><a class="viewcode-back" href="../../../imgProcessor.equations.html#imgProcessor.equations.vignetting.guessVignettingParam">[docs]</a><span class="k">def</span> <span class="nf">guessVignettingParam</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mf">0.7</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="vignetting"><a class="viewcode-back" href="../../../imgProcessor.equations.html#imgProcessor.equations.vignetting.vignetting">[docs]</a><span class="k">def</span> <span class="nf">vignetting</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">f</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rot</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cx</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">cy</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Vignetting equation using the KANG-WEISS-MODEL</span>
+<span class="sd">    see http://research.microsoft.com/en-us/um/people/sbkang/publications/eccv00.pdf   </span>
+<span class="sd">     </span>
+<span class="sd">    f - focal length</span>
+<span class="sd">    alpha - coefficient in the geometric vignetting factor</span>
+<span class="sd">    tilt - tilt angle of a planar scene</span>
+<span class="sd">    rot - rotation angle of a planar scene</span>
+<span class="sd">    cx - image center, x</span>
+<span class="sd">    cy - image center, y</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c">#distance to image center:</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">cx</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span><span class="o">-</span><span class="n">cy</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+    
+    <span class="c">#OFF_AXIS ILLUMINATION FACTOR:</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="n">dist</span><span class="o">/</span><span class="n">f</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="c">#GEOMETRIC FACTOR:</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="o">*</span><span class="n">dist</span><span class="p">)</span>
+    <span class="c">#TILT FACTOR:</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">tiltFactor</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">f</span><span class="p">,</span> <span class="n">tilt</span><span class="p">,</span> <span class="n">rot</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">A</span><span class="o">*</span><span class="n">G</span><span class="o">*</span><span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="tiltFactor"><a class="viewcode-back" href="../../../imgProcessor.equations.html#imgProcessor.equations.vignetting.tiltFactor">[docs]</a><span class="k">def</span> <span class="nf">tiltFactor</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">f</span><span class="p">,</span> <span class="n">tilt</span><span class="p">,</span> <span class="n">rot</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    this function is extra to only cover vignetting through perspective distortion</span>
+<span class="sd">    </span>
+<span class="sd">    f - focal length</span>
+<span class="sd">    tau - tilt angle of a planar scene</span>
+<span class="sd">    Xi - rotation angle of a planar scene</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">tilt</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">tilt</span><span class="p">)</span><span class="o">/</span><span class="n">f</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rot</span><span class="p">)</span><span class="o">-</span><span class="n">y</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rot</span><span class="p">))</span> <span class="p">)</span><span class="o">**</span><span class="mi">3</span></div>
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+        
+    <span class="n">param</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;cx&#39;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> 
+             <span class="s">&#39;cy&#39;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span>
+             <span class="s">&#39;tilt&#39;</span><span class="p">:</span><span class="o">-</span><span class="mf">0.5</span><span class="p">}</span>
+    <span class="n">vig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfunction</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="n">vignetting</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="o">**</span><span class="n">param</span><span class="p">),</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">150</span><span class="p">))</span>
+    
+
+
+    <span class="n">param</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;f&#39;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span>
+             <span class="s">&#39;rot&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span>
+             <span class="s">&#39;tilt&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">}</span>
+    <span class="n">tilt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfunction</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="n">tiltFactor</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="o">**</span><span class="n">param</span><span class="p">),</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">150</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="s">&#39;no_window&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;vignetting&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">vig</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;tilt factor only&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">tilt</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

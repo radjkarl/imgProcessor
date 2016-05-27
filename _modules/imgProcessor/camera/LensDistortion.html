@@ -1,0 +1,609 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.camera.LensDistortion &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.camera.LensDistortion</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.camera.LensDistortion</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="c">#own</span>
+<span class="kn">import</span> <span class="nn">imgProcessor</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.exceptions</span> <span class="kn">import</span> <span class="n">NothingFound</span><span class="p">,</span> <span class="n">EnoughImages</span>
+
+
+
+<div class="viewcode-block" id="LensDistortion"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion">[docs]</a><span class="k">class</span> <span class="nc">LensDistortion</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    class for detecting and correcting the lens distortion within images</span>
+<span class="sd">    </span>
+<span class="sd">    based on:</span>
+<span class="sd">    http://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">ftype</span> <span class="o">=</span> <span class="s">&#39;npz&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coeffs</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="c">#SAVED CALIBRATION RESULTS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span> <span class="o">=</span> <span class="n">coeffs</span>
+        <span class="c">#SAVED CALIBRATION SETTINGS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapy</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+
+<div class="viewcode-block" id="LensDistortion.calibrate"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.calibrate">[docs]</a>    <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">board_size</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;Chessboard&#39;</span><span class="p">,</span> <span class="n">images</span><span class="o">=</span><span class="p">[],</span> 
+                        <span class="n">max_images</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">sensorSize_mm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">detect_sensible</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        sensorSize_mm - (width, height) [mm] Physical size of the sensor</span>
+<span class="sd">        &#39;&#39;&#39;</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;foundPattern&#39;</span><span class="p">:[],</span><span class="c">#whether pattern could be found for image</span>
+                     <span class="s">&#39;size&#39;</span><span class="p">:</span><span class="n">board_size</span><span class="p">,</span>
+                     <span class="s">&#39;imgs&#39;</span><span class="p">:[],</span> <span class="c">#list of either npArrsays or img paths</span>
+                     <span class="s">&#39;imgPoints&#39;</span><span class="p">:[]</span> <span class="c"># list or 2d coords. of found pattern features (e.g. chessboard corners)</span>
+                     <span class="p">}</span>
+                                      
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_detect_sensible</span> <span class="o">=</span> <span class="n">detect_sensible</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Chessboard&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_findChessboard</span><span class="p">,</span>
+                       <span class="s">&#39;Symmetric circles&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_findSymmetricCircles</span><span class="p">,</span> 
+                       <span class="s">&#39;Asymmetric circles&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_findAsymmetricCircles</span><span class="p">,</span>
+                       <span class="s">&#39;Manual&#39;</span><span class="p">:</span><span class="bp">None</span>
+                       <span class="c">#TODO: &#39;Image grid&#39;:FindGridInImage</span>
+                       <span class="p">}[</span><span class="n">method</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_images</span> <span class="o">=</span> <span class="n">max_images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">findCount</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apertureSize</span> <span class="o">=</span> <span class="n">sensorSize_mm</span>
+        
+        <span class="n">s0</span><span class="p">,</span><span class="n">s1</span> <span class="o">=</span> <span class="n">board_size</span>
+        <span class="c"># prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">objp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">s0</span><span class="o">*</span><span class="n">s1</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="c">#reshape 3-D matrix as 2-D</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">objp</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">s0</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">s1</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;Asymmetric circles&#39;</span><span class="p">:</span>
+            <span class="c">#this pattern have its points (every 2. row) displaced, so:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">objp</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">%</span><span class="mi">2</span><span class="o">==</span><span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">objp</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">*=</span><span class="mi">2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">objp</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">+=</span><span class="mi">1</span>
+        
+        <span class="c"># Arrays to store object points and image points from all the images.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">objpoints</span> <span class="o">=</span> <span class="p">[]</span> <span class="c"># 3d point in real world space</span>
+        <span class="c">#self.imgpoints = [] # 2d points in image plane.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapy</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        
+        <span class="c">#from matplotlib import pyplot as plt</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;working on image </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">addImg</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;OK&#39;</span><span class="p">)</span></div>
+        
+        
+<div class="viewcode-block" id="LensDistortion.addPoints"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.addPoints">[docs]</a>    <span class="k">def</span> <span class="nf">addPoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        add corner points directly instead of extracting them from </span>
+<span class="sd">        image</span>
+<span class="sd">        points = ( (0,1), (...),... ) [x,y]</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;foundPattern&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">findCount</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">objpoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objp</span><span class="p">)</span>
+        <span class="n">s0</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;imgPoints&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">points</span>
+                                                 <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">s0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span>
+                                                 <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span> </div>
+<div class="viewcode-block" id="LensDistortion.setImgShape"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.setImgShape">[docs]</a>    <span class="k">def</span> <span class="nf">setImgShape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        image shape must be known for calculating camera matrix</span>
+<span class="sd">        if method==Manual and addPoints is used instead of addImg</span>
+<span class="sd">        this method must be called before .coeffs are obtained</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="s">&#39;Dummy&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nb">object</span><span class="p">,),</span> <span class="p">{})</span> 
+        <span class="k">if</span> <span class="n">imgProcessor</span><span class="o">.</span><span class="n">ARRAYS_ORDER_IS_XY</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span></div>
+
+   
+<div class="viewcode-block" id="LensDistortion.addImgStream"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.addImgStream">[docs]</a>    <span class="k">def</span> <span class="nf">addImgStream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        add images using a continous stream </span>
+<span class="sd">        - stop when max number of images is reached</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">findCount</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_images</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EnoughImages</span><span class="p">(</span><span class="s">&#39;have enough images&#39;</span><span class="p">)</span> 
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">addImg</span><span class="p">(</span><span class="n">img</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LensDistortion.addImg"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.addImg">[docs]</a>    <span class="k">def</span> <span class="nf">addImg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        add one chessboard image for detection lens distortion</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c">#self.opts[&#39;imgs&#39;].append(img)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="s">&#39;gray&#39;</span><span class="p">,</span> <span class="s">&#39;uint8&#39;</span><span class="p">)</span>
+
+        <span class="n">didFindCorners</span><span class="p">,</span> <span class="n">corners</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;foundPattern&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">didFindCorners</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">didFindCorners</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">findCount</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">objpoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;imgPoints&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">corners</span><span class="p">)</span> 
+        <span class="k">return</span> <span class="n">didFindCorners</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_findChessboard</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Find the chess board corners</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CALIB_CB_FAST_CHECK</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_sensible</span><span class="p">:</span>
+            <span class="n">flags</span> <span class="o">=</span> <span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CALIB_CB_FAST_CHECK</span> <span class="o">|</span>
+                     <span class="n">cv2</span><span class="o">.</span><span class="n">CALIB_CB_ADAPTIVE_THRESH</span> <span class="o">|</span>
+                     <span class="n">cv2</span><span class="o">.</span><span class="n">CALIB_CB_FILTER_QUADS</span> <span class="o">|</span>
+                     <span class="n">cv2</span><span class="o">.</span><span class="n">CALIB_CB_NORMALIZE_IMAGE</span> <span class="p">)</span>
+            
+        <span class="p">(</span><span class="n">didFindCorners</span><span class="p">,</span> <span class="n">corners</span><span class="p">)</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findChessboardCorners</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;size&#39;</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">flags</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="n">didFindCorners</span><span class="p">:</span>
+            <span class="c">#further refine corners, corners is updatd in place</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">cornerSubPix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">,</span><span class="n">corners</span><span class="p">,(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> 
+                             <span class="c"># termination criteria for corner estimation for chessboard method</span>
+                             <span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">TERM_CRITERIA_EPS</span> <span class="o">+</span> <span class="n">cv2</span><span class="o">.</span><span class="n">TERM_CRITERIA_MAX_ITER</span><span class="p">,</span> 
+                              <span class="mi">30</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">)</span>
+                            <span class="p">)</span> <span class="c"># returns None</span>
+        <span class="k">return</span> <span class="n">didFindCorners</span><span class="p">,</span> <span class="n">corners</span>
+
+
+    <span class="k">def</span> <span class="nf">_findAsymmetricCircles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_findSymmetricCircles</span><span class="p">(</span><span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">CALIB_CB_ASYMMETRIC_GRID</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">_findSymmetricCircles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">CALIB_CB_SYMMETRIC_GRID</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">didFindCorners</span><span class="p">,</span> <span class="n">corners</span><span class="p">)</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findCirclesGridDefault</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;size&#39;</span><span class="p">],</span> 
+                <span class="n">flags</span><span class="o">=</span><span class="n">flags</span><span class="o">|</span><span class="n">cv2</span><span class="o">.</span><span class="n">CALIB_CB_CLUSTERING</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">didFindCorners</span><span class="p">,</span> <span class="n">corners</span>
+
+
+<div class="viewcode-block" id="LensDistortion.getCoeffStr"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.getCoeffStr">[docs]</a>    <span class="k">def</span> <span class="nf">getCoeffStr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        get the distortion coeffs in a formated string </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">txt</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> = </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">txt</span></div>
+
+
+<div class="viewcode-block" id="LensDistortion.drawChessboard"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.drawChessboard">[docs]</a>    <span class="k">def</span> <span class="nf">drawChessboard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        draw a grid fitting to the last added image </span>
+<span class="sd">        on this one or an extra image</span>
+<span class="sd">        img == None</span>
+<span class="sd">            ==False -&gt; draw chessbord on empty image</span>
+<span class="sd">            ==img</span>
+<span class="sd">        &#39;&#39;&#39;</span> 
+        <span class="k">if</span> <span class="n">img</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="o">==</span> <span class="nb">bool</span> <span class="ow">and</span> <span class="n">img</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;uint8&#39;</span><span class="p">)</span>
+        <span class="n">gray</span> <span class="o">=</span> <span class="bp">False</span>  
+        <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">gray</span><span class="o">=</span><span class="bp">True</span>
+            <span class="c">#need a color 8 bit image</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_GRAY2BGR</span><span class="p">)</span>
+        <span class="c"># Draw and display the corners</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">drawChessboardCorners</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;size&#39;</span><span class="p">],</span> 
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;imgPoints&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> 
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;foundPattern&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">gray</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span> 
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">findCount</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NothingFound</span><span class="p">(</span><span class="s">&#39;can create camera calibration because no corners have been found&#39;</span><span class="p">)</span>
+            
+            <span class="c">#http://en.wikipedia.org/wiki/Reprojection_error</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">reprojectionError</span><span class="p">,</span> <span class="n">cameraMatrix</span><span class="p">,</span> <span class="n">distortionCoeffs</span><span class="p">,</span> 
+                 <span class="n">rotationVecs</span><span class="p">,</span> <span class="n">translationVecs</span><span class="p">)</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">calibrateCamera</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">objpoints</span><span class="p">,</span> 
+                            <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;imgPoints&#39;</span><span class="p">],</span> 
+                            <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;reprojectionError=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">reprojectionError</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NothingFound</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([</span>
+                    <span class="p">(</span><span class="s">&#39;reprojectionError&#39;</span><span class="p">,</span><span class="n">reprojectionError</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;apertureSize&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">apertureSize</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;cameraMatrix&#39;</span><span class="p">,</span><span class="n">cameraMatrix</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;distortionCoeffs&#39;</span><span class="p">,</span><span class="n">distortionCoeffs</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;shape&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+                    <span class="c">#(&#39;rotationVecs&#39;,rotationVecs),</span>
+                    <span class="c">#(&#39;translationVecs&#39;,translationVecs),</span>
+                    <span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">apertureSize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">fovx</span><span class="p">,</span> <span class="n">fovy</span><span class="p">,</span> <span class="n">focalLength</span><span class="p">,</span> <span class="n">principalPoint</span><span class="p">,</span> 
+                 <span class="n">aspectRatio</span><span class="p">)</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">calibrationMatrixValues</span><span class="p">(</span>
+                        <span class="n">cameraMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">apertureSize</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">([</span>
+                    <span class="p">(</span><span class="s">&#39;fovx&#39;</span><span class="p">,</span><span class="n">fovx</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;fovy&#39;</span><span class="p">,</span><span class="n">fovy</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;focalLength&#39;</span><span class="p">,</span><span class="n">focalLength</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;principalPoint&#39;</span><span class="p">,</span><span class="n">principalPoint</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s">&#39;aspectRatio&#39;</span><span class="p">,</span><span class="n">aspectRatio</span><span class="p">)])</span> 
+                    <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span>
+    
+    
+    <span class="nd">@coeffs.setter</span>
+    <span class="k">def</span> <span class="nf">coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span> <span class="o">=</span> <span class="n">c</span>
+
+
+<div class="viewcode-block" id="LensDistortion.writeToFile"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.writeToFile">[docs]</a>    <span class="k">def</span> <span class="nf">writeToFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">saveOpts</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        write the distortion coeffs to file</span>
+<span class="sd">        saveOpts --&gt; Whether so save calibration options (and not just results)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">ftype</span><span class="p">):</span>
+                <span class="n">filename</span> <span class="o">+=</span> <span class="s">&#39;.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">ftype</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;coeffs&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">saveOpts</span><span class="p">:</span>
+                <span class="n">s</span><span class="p">[</span><span class="s">&#39;opts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span>
+<span class="c">#             else:</span>
+<span class="c">#                 s[&#39;opts&#39;:{}]</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">filename</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;need to calibrate camera before calibration can be saved to file&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LensDistortion.readFromFile"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.readFromFile">[docs]</a>    <span class="k">def</span> <span class="nf">readFromFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        read the distortion coeffs from file</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="s">&#39;coeffs&#39;</span><span class="p">][()]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opts</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="s">&#39;opts&#39;</span><span class="p">][()]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span></div>
+
+
+
+<div class="viewcode-block" id="LensDistortion.undistortPoints"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.undistortPoints">[docs]</a>    <span class="k">def</span> <span class="nf">undistortPoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">cam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;cameraMatrix&#39;</span><span class="p">]</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;distortionCoeffs&#39;</span><span class="p">]</span>
+ 
+        <span class="p">(</span><span class="n">newCameraMatrix</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getOptimalNewCameraMatrix</span><span class="p">(</span><span class="n">cam</span><span class="p">,</span> 
+                                    <span class="n">d</span><span class="p">,</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mi">1</span><span class="p">,</span> 
+                                    <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">undistortPoints</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">cam</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="n">newCameraMatrix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LensDistortion.correct"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.correct">[docs]</a>    <span class="k">def</span> <span class="nf">correct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">keepSize</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span> 
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        remove lens distortion from given image</span>
+<span class="sd">        &#39;&#39;&#39;</span> 
+        <span class="n">image</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">w</span><span class="p">)</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">mapx</span><span class="p">,</span> <span class="n">mapy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUndistortRectifyMap</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="n">h</span><span class="p">)</span>
+   
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">remap</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mapx</span><span class="p">,</span> <span class="n">mapy</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LINEAR</span><span class="p">,</span> 
+                             <span class="n">borderMode</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">BORDER_TRANSPARENT</span>
+                            <span class="c">#borderValue=np.nan</span>
+                             <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">keepSize</span><span class="p">:</span>
+            <span class="n">xx</span><span class="p">,</span><span class="n">yy</span><span class="p">,</span><span class="n">ww</span><span class="p">,</span><span class="n">hh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">[</span><span class="n">yy</span> <span class="p">:</span> <span class="n">yy</span><span class="o">+</span><span class="n">hh</span><span class="p">,</span> <span class="n">xx</span> <span class="p">:</span> <span class="n">xx</span><span class="o">+</span><span class="n">ww</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="LensDistortion.distortImage"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.distortImage">[docs]</a>    <span class="k">def</span> <span class="nf">distortImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        opposite of &#39;correct&#39;</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">imgHeight</span><span class="p">,</span> <span class="n">imgWidth</span><span class="p">)</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">mapx</span><span class="p">,</span> <span class="n">mapy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDistortRectifyMap</span><span class="p">(</span><span class="n">imgWidth</span><span class="p">,</span> <span class="n">imgHeight</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">remap</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mapx</span><span class="p">,</span> <span class="n">mapy</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LINEAR</span><span class="p">,</span> <span class="n">borderValue</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span></div>
+                
+
+<div class="viewcode-block" id="LensDistortion.getUndistortRectifyMap"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.getUndistortRectifyMap">[docs]</a>    <span class="k">def</span> <span class="nf">getUndistortRectifyMap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imgWidth</span><span class="p">,</span> <span class="n">imgHeight</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapx</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">imgHeight</span><span class="p">,</span> <span class="n">imgWidth</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapy</span>
+        
+        <span class="n">cam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;cameraMatrix&#39;</span><span class="p">]</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;distortionCoeffs&#39;</span><span class="p">]</span>
+ 
+        <span class="p">(</span><span class="n">newCameraMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getOptimalNewCameraMatrix</span><span class="p">(</span><span class="n">cam</span><span class="p">,</span> 
+                                    <span class="n">d</span><span class="p">,</span> <span class="p">(</span><span class="n">imgWidth</span><span class="p">,</span> <span class="n">imgHeight</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> 
+                                    <span class="p">(</span><span class="n">imgWidth</span><span class="p">,</span> <span class="n">imgHeight</span><span class="p">))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapy</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">initUndistortRectifyMap</span><span class="p">(</span><span class="n">cam</span><span class="p">,</span> 
+                                    <span class="n">d</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">newCameraMatrix</span><span class="p">,</span> 
+                                    <span class="p">(</span><span class="n">imgWidth</span><span class="p">,</span> <span class="n">imgHeight</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CV_32FC1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapy</span></div>
+
+
+<div class="viewcode-block" id="LensDistortion.getCameraParams"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.getCameraParams">[docs]</a>    <span class="k">def</span> <span class="nf">getCameraParams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        value positions based on http://docs.opencv.org/modules/imgproc/doc/geometric_transformations.html#cv.InitUndistortRectifyMap</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;cameraMatrix&#39;</span><span class="p">]</span>
+        <span class="n">fx</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fy</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">cx</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">cy</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">k3</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;distortionCoeffs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">k3</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span>  <span class="n">p2</span></div>
+ 
+ 
+<div class="viewcode-block" id="LensDistortion.setCameraParams"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.setCameraParams">[docs]</a>    <span class="k">def</span> <span class="nf">setCameraParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">k3</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span><span class="p">[</span><span class="s">&#39;cameraMatrix&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">fx</span>
+        <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">fy</span>
+        <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">cx</span>
+        <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">cy</span>
+        <span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span><span class="p">[</span><span class="s">&#39;distortionCoeffs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">k3</span><span class="p">]])</span></div>
+ 
+    
+<div class="viewcode-block" id="LensDistortion.getDistortRectifyMap"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.getDistortRectifyMap">[docs]</a>    <span class="k">def</span> <span class="nf">getDistortRectifyMap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sizex</span><span class="p">,</span> <span class="n">sizey</span><span class="p">):</span>
+        <span class="n">posy</span><span class="p">,</span> <span class="n">posx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">sizey</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">sizex</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">mapx</span><span class="p">,</span> <span class="n">mapy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUndistortRectifyMap</span><span class="p">(</span><span class="n">sizex</span><span class="p">,</span> <span class="n">sizey</span><span class="p">)</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">posx</span><span class="o">-</span><span class="n">mapx</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">posy</span><span class="o">-</span><span class="n">mapy</span>
+        <span class="n">posx</span> <span class="o">+=</span> <span class="n">dx</span>
+        <span class="n">posy</span> <span class="o">+=</span> <span class="n">dy</span>
+        <span class="k">return</span> <span class="n">posx</span><span class="p">,</span> <span class="n">posy</span></div>
+ 
+ 
+<div class="viewcode-block" id="LensDistortion.getDeflection"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.getDeflection">[docs]</a>    <span class="k">def</span> <span class="nf">getDeflection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+        <span class="n">mapx</span><span class="p">,</span> <span class="n">mapy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUndistortRectifyMap</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+        <span class="n">ux</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">mapx</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">uy</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">mapy</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">ux</span><span class="p">[</span><span class="n">ux</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+        <span class="n">uy</span><span class="p">[</span><span class="n">uy</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">return</span> <span class="n">ux</span><span class="p">,</span><span class="n">uy</span></div>
+
+
+<div class="viewcode-block" id="LensDistortion.standardUncertainties"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.LensDistortion.LensDistortion.standardUncertainties">[docs]</a>    <span class="k">def</span> <span class="nf">standardUncertainties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        returns a list of standard uncertainties for the x and y component:</span>
+<span class="sd">        (1x,2x), (1y, 2y), (intensity:None)</span>
+<span class="sd">        1. px-size-changes(due to deflection)</span>
+<span class="sd">        2. reprojection error</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;shape&#39;</span><span class="p">]</span>
+        <span class="n">ux</span><span class="p">,</span><span class="n">uy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDeflection</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;reprojectionError&#39;</span><span class="p">]</span><span class="c">#is RMSE of imgPoint-projectedPoints</span>
+        <span class="c">#transform to standard uncertainty</span>
+        <span class="c">#we assume rectangular distribution:</span>
+        <span class="n">ux</span> <span class="o">=</span> <span class="n">ux</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">3</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">uy</span> <span class="o">=</span> <span class="n">uy</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">3</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">ux</span><span class="p">,</span><span class="n">r</span><span class="p">),</span> <span class="p">(</span><span class="n">uy</span><span class="p">,</span><span class="n">r</span><span class="p">),</span> <span class="p">()</span></div></div>
+ 
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">fancytools.os.PathStr</span> <span class="kn">import</span> <span class="n">PathStr</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    
+    <span class="n">folder</span> <span class="o">=</span> <span class="n">PathStr</span><span class="p">(</span><span class="n">imgProcessor</span><span class="o">.</span><span class="n">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">dirname</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="s">&#39;media&#39;</span><span class="p">,</span> <span class="s">&#39;lens_distortion&#39;</span><span class="p">)</span>
+    <span class="n">imgs</span> <span class="o">=</span> <span class="n">folder</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    
+    <span class="n">l</span> <span class="o">=</span> <span class="n">LensDistortion</span><span class="p">()</span>
+    <span class="n">l</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="n">board_size</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">11</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;Asymmetric circles&#39;</span><span class="p">,</span> 
+                <span class="n">images</span><span class="o">=</span><span class="n">imgs</span><span class="p">,</span> <span class="n">sensorSize_mm</span><span class="o">=</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="mf">13.5</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">print</span> <span class="n">l</span><span class="o">.</span><span class="n">getCoeffStr</span><span class="p">()</span>
+    
+    <span class="n">img</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">drawChessboard</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="s">&#39;no_window&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s">&#39;chessboard&#39;</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

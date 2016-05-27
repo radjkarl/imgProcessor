@@ -1,0 +1,427 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.scaleSignal &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.scaleSignal</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.scaleSignal</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.FitHistogramPeaks</span> <span class="kn">import</span> <span class="n">FitHistogramPeaks</span>
+
+
+
+<div class="viewcode-block" id="scaleSignal"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.scaleSignal">[docs]</a><span class="k">def</span> <span class="nf">scaleSignal</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">fitParams</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">backgroundToZero</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    scale the image between...</span>
+<span class="sd">    </span>
+<span class="sd">    backgroundToZero=True -&gt; 0 (average background) and 1 (maximum signal)</span>
+<span class="sd">    backgroundToZero=False -&gt; signal+-3std</span>
+<span class="sd">    </span>
+<span class="sd">    reference -&gt; reference image -- scale image to fit this one</span>
+<span class="sd">    </span>
+<span class="sd">    returns:</span>
+<span class="sd">    scaled image</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reference</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> 
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">signalRange</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">fitParams</span><span class="p">)</span>
+        <span class="n">low2</span><span class="p">,</span> <span class="n">high2</span> <span class="o">=</span> <span class="n">signalRange</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">ampl</span> <span class="o">=</span> <span class="p">(</span><span class="n">high2</span><span class="o">-</span><span class="n">low2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">high</span><span class="o">-</span><span class="n">low</span><span class="p">)</span>
+        <span class="n">img</span><span class="o">-=</span><span class="n">low</span>
+        <span class="n">img</span> <span class="o">*=</span> <span class="n">ampl</span>
+        <span class="n">img</span> <span class="o">+=</span> <span class="n">low2</span>
+        <span class="k">return</span> <span class="n">img</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">offs</span><span class="p">,</span> <span class="n">div</span> <span class="o">=</span> <span class="n">scaleParams</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">fitParams</span><span class="p">,</span> <span class="n">backgroundToZero</span><span class="p">)</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>  <span class="o">-</span> <span class="n">offs</span> 
+        <span class="n">img</span> <span class="o">/=</span> <span class="n">div</span> 
+        <span class="k">print</span> <span class="s">&#39;offset: </span><span class="si">%s</span><span class="s">, divident: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">offs</span><span class="p">,</span> <span class="n">div</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="getBackgroundRange"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.getBackgroundRange">[docs]</a><span class="k">def</span> <span class="nf">getBackgroundRange</span><span class="p">(</span><span class="n">fitParams</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    return minimum, average, maximum of the background peak</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">smn</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">getSignalParameters</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span>
+    
+    <span class="n">bg</span> <span class="o">=</span> <span class="n">fitParams</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">avg</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">bg</span>
+    <span class="n">bgmn</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">avg</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">std</span><span class="p">)</span> 
+    
+    <span class="k">if</span> <span class="n">avg</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">std</span> <span class="o">&lt;</span> <span class="n">smn</span><span class="p">:</span>
+        <span class="n">bgmx</span> <span class="o">=</span> <span class="n">avg</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">std</span>  
+    <span class="k">if</span> <span class="n">avg</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">std</span> <span class="o">&lt;</span> <span class="n">smn</span><span class="p">:</span>
+        <span class="n">bgmx</span> <span class="o">=</span> <span class="n">avg</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">std</span>  
+    <span class="k">if</span> <span class="n">avg</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">std</span> <span class="o">&lt;</span> <span class="n">smn</span><span class="p">:</span>
+        <span class="n">bgmx</span> <span class="o">=</span> <span class="n">avg</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">std</span>  
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bgmx</span> <span class="o">=</span> <span class="n">avg</span><span class="o">+</span><span class="n">std</span>  
+    <span class="k">return</span> <span class="n">bgmn</span><span class="p">,</span> <span class="n">avg</span><span class="p">,</span> <span class="n">bgmx</span></div>
+
+
+<div class="viewcode-block" id="hasBackground"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.hasBackground">[docs]</a><span class="k">def</span> <span class="nf">hasBackground</span><span class="p">(</span><span class="n">fitParams</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    compare the height of putative bg and signal peak</span>
+<span class="sd">    if ratio if too height assume there is no background</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">signal</span><span class="o">=</span> <span class="n">getSignalPeak</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span>
+    <span class="n">bg</span> <span class="o">=</span> <span class="n">getBackgroundPeak</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">signal</span> <span class="o">==</span> <span class="n">bg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">signal</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">bg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">r</span>
+    <span class="k">return</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="mi">100</span></div>
+
+
+<div class="viewcode-block" id="signalMinimum"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.signalMinimum">[docs]</a><span class="k">def</span>  <span class="nf">signalMinimum</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">fitParams</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n_std</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">fitParams</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fitParams</span> <span class="o">=</span> <span class="n">FitHistogramPeaks</span><span class="p">(</span><span class="n">img</span><span class="p">)</span><span class="o">.</span><span class="n">fitParams</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;need 2 peaks so get minimum signal&#39;</span>
+
+    <span class="n">i</span><span class="o">=</span> <span class="n">signalPeakIndex</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span>
+    <span class="n">signal</span> <span class="o">=</span> <span class="n">fitParams</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">bg</span> <span class="o">=</span> <span class="n">getBackgroundPeak</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span>
+    <span class="n">smn</span> <span class="o">=</span> <span class="n">signal</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">n_std</span><span class="o">*</span><span class="n">signal</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">bmx</span> <span class="o">=</span> <span class="n">bg</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">n_std</span><span class="o">*</span><span class="n">bg</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">smn</span> <span class="o">&gt;</span> <span class="n">bmx</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">smn</span>
+    <span class="c">#peaks are overlapping</span>
+    <span class="c">#define signal min. as intersection between both Gaussians</span>
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+        <span class="n">s1</span><span class="p">,</span><span class="n">m1</span><span class="p">,</span><span class="n">std1</span> <span class="o">=</span> <span class="n">p1</span>
+        <span class="n">s2</span><span class="p">,</span><span class="n">m2</span><span class="p">,</span><span class="n">std2</span> <span class="o">=</span> <span class="n">p2</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">std1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">std2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">m2</span><span class="o">/</span><span class="p">(</span><span class="n">std2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">m1</span><span class="o">/</span><span class="p">(</span><span class="n">std1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">m1</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">std1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">m2</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">std2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="n">std2</span><span class="o">*</span><span class="n">s1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">std1</span><span class="o">*</span><span class="n">s2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">([</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">])</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">bg</span><span class="p">,</span> <span class="n">signal</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">i</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">i</span><span class="o">&gt;</span><span class="n">bg</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">signal</span><span class="p">[</span><span class="mi">1</span><span class="p">])][</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="getSignalMinimum"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.getSignalMinimum">[docs]</a><span class="k">def</span> <span class="nf">getSignalMinimum</span><span class="p">(</span><span class="n">fitParams</span><span class="p">,</span> <span class="n">n_std</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;need 2 peaks so get minimum signal&#39;</span>
+
+    <span class="n">i</span><span class="o">=</span> <span class="n">signalPeakIndex</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span>
+    <span class="n">signal</span> <span class="o">=</span> <span class="n">fitParams</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">bg</span> <span class="o">=</span> <span class="n">fitParams</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c">#bg = getBackgroundPeak(fitParams)</span>
+    <span class="n">smn</span> <span class="o">=</span> <span class="n">signal</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">n_std</span><span class="o">*</span><span class="n">signal</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">bmx</span> <span class="o">=</span> <span class="n">bg</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">n_std</span><span class="o">*</span><span class="n">bg</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">smn</span> <span class="o">&gt;</span> <span class="n">bmx</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">smn</span>
+    <span class="c">#peaks are overlapping</span>
+    <span class="c">#define signal min. as intersection between both Gaussians</span>
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+        <span class="n">s1</span><span class="p">,</span><span class="n">m1</span><span class="p">,</span><span class="n">std1</span> <span class="o">=</span> <span class="n">p1</span>
+        <span class="n">s2</span><span class="p">,</span><span class="n">m2</span><span class="p">,</span><span class="n">std2</span> <span class="o">=</span> <span class="n">p2</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">std1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">std2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">m2</span><span class="o">/</span><span class="p">(</span><span class="n">std2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">m1</span><span class="o">/</span><span class="p">(</span><span class="n">std1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">m1</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">std1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">m2</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">std2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="n">std2</span><span class="o">*</span><span class="n">s1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">std1</span><span class="o">*</span><span class="n">s2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">([</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">])</span>
+    
+    <span class="n">i</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">bg</span><span class="p">,</span> <span class="n">signal</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">i</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">i</span><span class="o">&gt;</span><span class="n">bg</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">signal</span><span class="p">[</span><span class="mi">1</span><span class="p">])][</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="getSignalParameters"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.getSignalParameters">[docs]</a><span class="k">def</span> <span class="nf">getSignalParameters</span><span class="p">(</span><span class="n">fitParams</span><span class="p">,</span> <span class="n">n_std</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    return minimum, average, maximum of the signal peak</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">signal</span><span class="o">=</span> <span class="n">getSignalPeak</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span>
+    <span class="n">mx</span> <span class="o">=</span> <span class="n">signal</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">n_std</span><span class="o">*</span><span class="n">signal</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">mn</span> <span class="o">=</span> <span class="n">signal</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">n_std</span><span class="o">*</span><span class="n">signal</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">mn</span> <span class="o">&lt;</span> <span class="n">fitParams</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">mn</span> <span class="o">=</span> <span class="n">fitParams</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="c">#set to bg</span>
+    <span class="k">return</span> <span class="n">mn</span><span class="p">,</span> <span class="n">signal</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mx</span></div>
+
+
+<div class="viewcode-block" id="signalRange"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.signalRange">[docs]</a><span class="k">def</span> <span class="nf">signalRange</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">fitParams</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nSigma</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fitParams</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fitParams</span> <span class="o">=</span> <span class="n">FitHistogramPeaks</span><span class="p">(</span><span class="n">img</span><span class="p">)</span><span class="o">.</span><span class="n">fitParams</span>
+        <span class="n">signPeak</span> <span class="o">=</span> <span class="n">getSignalPeak</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">signPeak</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">nSigma</span><span class="o">*</span><span class="n">signPeak</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">signPeak</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">nSigma</span><span class="o">*</span><span class="n">signPeak</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">e</span>
+        <span class="c">#in case peaks were not found:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">m</span><span class="o">-</span><span class="n">nSigma</span><span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="n">m</span><span class="o">+</span><span class="n">nSigma</span><span class="o">*</span><span class="n">s</span></div>
+
+
+<div class="viewcode-block" id="scaleParamsFromReference"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.scaleParamsFromReference">[docs]</a><span class="k">def</span> <span class="nf">scaleParamsFromReference</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+    <span class="c">#saving startup time:</span>
+    <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span>
+    
+    <span class="k">def</span> <span class="nf">ff</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="s">&#39;gray&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">300000</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[::</span><span class="mi">10</span><span class="p">,::</span><span class="mi">10</span><span class="p">]</span>        
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">m</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">s</span><span class="p">,</span><span class="n">m</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">s</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">5</span>
+        <span class="k">return</span> <span class="n">arr</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span><span class="n">b</span>
+
+    <span class="n">img</span><span class="p">,</span> <span class="n">imgr</span><span class="p">,</span> <span class="n">imgb</span> <span class="o">=</span> <span class="n">ff</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> 
+    <span class="n">reference</span><span class="p">,</span> <span class="n">refr</span><span class="p">,</span> <span class="n">refb</span> <span class="o">=</span> <span class="n">ff</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span> 
+ 
+    <span class="n">nbins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="nb">max</span><span class="p">(</span><span class="n">imgb</span><span class="p">,</span> <span class="n">refb</span><span class="p">),</span><span class="mi">50</span><span class="p">)</span>
+
+    <span class="n">refh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">nbins</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">refr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">imgh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">nbins</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">imgr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">refh</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">imgh</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">offs</span><span class="p">,</span> <span class="n">div</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">offs</span><span class="p">)</span><span class="o">/</span><span class="n">div</span>
+    
+    <span class="n">params</span><span class="p">,</span> <span class="n">fitCovariances</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">refh</span><span class="p">,</span> <span class="n">imgh</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> 
+    <span class="n">perr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">fitCovariances</span><span class="p">))</span>
+    <span class="k">print</span> <span class="s">&#39;error scaling to reference image: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">perr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c">#if perr[0] &lt; 0.1:</span>
+    <span class="k">return</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  </div>
+
+
+<div class="viewcode-block" id="scaleParams"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.scaleParams">[docs]</a><span class="k">def</span> <span class="nf">scaleParams</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">fitParams</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">backgroundToZero</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">signalRange</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">fitParams</span><span class="p">)</span>
+    <span class="n">offs</span> <span class="o">=</span> <span class="n">low</span>
+    <span class="n">div</span> <span class="o">=</span> <span class="n">high</span><span class="o">-</span><span class="n">low</span>
+    
+    <span class="k">return</span> <span class="n">offs</span><span class="p">,</span> <span class="n">div</span></div>
+
+
+<div class="viewcode-block" id="getBackgroundPeak"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.getBackgroundPeak">[docs]</a><span class="k">def</span> <span class="nf">getBackgroundPeak</span><span class="p">(</span><span class="n">fitParams</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">fitParams</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="getSignalPeak"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.getSignalPeak">[docs]</a><span class="k">def</span> <span class="nf">getSignalPeak</span><span class="p">(</span><span class="n">fitParams</span><span class="p">):</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">signalPeakIndex</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fitParams</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="signalPeakIndex"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.scaleSignal.signalPeakIndex">[docs]</a><span class="k">def</span> <span class="nf">signalPeakIndex</span><span class="p">(</span><span class="n">fitParams</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fitParams</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="c">#find categorical signal peak as max(peak height*standard deviation):</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">pi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">pi</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">pi</span> <span class="ow">in</span>  <span class="n">fitParams</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+        <span class="c">#signal peak has to have positive avg:</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fitParams</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">sizes</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">i</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="kn">from</span> <span class="nn">fancytools.os.PathStr</span> <span class="kn">import</span> <span class="n">PathStr</span>
+    <span class="kn">import</span> <span class="nn">imgProcessor</span>
+
+    <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">PathStr</span><span class="p">(</span><span class="n">imgProcessor</span><span class="o">.</span><span class="n">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">dirname</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="s">&#39;media&#39;</span><span class="p">,</span> <span class="s">&#39;electroluminescence&#39;</span><span class="p">,</span> <span class="s">&#39;EL_module_orig.PNG&#39;</span><span class="p">),</span> <span class="s">&#39;gray&#39;</span> <span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;EL signal within range of </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">signalRange</span><span class="p">(</span><span class="n">img</span><span class="p">)))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;EL signal minimum = </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">signalMinimum</span><span class="p">(</span><span class="n">img</span><span class="p">))</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

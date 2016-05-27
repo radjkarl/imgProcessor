@@ -1,0 +1,306 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.interpolate package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor package" href="imgProcessor.html"/>
+        <link rel="next" title="imgProcessor.measure package" href="imgProcessor.measure.html"/>
+        <link rel="prev" title="imgProcessor.filters package" href="imgProcessor.filters.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">imgProcessor.interpolate package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.interpolate.interpolate2dStructuredIDW">imgProcessor.interpolate.interpolate2dStructuredIDW module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW">imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.interpolate.interpolate2dUnstructuredIDW">imgProcessor.interpolate.interpolate2dUnstructuredIDW module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.interpolate.interpolateCircular2dStructuredIDW">imgProcessor.interpolate.interpolateCircular2dStructuredIDW module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.interpolate.polyfit2d">imgProcessor.interpolate.polyfit2d module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+    <li>imgProcessor.interpolate package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.interpolate.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.interpolate">
+<span id="imgprocessor-interpolate-package"></span><h1>imgProcessor.interpolate package<a class="headerlink" href="#module-imgProcessor.interpolate" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.interpolate.interpolate2dStructuredIDW">
+<span id="imgprocessor-interpolate-interpolate2dstructuredidw-module"></span><h2>imgProcessor.interpolate.interpolate2dStructuredIDW module<a class="headerlink" href="#module-imgProcessor.interpolate.interpolate2dStructuredIDW" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.interpolate.interpolate2dStructuredIDW.interpolate2dStructuredIDW">
+<code class="descclassname">imgProcessor.interpolate.interpolate2dStructuredIDW.</code><code class="descname">interpolate2dStructuredIDW</code><span class="sig-paren">(</span><em>grid</em>, <em>mask</em>, <em>kernel=15</em>, <em>power=2</em>, <em>fx=1</em>, <em>fy=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/interpolate/interpolate2dStructuredIDW.html#interpolate2dStructuredIDW"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.interpolate.interpolate2dStructuredIDW.interpolate2dStructuredIDW" title="Permalink to this definition">¶</a></dt>
+<dd><p>replace all values in [grid] indicated by [mask]
+with the inverse distance weighted interpolation of all values within
+px+-kernel
+[power] -&gt; distance weighting factor: 1/distance**[power]</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW">
+<span id="imgprocessor-interpolate-interpolate2dstructuredpointspreadidw-module"></span><h2>imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW module<a class="headerlink" href="#module-imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW.interpolate2dStructuredPointSpreadIDW">
+<code class="descclassname">imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW.</code><code class="descname">interpolate2dStructuredPointSpreadIDW</code><span class="sig-paren">(</span><em>grid</em>, <em>mask</em>, <em>kernel=15</em>, <em>power=2</em>, <em>maxIter=100000.0</em>, <em>copy=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/interpolate/interpolate2dStructuredPointSpreadIDW.html#interpolate2dStructuredPointSpreadIDW"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW.interpolate2dStructuredPointSpreadIDW" title="Permalink to this definition">¶</a></dt>
+<dd><p>same as interpolate2dStructuredIDW but using the point spread method
+this is faster if there are bigger connected masked areas and the border length is smaller</p>
+<p>replace all values in [grid] indicated by [mask]
+with the inverse distance weighted interpolation of all values within
+px+-kernel</p>
+<p>[power] -&gt; distance weighting factor: 1/distance**[power]
+[copy] -&gt; False: a bit faster, but modifies &#8216;grid&#8217; and &#8216;mask&#8217;</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.interpolate.interpolate2dUnstructuredIDW">
+<span id="imgprocessor-interpolate-interpolate2dunstructuredidw-module"></span><h2>imgProcessor.interpolate.interpolate2dUnstructuredIDW module<a class="headerlink" href="#module-imgProcessor.interpolate.interpolate2dUnstructuredIDW" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="imgProcessor.interpolate.interpolate2dUnstructuredIDW.interpolate2dUnstructuredIDW">
+<code class="descclassname">imgProcessor.interpolate.interpolate2dUnstructuredIDW.</code><code class="descname">interpolate2dUnstructuredIDW</code><a class="reference internal" href="_modules/imgProcessor/interpolate/interpolate2dUnstructuredIDW.html#interpolate2dUnstructuredIDW"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.interpolate.interpolate2dUnstructuredIDW.interpolate2dUnstructuredIDW" title="Permalink to this definition">¶</a></dt>
+<dd><p>x,y,v &#8211;&gt; 1d numpy.array
+grid &#8211;&gt; 2d numpy.array</p>
+<p>fast if number of given values is small relative to grid resolution</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.interpolate.interpolateCircular2dStructuredIDW">
+<span id="imgprocessor-interpolate-interpolatecircular2dstructuredidw-module"></span><h2>imgProcessor.interpolate.interpolateCircular2dStructuredIDW module<a class="headerlink" href="#module-imgProcessor.interpolate.interpolateCircular2dStructuredIDW" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="imgProcessor.interpolate.interpolateCircular2dStructuredIDW.interpolateCircular2dStructuredIDW">
+<code class="descclassname">imgProcessor.interpolate.interpolateCircular2dStructuredIDW.</code><code class="descname">interpolateCircular2dStructuredIDW</code><a class="reference internal" href="_modules/imgProcessor/interpolate/interpolateCircular2dStructuredIDW.html#interpolateCircular2dStructuredIDW"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.interpolate.interpolateCircular2dStructuredIDW.interpolateCircular2dStructuredIDW" title="Permalink to this definition">¶</a></dt>
+<dd><p>same as interpolate2dStructuredIDW
+but calculation distance to neighbour using polar coordinates
+fr, fphi &#8211;&gt; weight factors for radian and radius differences
+cx,cy -&gt; polar center of the array e.g. middle-&gt;(sx//2+1,sy//2+1)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.interpolate.polyfit2d">
+<span id="imgprocessor-interpolate-polyfit2d-module"></span><h2>imgProcessor.interpolate.polyfit2d module<a class="headerlink" href="#module-imgProcessor.interpolate.polyfit2d" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.interpolate.polyfit2d.polyfit2d">
+<code class="descclassname">imgProcessor.interpolate.polyfit2d.</code><code class="descname">polyfit2d</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>order=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/interpolate/polyfit2d.html#polyfit2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.interpolate.polyfit2d.polyfit2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit unstructured data</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.interpolate.polyfit2d.polyfit2dGrid">
+<code class="descclassname">imgProcessor.interpolate.polyfit2d.</code><code class="descname">polyfit2dGrid</code><span class="sig-paren">(</span><em>arr</em>, <em>mask</em>, <em>order=3</em>, <em>copy=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/interpolate/polyfit2d.html#polyfit2dGrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.interpolate.polyfit2d.polyfit2dGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>replace all masked values with polynomal fitted ones</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.interpolate.polyfit2d.polyval2d">
+<code class="descclassname">imgProcessor.interpolate.polyfit2d.</code><code class="descname">polyval2d</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>m</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/interpolate/polyfit2d.html#polyval2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.interpolate.polyfit2d.polyval2d" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.measure.html" class="btn btn-neutral float-right" title="imgProcessor.measure package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imgProcessor.filters.html" class="btn btn-neutral" title="imgProcessor.filters package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

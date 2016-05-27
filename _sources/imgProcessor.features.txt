@@ -1,0 +1,60 @@
+imgProcessor.features package
+=============================
+
+.. automodule:: imgProcessor.features
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.features.PatternRecognition module
+-----------------------------------------------
+
+.. automodule:: imgProcessor.features.PatternRecognition
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.features.QuadDetection module
+------------------------------------------
+
+.. automodule:: imgProcessor.features.QuadDetection
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.features.SingleTimeEffectDetection module
+------------------------------------------------------
+
+.. automodule:: imgProcessor.features.SingleTimeEffectDetection
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.features.hog module
+--------------------------------
+
+.. automodule:: imgProcessor.features.hog
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.features.minimumLineInArray module
+-----------------------------------------------
+
+.. automodule:: imgProcessor.features.minimumLineInArray
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.features.polylinesFromBinImage module
+--------------------------------------------------
+
+.. automodule:: imgProcessor.features.polylinesFromBinImage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

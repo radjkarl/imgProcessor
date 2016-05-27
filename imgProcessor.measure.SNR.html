@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.measure.SNR package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor.measure package" href="imgProcessor.measure.html"/>
+        <link rel="next" title="imgProcessor.measure.sharpness package" href="imgProcessor.measure.sharpness.html"/>
+        <link rel="prev" title="imgProcessor.measure package" href="imgProcessor.measure.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="imgProcessor.measure.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.html#module-imgProcessor.measure.FitHistogramPeaks">imgProcessor.measure.FitHistogramPeaks module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.measure.html">imgProcessor.measure package</a> &raquo;</li>
+      
+    <li>imgProcessor.measure.SNR package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.measure.SNR.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.measure.SNR">
+<span id="imgprocessor-measure-snr-package"></span><h1>imgProcessor.measure.SNR package<a class="headerlink" href="#module-imgProcessor.measure.SNR" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.measure.SNR.SNR">
+<span id="imgprocessor-measure-snr-snr-module"></span><h2>imgProcessor.measure.SNR.SNR module<a class="headerlink" href="#module-imgProcessor.measure.SNR.SNR" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.measure.SNR.SNR.SNR">
+<code class="descclassname">imgProcessor.measure.SNR.SNR.</code><code class="descname">SNR</code><span class="sig-paren">(</span><em>img1</em>, <em>img2=None</em>, <em>bg=0</em>, <em>noise_level_function=None</em>, <em>constant_noise_level=False</em>, <em>imgs_to_be_averaged=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/SNR/SNR.html#SNR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.SNR.SNR.SNR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a signal-to-noise-map
+uses algorithm as described in BEDRICH 2016 JPV (not jet published)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>constant_noise_level</strong> &#8211; True, to assume noise to be constant</li>
+<li><strong>imgs_to_be_averaged</strong> &#8211; True, if SNR is for average(img1, img2)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.measure.SNR.SNR.getBackgroundLevel">
+<code class="descclassname">imgProcessor.measure.SNR.SNR.</code><code class="descname">getBackgroundLevel</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/SNR/SNR.html#getBackgroundLevel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.SNR.SNR.getBackgroundLevel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.measure.SNR.SNR_IEC">
+<span id="imgprocessor-measure-snr-snr-iec-module"></span><h2>imgProcessor.measure.SNR.SNR_IEC module<a class="headerlink" href="#module-imgProcessor.measure.SNR.SNR_IEC" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.measure.SNR.SNR_IEC.SNR_IEC">
+<code class="descclassname">imgProcessor.measure.SNR.SNR_IEC.</code><code class="descname">SNR_IEC</code><span class="sig-paren">(</span><em>i1</em>, <em>i2</em>, <em>ibg=0</em>, <em>allow_color_images=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/SNR/SNR_IEC.html#SNR_IEC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.SNR.SNR_IEC.SNR_IEC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the averaged signal-to-noise ratio SNR50
+as defined by IEC NP 60904-13</p>
+<p>needs 2 reference EL images and one background image</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.measure.SNR.SNRaverage">
+<span id="imgprocessor-measure-snr-snraverage-module"></span><h2>imgProcessor.measure.SNR.SNRaverage module<a class="headerlink" href="#module-imgProcessor.measure.SNR.SNRaverage" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.measure.SNR.SNRaverage.SNRaverage">
+<code class="descclassname">imgProcessor.measure.SNR.SNRaverage.</code><code class="descname">SNRaverage</code><span class="sig-paren">(</span><em>snr</em>, <em>method='X75'</em>, <em>excludeBackground=True</em>, <em>checkBackground=True</em>, <em>backgroundLevel=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/SNR/SNRaverage.html#SNRaverage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.SNR.SNRaverage.SNRaverage" title="Permalink to this definition">¶</a></dt>
+<dd><p>average a signal-to-noise map
+:param method:  [&#8216;average&#8217;,&#8217;X75&#8217;, &#8216;RMS&#8217;, &#8216;median&#8217;] - X75: this SNR will be exceeded by 75% of the signal
+:type method: str
+:param checkBackground:  check whether there is actually a background level to exclude
+:type  checkBackground: bool
+:returns: averaged SNR as float</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.measure.sharpness.html" class="btn btn-neutral float-right" title="imgProcessor.measure.sharpness package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imgProcessor.measure.html" class="btn btn-neutral" title="imgProcessor.measure package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

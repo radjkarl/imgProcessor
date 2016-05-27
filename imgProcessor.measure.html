@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.measure package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor package" href="imgProcessor.html"/>
+        <link rel="next" title="imgProcessor.measure.SNR package" href="imgProcessor.measure.SNR.html"/>
+        <link rel="prev" title="imgProcessor.interpolate package" href="imgProcessor.interpolate.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">imgProcessor.measure package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.measure.FitHistogramPeaks">imgProcessor.measure.FitHistogramPeaks module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+    <li>imgProcessor.measure package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.measure.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.measure">
+<span id="imgprocessor-measure-package"></span><h1>imgProcessor.measure package<a class="headerlink" href="#module-imgProcessor.measure" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.measure.SNR.html">imgProcessor.measure.SNR package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.measure.SNR.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.measure.SNR.html#module-imgProcessor.measure.SNR.SNR">imgProcessor.measure.SNR.SNR module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.measure.SNR.html#module-imgProcessor.measure.SNR.SNR_IEC">imgProcessor.measure.SNR.SNR_IEC module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.measure.SNR.html#module-imgProcessor.measure.SNR.SNRaverage">imgProcessor.measure.SNR.SNRaverage module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imgProcessor.measure.sharpness.html">imgProcessor.measure.sharpness package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.measure.sharpness.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.measure.sharpness.html#module-imgProcessor.measure.sharpness.SharpnessfromPoints">imgProcessor.measure.sharpness.SharpnessfromPoints module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.measure.sharpness.html#module-imgProcessor.measure.sharpness.parameters">imgProcessor.measure.sharpness.parameters module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.measure.FitHistogramPeaks">
+<span id="imgprocessor-measure-fithistogrampeaks-module"></span><h2>imgProcessor.measure.FitHistogramPeaks module<a class="headerlink" href="#module-imgProcessor.measure.FitHistogramPeaks" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.measure.FitHistogramPeaks.FitHistogramPeaks">
+<em class="property">class </em><code class="descclassname">imgProcessor.measure.FitHistogramPeaks.</code><code class="descname">FitHistogramPeaks</code><span class="sig-paren">(</span><em>img</em>, <em>binEveryNPxVals=10</em>, <em>fitFunction=&lt;function gaussian at 0x0000000005FADAC8&gt;</em>, <em>maxNPeaks=4</em>, <em>debug=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/FitHistogramPeaks.html#FitHistogramPeaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.FitHistogramPeaks.FitHistogramPeaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>try to fit the histogram of an image as an addition of 2 GAUSSian distributions
+stores the position the the peaks in self.fitParams</p>
+<dl class="method">
+<dt id="imgProcessor.measure.FitHistogramPeaks.FitHistogramPeaks.fitValues">
+<code class="descname">fitValues</code><span class="sig-paren">(</span><em>xvals=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/FitHistogramPeaks.html#FitHistogramPeaks.fitValues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.FitHistogramPeaks.FitHistogramPeaks.fitValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.measure.FitHistogramPeaks.plotFitResult">
+<code class="descclassname">imgProcessor.measure.FitHistogramPeaks.</code><code class="descname">plotFitResult</code><span class="sig-paren">(</span><em>fit</em>, <em>show_legend=True</em>, <em>show_plots=True</em>, <em>save_to_file=False</em>, <em>foldername=''</em>, <em>filename=''</em>, <em>filetype='png'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/FitHistogramPeaks.html#plotFitResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.FitHistogramPeaks.plotFitResult" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.measure.FitHistogramPeaks.plotSet">
+<code class="descclassname">imgProcessor.measure.FitHistogramPeaks.</code><code class="descname">plotSet</code><span class="sig-paren">(</span><em>imgDir</em>, <em>posExTime</em>, <em>outDir</em>, <em>show_legend</em>, <em>show_plots</em>, <em>save_to_file</em>, <em>ftype</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/FitHistogramPeaks.html#plotSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.FitHistogramPeaks.plotSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates plots showing both found GAUSSIAN peaks, the histogram, a smoothed histogram
+from all images within [imgDir]</p>
+<p>posExTime - position range of the exposure time in the image name e.g.: img_30s.jpg -&gt; (4,5)
+outDir - dirname to save the output images
+show_legend - True/False
+show_plots - display the result on screen
+save_to_file - save the result to file
+ftype - file type of the output images</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.measure.SNR.html" class="btn btn-neutral float-right" title="imgProcessor.measure.SNR package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imgProcessor.interpolate.html" class="btn btn-neutral" title="imgProcessor.interpolate package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

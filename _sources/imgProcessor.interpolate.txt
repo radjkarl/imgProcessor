@@ -1,0 +1,52 @@
+imgProcessor.interpolate package
+================================
+
+.. automodule:: imgProcessor.interpolate
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.interpolate.interpolate2dStructuredIDW module
+----------------------------------------------------------
+
+.. automodule:: imgProcessor.interpolate.interpolate2dStructuredIDW
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW module
+---------------------------------------------------------------------
+
+.. automodule:: imgProcessor.interpolate.interpolate2dStructuredPointSpreadIDW
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.interpolate.interpolate2dUnstructuredIDW module
+------------------------------------------------------------
+
+.. automodule:: imgProcessor.interpolate.interpolate2dUnstructuredIDW
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.interpolate.interpolateCircular2dStructuredIDW module
+------------------------------------------------------------------
+
+.. automodule:: imgProcessor.interpolate.interpolateCircular2dStructuredIDW
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.interpolate.polyfit2d module
+-----------------------------------------
+
+.. automodule:: imgProcessor.interpolate.polyfit2d
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

@@ -1,0 +1,36 @@
+imgProcessor.SNR package
+========================
+
+.. automodule:: imgProcessor.SNR
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.SNR.SNR module
+---------------------------
+
+.. automodule:: imgProcessor.SNR.SNR
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.SNR.SNR_IEC module
+-------------------------------
+
+.. automodule:: imgProcessor.SNR.SNR_IEC
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.SNR.SNRaverage module
+----------------------------------
+
+.. automodule:: imgProcessor.SNR.SNRaverage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

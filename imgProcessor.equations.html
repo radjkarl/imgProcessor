@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.equations package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor package" href="imgProcessor.html"/>
+        <link rel="next" title="imgProcessor.features package" href="imgProcessor.features.html"/>
+        <link rel="prev" title="imgProcessor.camera package" href="imgProcessor.camera.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">imgProcessor.equations package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.equations.defocusThroughDepth">imgProcessor.equations.defocusThroughDepth module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.equations.gaussian">imgProcessor.equations.gaussian module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#imgprocessor-equations-gaussian2d-module">imgProcessor.equations.gaussian2d module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.equations.poisson">imgProcessor.equations.poisson module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#imgprocessor-equations-vignetting-module">imgProcessor.equations.vignetting module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+    <li>imgProcessor.equations package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.equations.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.equations">
+<span id="imgprocessor-equations-package"></span><h1>imgProcessor.equations package<a class="headerlink" href="#module-imgProcessor.equations" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.equations.defocusThroughDepth">
+<span id="imgprocessor-equations-defocusthroughdepth-module"></span><h2>imgProcessor.equations.defocusThroughDepth module<a class="headerlink" href="#module-imgProcessor.equations.defocusThroughDepth" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.equations.defocusThroughDepth.defocusThroughDepth">
+<code class="descclassname">imgProcessor.equations.defocusThroughDepth.</code><code class="descname">defocusThroughDepth</code><span class="sig-paren">(</span><em>u</em>, <em>uf</em>, <em>f</em>, <em>fn</em>, <em>k=2.355</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/equations/defocusThroughDepth.html#defocusThroughDepth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.equations.defocusThroughDepth.defocusThroughDepth" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the defocus (mm std) through DOF</p>
+<p>u -&gt; scene point (depth value)
+uf -&gt; in-focus position (the distance at which the scene point should be placed in order to be focused)
+f -&gt; focal length
+k -&gt; camera dependent constant (transferring blur circle to PSF), 2.335 would be FHWD of 2dgaussian
+fn &#8211;&gt; f-number (relative aperture)</p>
+<p>equation taken from <a class="reference external" href="http://linkinghub.elsevier.com/retrieve/pii/S0031320312004736">http://linkinghub.elsevier.com/retrieve/pii/S0031320312004736</a></p>
+<p>all parameter should be in [mm]</p>
+<p>!! assumes spatial invariant blur</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.equations.gaussian">
+<span id="imgprocessor-equations-gaussian-module"></span><h2>imgProcessor.equations.gaussian module<a class="headerlink" href="#module-imgProcessor.equations.gaussian" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.equations.gaussian.gaussian">
+<code class="descclassname">imgProcessor.equations.gaussian.</code><code class="descname">gaussian</code><span class="sig-paren">(</span><em>x</em>, <em>a</em>, <em>b</em>, <em>c</em>, <em>d=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/equations/gaussian.html#gaussian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.equations.gaussian.gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>a -&gt; height of the curve&#8217;s peak
+b -&gt; position of the center of the peak
+c -&gt;  standard deviation or Gaussian RMS width
+d -&gt; offset</p>
+</dd></dl>
+
+</div>
+<div class="section" id="imgprocessor-equations-gaussian2d-module">
+<h2>imgProcessor.equations.gaussian2d module<a class="headerlink" href="#imgprocessor-equations-gaussian2d-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-imgProcessor.equations.gaussian2d"></span><dl class="function">
+<dt id="imgProcessor.equations.gaussian2d.gaussian2d">
+<code class="descclassname">imgProcessor.equations.gaussian2d.</code><code class="descname">gaussian2d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/equations/gaussian2d.html#gaussian2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.equations.gaussian2d.gaussian2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference external" href="http://en.wikipedia.org/wiki/Multivariate_normal_distribution">http://en.wikipedia.org/wiki/Multivariate_normal_distribution</a>
+# probability density function of a vector [x,y]
+sx,sy -&gt; sigma (standard deviation)
+mx,my: mue (mean position)
+rho: correlation between x and y</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.equations.poisson">
+<span id="imgprocessor-equations-poisson-module"></span><h2>imgProcessor.equations.poisson module<a class="headerlink" href="#module-imgProcessor.equations.poisson" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.equations.poisson.poisson">
+<code class="descclassname">imgProcessor.equations.poisson.</code><code class="descname">poisson</code><span class="sig-paren">(</span><em>x</em>, <em>a</em>, <em>b</em>, <em>c</em>, <em>d=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/equations/poisson.html#poisson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.equations.poisson.poisson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poisson function
+a -&gt; height of the curve&#8217;s peak
+b -&gt; position of the center of the peak
+c -&gt;  standard deviation
+d -&gt; offset</p>
+</dd></dl>
+
+</div>
+<div class="section" id="imgprocessor-equations-vignetting-module">
+<h2>imgProcessor.equations.vignetting module<a class="headerlink" href="#imgprocessor-equations-vignetting-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-imgProcessor.equations.vignetting"></span><dl class="function">
+<dt id="imgProcessor.equations.vignetting.guessVignettingParam">
+<code class="descclassname">imgProcessor.equations.vignetting.</code><code class="descname">guessVignettingParam</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/equations/vignetting.html#guessVignettingParam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.equations.vignetting.guessVignettingParam" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.equations.vignetting.tiltFactor">
+<code class="descclassname">imgProcessor.equations.vignetting.</code><code class="descname">tiltFactor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/equations/vignetting.html#tiltFactor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.equations.vignetting.tiltFactor" title="Permalink to this definition">¶</a></dt>
+<dd><p>this function is extra to only cover vignetting through perspective distortion</p>
+<p>f - focal length
+tau - tilt angle of a planar scene
+Xi - rotation angle of a planar scene</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.equations.vignetting.vignetting">
+<code class="descclassname">imgProcessor.equations.vignetting.</code><code class="descname">vignetting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/equations/vignetting.html#vignetting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.equations.vignetting.vignetting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vignetting equation using the KANG-WEISS-MODEL
+see <a class="reference external" href="http://research.microsoft.com/en-us/um/people/sbkang/publications/eccv00.pdf">http://research.microsoft.com/en-us/um/people/sbkang/publications/eccv00.pdf</a></p>
+<p>f - focal length
+alpha - coefficient in the geometric vignetting factor
+tilt - tilt angle of a planar scene
+rot - rotation angle of a planar scene
+cx - image center, x
+cy - image center, y</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.features.html" class="btn btn-neutral float-right" title="imgProcessor.features package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imgProcessor.camera.html" class="btn btn-neutral" title="imgProcessor.camera package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

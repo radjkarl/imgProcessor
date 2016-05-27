@@ -1,0 +1,258 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.transform.alignImageAlongLine &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.transform.alignImageAlongLine</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.transform.alignImageAlongLine</h1><div class="highlight"><pre>
+
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">fancytools.math.line</span> <span class="kn">as</span> <span class="nn">ln</span>
+
+
+<div class="viewcode-block" id="alignImageAlongLine"><a class="viewcode-back" href="../../../imgProcessor.transform.html#imgProcessor.transform.alignImageAlongLine.alignImageAlongLine">[docs]</a><span class="k">def</span> <span class="nf">alignImageAlongLine</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">borderValue</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    return a sub image aligned along given line</span>
+<span class="sd">    </span>
+<span class="sd">    @param img -  numpy.2darray input image to get subimage from</span>
+<span class="sd">    @param line - list of 2 points [x0,y0,x1,y1])</span>
+<span class="sd">    @param height - height of output array in y</span>
+<span class="sd">    @param length - width of output array</span>
+<span class="sd">    @param fast - speed up calculation using nearest neighbour interpolation</span>
+<span class="sd">    @returns transformed image as numpy.2darray with found line as in the middle</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">height</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">height</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span><span class="c">#-&gt;is even number</span>
+        <span class="n">height</span> <span class="o">+=</span> <span class="mi">1</span> <span class="c">#only take uneven numbers to have line in middle</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">ln</span><span class="o">.</span><span class="n">length</span><span class="p">(</span><span class="n">line</span><span class="p">))</span> <span class="p">)</span>
+    <span class="n">p0</span><span class="p">,</span><span class="n">p1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">p1</span><span class="o">-</span><span class="n">p0</span>
+    <span class="n">norm</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">norm</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">p2</span> <span class="o">=</span> <span class="n">p0</span> <span class="o">+</span> <span class="p">(</span><span class="n">p1</span><span class="o">-</span><span class="n">p0</span><span class="p">)</span><span class="o">*</span><span class="mf">0.5</span> <span class="o">+</span> <span class="n">norm</span><span class="o">*</span><span class="n">height</span>
+    
+    <span class="n">middleY</span> <span class="o">=</span> <span class="p">(</span><span class="n">height</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">pp0</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">middleY</span><span class="p">]</span>
+    <span class="n">pp1</span> <span class="o">=</span> <span class="p">[</span><span class="n">length</span><span class="p">,</span> <span class="n">middleY</span><span class="p">]</span>
+    <span class="n">pp2</span> <span class="o">=</span> <span class="p">[</span><span class="n">length</span><span class="o">*</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">height</span><span class="p">]</span>
+
+    <span class="n">pts1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">p0</span><span class="p">,</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">pts2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pp0</span><span class="p">,</span><span class="n">pp1</span><span class="p">,</span><span class="n">pp2</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="c">#TRANSFORM:</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getAffineTransform</span><span class="p">(</span><span class="n">pts1</span><span class="p">,</span><span class="n">pts2</span><span class="p">)</span>
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpAffine</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span>
+                          <span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_NEAREST</span> <span class="k">if</span> <span class="n">fast</span> <span class="k">else</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LINEAR</span><span class="p">,</span>
+                          <span class="n">borderValue</span><span class="o">=</span><span class="n">borderValue</span><span class="p">)</span>   
+    <span class="k">return</span> <span class="n">dst</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="kn">from</span> <span class="nn">fancytools.os.PathStr</span> <span class="kn">import</span> <span class="n">PathStr</span>
+    <span class="kn">import</span> <span class="nn">imgProcessor</span>
+    <span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+
+    <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">PathStr</span><span class="p">(</span><span class="n">imgProcessor</span><span class="o">.</span><span class="n">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">dirname</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="s">&#39;media&#39;</span><span class="p">,</span> <span class="s">&#39;electroluminescence&#39;</span><span class="p">,</span> <span class="s">&#39;EL_module_orig.PNG&#39;</span><span class="p">))</span>
+    
+    <span class="n">line</span> <span class="o">=</span> <span class="p">(</span><span class="mi">48</span><span class="p">,</span><span class="mi">325</span><span class="p">,</span><span class="mi">162</span><span class="p">,</span><span class="mi">54</span><span class="p">)</span><span class="c">#x0,y0,x1,y1</span>
+    
+    <span class="n">sub</span> <span class="o">=</span> <span class="n">alignImageAlongLine</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="s">&#39;no_window&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;original&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">((</span><span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">]),(</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mo">03</span><span class="p">]))</span>
+        
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;sub image&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

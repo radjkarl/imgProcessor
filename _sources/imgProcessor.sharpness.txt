@@ -1,0 +1,28 @@
+imgProcessor.sharpness package
+==============================
+
+.. automodule:: imgProcessor.sharpness
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.sharpness.SharpnessfromPoints module
+-------------------------------------------------
+
+.. automodule:: imgProcessor.sharpness.SharpnessfromPoints
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.sharpness.parameters module
+----------------------------------------
+
+.. automodule:: imgProcessor.sharpness.parameters
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

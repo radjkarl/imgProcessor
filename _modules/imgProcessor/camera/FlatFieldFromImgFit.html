@@ -1,0 +1,395 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.camera.FlatFieldFromImgFit &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.camera.FlatFieldFromImgFit</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.camera.FlatFieldFromImgFit</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="kn">import</span> <span class="n">gaussian_filter</span><span class="p">,</span> <span class="n">maximum_filter</span><span class="p">,</span> \
+                                  <span class="n">laplace</span><span class="p">,</span> <span class="n">minimum_filter</span>
+<span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="kn">import</span> <span class="n">resize</span>
+
+<span class="kn">from</span> <span class="nn">fancytools.math.MaskedMovingAverage</span> <span class="kn">import</span> <span class="n">MaskedMovingAverage</span>
+<span class="kn">from</span> <span class="nn">fancytools.fit.fit2dArrayToFn</span> <span class="kn">import</span> <span class="n">fit2dArrayToFn</span>
+
+<span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.measure.FitHistogramPeaks</span> <span class="kn">import</span> <span class="n">FitHistogramPeaks</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.signal</span> <span class="kn">import</span> <span class="n">getSignalPeak</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.equations.vignetting</span> <span class="kn">import</span> <span class="n">vignetting</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.interpolate.polyfit2d</span> <span class="kn">import</span> <span class="n">polyfit2dGrid</span>
+
+
+
+<div class="viewcode-block" id="highGrad"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.FlatFieldFromImgFit.highGrad">[docs]</a><span class="k">def</span> <span class="nf">highGrad</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="c">#mask high gradient areas in given array </span>
+    <span class="n">s</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">maximum_filter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">laplace</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;reflect&#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mf">0.02</span><span class="p">,</span>
+                          <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="o">/</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span><span class="mi">15</span><span class="p">)</span> <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FlatFieldFromImgFit"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit">[docs]</a><span class="k">class</span> <span class="nc">FlatFieldFromImgFit</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nstd</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">ksize</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        calculate flat field from multiple non-calibration images</span>
+<span class="sd">        through ....</span>
+<span class="sd">        * blurring each image</span>
+<span class="sd">        * masked moving average of all images to even out individual deviations</span>
+<span class="sd">        * fit vignetting function of average OR 2d-polynomal</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nstd</span> <span class="o">=</span> <span class="n">nstd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ksize</span> <span class="o">=</span> <span class="n">ksize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span> <span class="o">=</span> <span class="n">scale_factor</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">bglevel</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">#average background level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_m</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
+                <span class="k">print</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addImg</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            
+            
+<div class="viewcode-block" id="FlatFieldFromImgFit.addImg"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit.addImg">[docs]</a>    <span class="k">def</span> <span class="nf">addImg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s">&#39;gray&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_shape</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="c">#determine so that smaller image size has 50 px</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span> <span class="o">=</span> <span class="mf">100.0</span><span class="o">/</span><span class="nb">min</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">]</span>
+ 
+            <span class="n">img</span> <span class="o">=</span> <span class="n">resize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>           
+                <span class="bp">self</span><span class="o">.</span><span class="n">_m</span> <span class="o">=</span> <span class="n">MaskedMovingAverage</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ksize</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ksize</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span><span class="p">))</span>
+
+            <span class="n">f</span> <span class="o">=</span> <span class="n">FitHistogramPeaks</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">sp</span>  <span class="o">=</span> <span class="n">getSignalPeak</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">fitParams</span><span class="p">)</span>
+            
+            <span class="c">#non-backround indices:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">img</span> <span class="o">&gt;</span> <span class="n">sp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nstd</span><span class="o">*</span><span class="n">sp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="c">#blur:</span>
+            <span class="n">blurred</span> <span class="o">=</span> <span class="n">minimum_filter</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">blurred</span> <span class="o">=</span> <span class="n">maximum_filter</span><span class="p">(</span><span class="n">blurred</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ksize</span><span class="p">)</span>
+            <span class="n">gblurred</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">blurred</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ksize</span><span class="p">)</span>
+            <span class="n">blurred</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">=</span><span class="n">gblurred</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+
+            <span class="c">#scale [0-1]:</span>
+            <span class="n">mn</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">~</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">mn</span><span class="p">):</span>
+                <span class="n">mn</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">mx</span> <span class="o">=</span> <span class="n">blurred</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">blurred</span><span class="o">-=</span><span class="n">mn</span>
+            <span class="n">blurred</span><span class="o">/=</span><span class="p">(</span><span class="n">mx</span><span class="o">-</span><span class="n">mn</span><span class="p">)</span>
+            
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">blurred</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">_m</span><span class="o">.</span><span class="n">avg</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">_m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">blurred</span><span class="p">,</span> <span class="n">ind</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bglevel</span> <span class="o">+=</span> <span class="n">mn</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mx</span> <span class="o">+=</span> <span class="n">mx</span>    
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">+=</span><span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="FlatFieldFromImgFit.flatFieldFromFunction"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit.flatFieldFromFunction">[docs]</a>    <span class="k">def</span> <span class="nf">flatFieldFromFunction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        calculate flatField from fitting vignetting function to averaged fit-image</span>
+<span class="sd">        returns flatField, average background level, fitted image, valid indices mask</span>
+<span class="sd">        &#39;&#39;&#39;</span>   
+        <span class="n">s0</span><span class="p">,</span><span class="n">s1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m</span><span class="o">.</span><span class="n">avg</span><span class="o">.</span><span class="n">shape</span>
+                <span class="c">#f-value, alpha, fx, cx,     cy</span>
+        <span class="n">guess</span> <span class="o">=</span> <span class="p">(</span><span class="n">s1</span><span class="o">*</span><span class="mf">0.7</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>     <span class="mi">1</span> <span class="p">,</span> <span class="n">s0</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">s1</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span>
+        
+        <span class="c">#set assume normal plane - no tilt and rotation:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="n">f</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span> <span class="n">fx</span><span class="p">,</span><span class="n">cx</span><span class="p">,</span><span class="n">cy</span><span class="p">:</span>  <span class="n">vignetting</span><span class="p">((</span><span class="n">x</span><span class="o">*</span><span class="n">fx</span><span class="p">,</span><span class="n">y</span><span class="p">),</span>  <span class="n">f</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> 
+                <span class="n">cx</span><span class="o">=</span><span class="n">cx</span><span class="p">,</span><span class="n">cy</span><span class="o">=</span><span class="n">cy</span><span class="p">)</span>
+    
+        <span class="n">fitimg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m</span><span class="o">.</span><span class="n">avg</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">fitimg</span><span class="o">&gt;</span><span class="mf">0.5</span>
+        
+        <span class="n">flatfield</span> <span class="o">=</span> <span class="n">fit2dArrayToFn</span><span class="p">(</span><span class="n">fitimg</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> 
+                        <span class="n">guess</span><span class="o">=</span><span class="n">guess</span><span class="p">,</span><span class="n">output_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_shape</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">flatfield</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bglevel</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span> <span class="n">fitimg</span><span class="p">,</span> <span class="n">mask</span></div>
+
+
+
+<div class="viewcode-block" id="FlatFieldFromImgFit.flatFieldFromFit"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit.flatFieldFromFit">[docs]</a>    <span class="k">def</span> <span class="nf">flatFieldFromFit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        calculate flatField from 2d-polynomal fit filling</span>
+<span class="sd">        all high gradient areas within averaged fit-image</span>
+<span class="sd">        </span>
+<span class="sd">        returns flatField, average background level, fitted image, valid indices mask</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="n">fitimg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m</span><span class="o">.</span><span class="n">avg</span>
+        <span class="c">#replace all dark and high gradient variations:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">fitimg</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">highGrad</span><span class="p">(</span><span class="n">fitimg</span><span class="p">))</span>  
+  
+        <span class="n">out</span> <span class="o">=</span> <span class="n">fitimg</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">lastm</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">polyfit2dGrid</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">mask</span> <span class="o">=</span>  <span class="n">highGrad</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> 
+            <span class="n">m</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="n">lastm</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">lastm</span> <span class="o">=</span> <span class="n">m</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> 
+
+        <span class="n">out</span> <span class="o">=</span> <span class="n">resize</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_shape</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;reflect&#39;</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">out</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bglevel</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span> <span class="n">fitimg</span><span class="p">,</span> <span class="n">mask</span></div></div>
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    
+    <span class="n">s0</span><span class="p">,</span><span class="n">s1</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span><span class="mi">300</span>
+            <span class="c">#f-value, alpha,  rot, tilt,cx,     cy</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">(</span><span class="n">s1</span><span class="o">*</span><span class="mf">0.7</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>     <span class="mi">0</span><span class="p">,</span>   <span class="mi">0</span> <span class="p">,</span>  <span class="n">s0</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">s1</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span>
+    <span class="n">vig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfunction</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="n">vignetting</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="o">*</span><span class="n">params</span><span class="p">),</span>  <span class="p">(</span><span class="n">s0</span><span class="p">,</span><span class="n">s1</span><span class="p">))</span>
+
+
+    <span class="n">o0</span><span class="p">,</span><span class="n">o1</span> <span class="o">=</span> <span class="mi">120</span><span class="p">,</span><span class="mi">150</span>
+    <span class="n">p0</span><span class="p">,</span><span class="n">p1</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span><span class="mi">75</span>
+    <span class="n">d0</span><span class="p">,</span><span class="n">d1</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span><span class="mi">15</span>
+
+    <span class="n">ff</span> <span class="o">=</span> <span class="n">FlatFieldFromImgFit</span><span class="p">()</span>
+    
+    <span class="c">#lets say we have 10 images of an object at slightly different positions</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">s0</span><span class="p">,</span><span class="n">s1</span><span class="p">))</span>
+        <span class="n">dev0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">*</span><span class="n">d0</span>
+        <span class="n">dev1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">*</span><span class="n">d1</span>
+        <span class="n">img</span><span class="p">[</span><span class="n">dev0</span><span class="o">+</span><span class="n">p0</span><span class="p">:</span><span class="n">dev0</span><span class="o">+</span><span class="n">p0</span><span class="o">+</span><span class="n">o0</span><span class="p">,</span><span class="n">dev1</span><span class="o">+</span><span class="n">p1</span><span class="p">:</span><span class="n">dev1</span><span class="o">+</span><span class="n">p1</span><span class="o">+</span><span class="n">o1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">img</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">s0</span><span class="p">,</span><span class="n">s1</span><span class="p">)</span>
+        <span class="n">img</span> <span class="o">*=</span><span class="n">vig</span>
+        <span class="n">ff</span><span class="o">.</span><span class="n">addImg</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39;</span><span class="si">%i</span><span class="s">/</span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        
+    <span class="n">vig_fit</span> <span class="o">=</span> <span class="n">ff</span><span class="o">.</span><span class="n">flatFieldFromFit</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">vig_fn</span><span class="p">,</span><span class="n">bg</span><span class="p">,</span><span class="n">img_fit</span><span class="p">,</span><span class="n">mask</span> <span class="o">=</span> <span class="n">ff</span><span class="o">.</span><span class="n">flatFieldFromFunction</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;background level: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">bg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">&#39;no_window&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;image 10/10&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;original flat field&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">vig</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;fitted flat field / function&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">vig_fn</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;fitted flat field / polynomal fit&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">vig_fit</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;image average&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img_fit</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;valid indices&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        
+        
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

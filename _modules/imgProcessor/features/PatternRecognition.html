@@ -1,0 +1,446 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.features.PatternRecognition &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.features.PatternRecognition</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.features.PatternRecognition</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">imgProcessor.signal</span> <span class="kn">import</span> <span class="n">signalRange</span>
+
+
+
+<div class="viewcode-block" id="PatternRecognition"><a class="viewcode-back" href="../../../imgProcessor.features.html#imgProcessor.features.PatternRecognition.PatternRecognition">[docs]</a><span class="k">class</span> <span class="nc">PatternRecognition</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">fineKernelSize</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fineKernelSize</span> <span class="o">=</span> <span class="n">fineKernelSize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signal_ranges</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">base8bit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepareImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+        <span class="c">#PATTERN DETECTOR: Use the SIFT</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detector</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">SIFT</span><span class="p">()</span>
+            <span class="c">#Parameters for nearest-neighbour matching</span>
+        <span class="n">flann_params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">algorithm</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">trees</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matcher</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">FlannBasedMatcher</span><span class="p">(</span><span class="n">flann_params</span><span class="p">,</span> <span class="p">{})</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_features</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_descs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base8bit</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">_prepareImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">img8bit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaleTo8bit</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">(</span><span class="n">img8bit</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fineKernelSize</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fineKernelSize</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">_scaleTo8bit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The pattern comparator need images to be 8 bit</span>
+<span class="sd">        -&gt; find the range of the signal and scale the image</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">img</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">signalRange</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">nSigma</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signal_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="n">img</span> <span class="o">=</span> <span class="mi">255</span> <span class="o">*</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">)</span>
+        <span class="n">img</span><span class="p">[</span><span class="n">img</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">img</span><span class="p">[</span><span class="n">img</span> <span class="o">&gt;</span> <span class="mi">255</span><span class="p">]</span> <span class="o">=</span> <span class="mi">255</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span>
+
+
+    <span class="k">def</span> <span class="nf">_filterMatches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matches</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="mf">0.75</span><span class="p">):</span>
+        <span class="n">filtered_matches</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">distance</span> <span class="o">&lt;</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">distance</span> <span class="o">*</span> <span class="n">ratio</span><span class="p">:</span>
+                <span class="n">filtered_matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">filtered_matches</span>
+
+
+<div class="viewcode-block" id="PatternRecognition.invertHomography"><a class="viewcode-back" href="../../../imgProcessor.features.html#imgProcessor.features.PatternRecognition.PatternRecognition.invertHomography">[docs]</a>    <span class="k">def</span> <span class="nf">invertHomography</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+        <span class="c">#normalize</span>
+        <span class="n">H</span> <span class="o">/=</span> <span class="n">H</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c">#invert homography</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">H</span><span class="p">)</span></div>
+
+
+    <span class="c">#only for opencv2.4 because that method is built into 3.0  - remove later    </span>
+    <span class="k">def</span> <span class="nf">_drawMatches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img1</span><span class="p">,</span> <span class="n">kp1</span><span class="p">,</span> <span class="n">img2</span><span class="p">,</span> <span class="n">kp2</span><span class="p">,</span> <span class="n">matches</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        ##TAKEN FROM http://stackoverflow.com/questions/20259025/module-object-has-no-attribute-drawmatches-opencv-python</span>
+<span class="sd">        #DOESNT WORK FOR knn matcher</span>
+<span class="sd">        </span>
+<span class="sd">        My own implementation of cv2.drawMatches as OpenCV 2.4.9</span>
+<span class="sd">        does not have this function available but it&#39;s supported in</span>
+<span class="sd">        OpenCV 3.0.0</span>
+<span class="sd">    </span>
+<span class="sd">        This function takes in two images with their associated </span>
+<span class="sd">        keypoints, as well as a list of DMatch data structure (matches) </span>
+<span class="sd">        that contains which keypoints matched in which images.</span>
+<span class="sd">    </span>
+<span class="sd">        An image will be produced where a montage is shown with</span>
+<span class="sd">        the first image followed by the second image beside it.</span>
+<span class="sd">    </span>
+<span class="sd">        Keypoints are delineated with circles, while lines are connected</span>
+<span class="sd">        between matching keypoints.</span>
+<span class="sd">    </span>
+<span class="sd">        img1,img2 - Grayscale images</span>
+<span class="sd">        kp1,kp2 - Detected list of keypoints through any of the OpenCV keypoint </span>
+<span class="sd">                  detection algorithms</span>
+<span class="sd">        matches - A list of matches of corresponding keypoints through any</span>
+<span class="sd">                  OpenCV keypoint matching algorithm</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    
+        <span class="c"># Create a new output image that concatenates the two images together</span>
+        <span class="c"># (a.k.a) a montage</span>
+        <span class="n">rows1</span> <span class="o">=</span> <span class="n">img1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">cols1</span> <span class="o">=</span> <span class="n">img1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">rows2</span> <span class="o">=</span> <span class="n">img2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">cols2</span> <span class="o">=</span> <span class="n">img2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">max</span><span class="p">([</span><span class="n">rows1</span><span class="p">,</span><span class="n">rows2</span><span class="p">]),</span><span class="n">cols1</span><span class="o">+</span><span class="n">cols2</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;uint8&#39;</span><span class="p">)</span>
+    
+        <span class="c"># Place the first image to the left</span>
+        <span class="n">out</span><span class="p">[:</span><span class="n">rows1</span><span class="p">,:</span><span class="n">cols1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">img1</span><span class="p">,</span> <span class="n">img1</span><span class="p">,</span> <span class="n">img1</span><span class="p">])</span>
+    
+        <span class="c"># Place the next image to the right of it</span>
+        <span class="n">out</span><span class="p">[:</span><span class="n">rows2</span><span class="p">,</span><span class="n">cols1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">img2</span><span class="p">,</span> <span class="n">img2</span><span class="p">,</span> <span class="n">img2</span><span class="p">])</span>
+    
+        <span class="c"># For each pair of points we have between both images</span>
+        <span class="c"># draw circles, then connect a line between them</span>
+        <span class="k">for</span> <span class="n">mat</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+    
+            <span class="c"># Get the matching keypoints for each of the images</span>
+            <span class="k">print</span> <span class="n">mat</span><span class="p">,</span> <span class="nb">dir</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+            
+            <span class="n">img1_idx</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">queryIdx</span>
+            <span class="n">img2_idx</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">trainIdx</span>
+    
+            <span class="c"># x - columns</span>
+            <span class="c"># y - rows</span>
+            <span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">)</span> <span class="o">=</span> <span class="n">kp1</span><span class="p">[</span><span class="n">img1_idx</span><span class="p">]</span><span class="o">.</span><span class="n">pt</span>
+            <span class="p">(</span><span class="n">x2</span><span class="p">,</span><span class="n">y2</span><span class="p">)</span> <span class="o">=</span> <span class="n">kp2</span><span class="p">[</span><span class="n">img2_idx</span><span class="p">]</span><span class="o">.</span><span class="n">pt</span>
+    
+            <span class="c"># Draw a small circle at both co-ordinates</span>
+            <span class="c"># radius 4</span>
+            <span class="c"># colour blue</span>
+            <span class="c"># thickness = 1</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">y1</span><span class="p">)),</span> <span class="mi">4</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>   
+            <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span><span class="o">+</span><span class="n">cols1</span><span class="p">,</span><span class="nb">int</span><span class="p">(</span><span class="n">y2</span><span class="p">)),</span> <span class="mi">4</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+    
+            <span class="c"># Draw a line in between the two points</span>
+            <span class="c"># thickness = 1</span>
+            <span class="c"># colour blue</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">y1</span><span class="p">)),</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span><span class="o">+</span><span class="n">cols1</span><span class="p">,</span><span class="nb">int</span><span class="p">(</span><span class="n">y2</span><span class="p">)),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+    
+        <span class="c"># Show the image</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">namedWindow</span><span class="p">(</span><span class="s">&#39;Matched Features&#39;</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cv</span><span class="o">.</span><span class="n">CV_WINDOW_NORMAL</span><span class="p">)</span>
+
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s">&#39;Matched Features&#39;</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">destroyWindow</span><span class="p">(</span><span class="s">&#39;Matched Features&#39;</span><span class="p">)</span>
+    
+        <span class="c"># Also return the image if you&#39;d like a copy</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+
+    <span class="c">#alternative method - might remove later</span>
+    <span class="k">def</span> <span class="nf">_findHomography_knnFlann</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepareImage</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>   
+
+        <span class="c"># Initiate SIFT detector</span>
+        <span class="n">sift</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">SIFT</span><span class="p">()</span>
+        
+        <span class="c"># find the keypoints and descriptors with SIFT</span>
+        <span class="n">kp1</span><span class="p">,</span> <span class="n">des1</span> <span class="o">=</span> <span class="n">sift</span><span class="o">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base8bit</span><span class="p">,</span><span class="bp">None</span><span class="p">)</span>
+        <span class="n">kp2</span><span class="p">,</span> <span class="n">des2</span> <span class="o">=</span> <span class="n">sift</span><span class="o">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="bp">None</span><span class="p">)</span>
+        
+        <span class="c"># FLANN parameters</span>
+        <span class="n">FLANN_INDEX_KDTREE</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">index_params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">FLANN_INDEX_KDTREE</span><span class="p">,</span> <span class="n">trees</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">search_params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>   <span class="c"># or pass empty dictionary</span>
+        
+        <span class="n">flann</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">FlannBasedMatcher</span><span class="p">(</span><span class="n">index_params</span><span class="p">,</span><span class="n">search_params</span><span class="p">)</span>
+        
+        <span class="n">matches</span> <span class="o">=</span> <span class="n">flann</span><span class="o">.</span><span class="n">knnMatch</span><span class="p">(</span><span class="n">des1</span><span class="p">,</span><span class="n">des2</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        
+        <span class="c"># store all the good matches as per Lowe&#39;s ratio test.</span>
+        <span class="n">good</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">m</span><span class="p">,</span><span class="n">n</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">distance</span> <span class="o">&lt;</span> <span class="mf">0.7</span><span class="o">*</span><span class="n">n</span><span class="o">.</span><span class="n">distance</span><span class="p">:</span>
+                <span class="n">good</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        
+        <span class="n">src_pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([</span> <span class="n">kp1</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">queryIdx</span><span class="p">]</span><span class="o">.</span><span class="n">pt</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">good</span> <span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">dst_pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([</span> <span class="n">kp2</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">trainIdx</span><span class="p">]</span><span class="o">.</span><span class="n">pt</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">good</span> <span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">H</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findHomography</span><span class="p">(</span><span class="n">src_pts</span><span class="p">,</span> <span class="n">dst_pts</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RANSAC</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)</span>  
+        <span class="k">print</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> / </span><span class="si">%d</span><span class="s">  inliers/matched&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">status</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+
+        <span class="n">inliers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+        <span class="n">inlierRatio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">inliers</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+        
+        <span class="k">return</span> <span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">inliers</span><span class="p">,</span> <span class="n">inlierRatio</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="PatternRecognition.findHomography"><a class="viewcode-back" href="../../../imgProcessor.features.html#imgProcessor.features.PatternRecognition.PatternRecognition.findHomography">[docs]</a>    <span class="k">def</span> <span class="nf">findHomography</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Find homography of the image through pattern </span>
+<span class="sd">        comparison with the base image</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">print</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s"> Finding points...&quot;</span>
+        <span class="c"># Find points in the next frame   </span>
+        <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepareImage</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>    
+
+        <span class="n">features</span><span class="p">,</span> <span class="n">descs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matcher</span><span class="o">.</span><span class="n">knnMatch</span><span class="p">(</span><span class="n">descs</span><span class="p">,</span> <span class="n">trainDescriptors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_descs</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s"> Match Count: &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span>
+        <span class="n">matches_subset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filterMatches</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches_subset</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;no matches found&#39;</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s"> Filtered Match Count: &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches_subset</span><span class="p">)</span>
+        
+        <span class="n">distance</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">distance</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches_subset</span><span class="p">])</span>
+        <span class="k">print</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s"> Distance from Key Image: &quot;</span><span class="p">,</span> <span class="n">distance</span>
+
+        <span class="n">averagePointDistance</span> <span class="o">=</span> <span class="n">distance</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">matches_subset</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s"> Average Distance: &quot;</span><span class="p">,</span> <span class="n">averagePointDistance</span>
+
+        <span class="n">kp1</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">kp2</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches_subset</span><span class="p">:</span>
+            <span class="n">kp1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_features</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">trainIdx</span><span class="p">])</span>
+            <span class="n">kp2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">queryIdx</span><span class="p">])</span>
+
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">pt</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kp1</span><span class="p">])</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">pt</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kp2</span><span class="p">])</span>
+
+        <span class="n">H</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findHomography</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RANSAC</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> / </span><span class="si">%d</span><span class="s">  inliers/matched&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">status</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+
+        <span class="n">inliers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+        <span class="n">inlierRatio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">inliers</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">inliers</span><span class="p">,</span> <span class="n">inlierRatio</span><span class="p">,</span> <span class="n">averagePointDistance</span><span class="p">,</span> 
+            <span class="n">img</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> 
+            <span class="n">descs</span><span class="p">,</span> <span class="n">matches_subset</span><span class="p">)</span></div>
+
+
+    <span class="c">#alternative method - might remove later</span>
+    <span class="k">def</span> <span class="nf">_findHomography_BR</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Find homography of the image through pattern </span>
+<span class="sd">        comparison with the base image</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">print</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s"> Finding points...&quot;</span>
+        <span class="c"># Find points in the next frame   </span>
+        <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepareImage</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>     
+        <span class="c"># Initiate SIFT detector</span>
+        <span class="n">sift</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">SIFT</span><span class="p">()</span>
+        <span class="c"># find the keypoints and descriptors with SIFT</span>
+        <span class="n">kp1</span><span class="p">,</span> <span class="n">des1</span> <span class="o">=</span> <span class="n">sift</span><span class="o">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base8bit</span><span class="p">,</span><span class="bp">None</span><span class="p">)</span>
+        <span class="n">kp2</span><span class="p">,</span> <span class="n">des2</span> <span class="o">=</span> <span class="n">sift</span><span class="o">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="bp">None</span><span class="p">)</span>
+        <span class="c"># Create matcher</span>
+        <span class="n">bf</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">BFMatcher</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">NORM_HAMMING</span><span class="p">,</span> <span class="n">crossCheck</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="c"># Do matching</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="n">bf</span><span class="o">.</span><span class="n">knnMatch</span><span class="p">(</span><span class="n">des1</span><span class="p">,</span><span class="n">des2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c"># store all the good matches as per Lowe&#39;s ratio test.</span>
+        <span class="n">good</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">m</span><span class="p">,</span><span class="n">n</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">distance</span> <span class="o">&lt;</span> <span class="mf">0.7</span><span class="o">*</span><span class="n">n</span><span class="o">.</span><span class="n">distance</span><span class="p">:</span>
+                <span class="n">good</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+        <span class="n">src_pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([</span> <span class="n">kp1</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">queryIdx</span><span class="p">]</span><span class="o">.</span><span class="n">pt</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">good</span> <span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">dst_pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([</span> <span class="n">kp2</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">trainIdx</span><span class="p">]</span><span class="o">.</span><span class="n">pt</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">good</span> <span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    
+        <span class="n">H</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findHomography</span><span class="p">(</span><span class="n">src_pts</span><span class="p">,</span> <span class="n">dst_pts</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RANSAC</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> / </span><span class="si">%d</span><span class="s">  inliers/matched&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">status</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+
+        <span class="n">inliers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+        <span class="n">inlierRatio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">inliers</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">inliers</span><span class="p">,</span> <span class="n">inlierRatio</span><span class="p">)</span></div>
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

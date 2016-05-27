@@ -1,0 +1,289 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.filters.localizedMaximum &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.filters.localizedMaximum</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.filters.localizedMaximum</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
+
+
+<div class="viewcode-block" id="localizedMaximum"><a class="viewcode-back" href="../../../imgProcessor.filters.html#imgProcessor.filters.localizedMaximum.localizedMaximum">[docs]</a><span class="k">def</span> <span class="nf">localizedMaximum</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">min_increase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns the local maximum of a given 2d array</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    thresh -&gt; if given, ignore all values below that value</span>
+<span class="sd">    </span>
+<span class="sd">    max_length -&gt; limit length between value has to vary  &gt; min_increase</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; a = np.array([[0,1,2,3,2,1,0], \</span>
+<span class="sd">                      [0,1,2,2,3,1,0], \</span>
+<span class="sd">                      [0,1,1,2,2,3,0], \</span>
+<span class="sd">                      [0,1,1,2,1,1,0],  \</span>
+<span class="sd">                      [0,0,0,1,1,0,0]])</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; print localizedMaximum(a, dtype=int)</span>
+<span class="sd">    [[0 1 1 1 0 1 0]</span>
+<span class="sd">     [0 0 0 0 1 0 0]</span>
+<span class="sd">     [0 0 0 1 0 1 0]</span>
+<span class="sd">     [0 0 1 1 0 1 0]</span>
+<span class="sd">     [0 0 0 1 0 0 0]]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c">#because numba cannot create arrays:</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="c">#first iterate all rows:</span>
+    <span class="n">_calc</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">min_increase</span><span class="p">,</span> <span class="n">max_length</span><span class="p">)</span>
+    <span class="c">#that all columns:</span>
+    <span class="n">_calc</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">min_increase</span><span class="p">,</span> <span class="n">max_length</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> 
+<span class="k">def</span> <span class="nf">_calc</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">min_increase</span><span class="p">,</span> <span class="n">max_length</span><span class="p">):</span>
+    <span class="n">g0</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">g1</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">found_peak</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">lmx</span> <span class="o">=</span> <span class="n">thresh</span> <span class="c">#value of localized maximum</span>
+    <span class="n">pmx</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">#position of loc. mx</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">g0</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">g1</span><span class="p">):</span>
+            <span class="n">px</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">found_peak</span> <span class="ow">and</span> <span class="n">px</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">max_length</span><span class="p">:</span>
+                    <span class="n">found_peak</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">else</span><span class="p">:</span><span class="c">#go back and check increase</span>
+                    <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">max_length</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">px</span> <span class="o">-</span> <span class="n">img</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">jj</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">min_increase</span><span class="p">:</span>
+                            <span class="n">found_peak</span> <span class="o">=</span> <span class="bp">True</span>
+                            <span class="k">break</span>
+            <span class="k">if</span> <span class="n">found_peak</span><span class="p">:</span>
+                <span class="c">#move local maximum:</span>
+                <span class="k">if</span> <span class="n">px</span> <span class="o">&gt;</span> <span class="n">lmx</span><span class="p">:</span>
+                    <span class="n">lmx</span>  <span class="o">=</span> <span class="n">px</span> 
+                    <span class="n">pmx</span> <span class="o">=</span> <span class="n">j</span>
+
+                <span class="k">elif</span> <span class="n">lmx</span> <span class="o">-</span> <span class="n">px</span> <span class="o">&gt;</span><span class="n">min_increase</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">max_length</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">-</span> <span class="n">pmx</span> <span class="o">&lt;=</span> <span class="n">max_length</span><span class="p">:</span>
+                        <span class="c">#at peaks end:</span>
+                        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">pmx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> 
+                    <span class="c">#reset:</span>
+                    <span class="n">found_peak</span> <span class="o">=</span> <span class="bp">False</span>
+                    <span class="n">lmx</span> <span class="o">=</span> <span class="n">thresh</span>
+        <span class="n">lmx</span> <span class="o">=</span> <span class="n">thresh</span>
+                    
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="c">#     import doctest</span>
+<span class="c">#     doctest.testmod()</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="kn">from</span> <span class="nn">fancytools.os.PathStr</span> <span class="kn">import</span> <span class="n">PathStr</span>
+    <span class="kn">import</span> <span class="nn">imgProcessor</span>
+    <span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+    <span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="kn">import</span> <span class="n">maximum_filter</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">PathStr</span><span class="p">(</span><span class="n">imgProcessor</span><span class="o">.</span><span class="n">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">dirname</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="s">&#39;media&#39;</span><span class="p">,</span> <span class="s">&#39;electroluminescence&#39;</span><span class="p">)</span>
+
+
+    <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;EL_cell_cracked.png&#39;</span><span class="p">),</span> <span class="s">&#39;gray&#39;</span><span class="p">)</span>
+    
+    <span class="n">bn</span> <span class="o">=</span> <span class="n">maximum_filter</span><span class="p">(</span><span class="c">#&lt;-- make lines bold</span>
+            <span class="n">localizedMaximum</span><span class="p">(</span><span class="o">-</span><span class="n">img</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">min_increase</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">&#39;no_window&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;image&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;binarized&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">bn</span><span class="p">)</span>        
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

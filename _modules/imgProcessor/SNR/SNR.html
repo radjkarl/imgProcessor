@@ -1,0 +1,265 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.SNR.SNR &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.SNR.SNR</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.SNR.SNR</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="kn">import</span> <span class="n">median_filter</span>
+
+<span class="kn">from</span> <span class="nn">imgProcessor.cameraCalibration.NoiseLevelFunction</span> <span class="kn">import</span> <span class="n">oneImageNLF</span>
+
+<span class="c">#factor root-mean-square to average-absolute-deviation (AAD)</span>
+<span class="c">#see https://en.wikipedia.org/wiki/Average_absolute_deviation</span>
+<span class="c">#citing GEARY1935:</span>
+<span class="n">F_RMS2AAD</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">**-</span><span class="mf">0.5</span> 
+<span class="c">#factor scaling resulting noise is extracted by the difference</span>
+<span class="c">#of an image by its median filtered version</span>
+<span class="c">#see BEDRICH 2016 JPV (not jet published):</span>
+<span class="n">F_DiffTHroughMedian</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="mi">3</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="SNR"><a class="viewcode-back" href="../../../imgProcessor.SNR.html#imgProcessor.SNR.SNR.SNR">[docs]</a><span class="k">def</span> <span class="nf">SNR</span><span class="p">(</span><span class="n">img1</span><span class="p">,</span> <span class="n">img2</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">noise_level_function</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">constant_noise_level</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">imgs_to_be_averaged</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns a signal-to-noise-map</span>
+<span class="sd">    uses algorithm as described in BEDRICH 2016 JPV (not jet published)</span>
+<span class="sd">    </span>
+<span class="sd">    @param constant_noise_level = True, to assume noise to be constant</span>
+<span class="sd">    </span>
+<span class="sd">    @param imgs_to_be_averaged = True, if SNR is for average(img1, img2)</span>
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span> 
+    <span class="c">#dark current subtraction:       </span>
+    <span class="n">img1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">img1</span><span class="p">)</span> <span class="o">-</span> <span class="n">bg</span>
+    
+    <span class="k">if</span> <span class="n">img2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">img2_exists</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">img2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">img2</span><span class="p">)</span> <span class="o">-</span> <span class="n">bg</span>
+        <span class="c">#signal as average on both images</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">img1</span><span class="o">+</span><span class="n">img2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">img2_exists</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="n">img1</span>
+   
+    <span class="c">#denoise:</span>
+    <span class="n">signal</span> <span class="o">=</span> <span class="n">median_filter</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">constant_noise_level</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">img2_exists</span><span class="p">:</span>
+            <span class="c">#0.5**0.5 because of sum of variances</span>
+            <span class="n">noise</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">img1</span><span class="o">-</span><span class="n">img2</span><span class="p">)))</span><span class="o">*</span><span class="n">F_RMS2AAD</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">img1</span><span class="o">-</span><span class="n">signal</span><span class="p">)</span><span class="o">*</span><span class="n">F_DiffTHroughMedian</span>
+            <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">d</span><span class="p">))</span><span class="o">*</span><span class="n">F_RMS2AAD</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">noise_level_function</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">noise_level_function</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">oneImageNLF</span><span class="p">(</span><span class="n">img1</span><span class="p">,</span> <span class="n">img2</span><span class="p">,</span> <span class="n">signal</span><span class="p">)</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">noise_level_function</span><span class="p">(</span><span class="n">signal</span><span class="p">)</span>
+        <span class="n">noise</span><span class="p">[</span><span class="n">noise</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="c">#otherwise SNR could be higher than image value</span>
+    
+    <span class="k">if</span> <span class="n">imgs_to_be_averaged</span><span class="p">:</span>
+        <span class="c">#factor of noise reduction if SNR if for average(img1, img2):</span>
+        <span class="n">noise</span> <span class="o">*=</span> <span class="mf">0.5</span><span class="o">**</span><span class="mf">0.5</span>
+    
+    <span class="c">#background estimation and removal if background not given:</span>
+    <span class="k">if</span> <span class="n">bg</span> <span class="ow">is</span> <span class="mi">0</span><span class="p">:</span> 
+        <span class="n">bg</span> <span class="o">=</span> <span class="n">getBackgroundLevel</span><span class="p">(</span><span class="n">img1</span><span class="p">)</span>
+        <span class="n">signal</span> <span class="o">-=</span> <span class="n">bg</span>
+    <span class="n">snr</span> <span class="o">=</span> <span class="n">signal</span><span class="o">/</span><span class="n">noise</span>
+
+    <span class="c">#limit to 1, saying at these points signal=noise:</span>
+    <span class="n">snr</span><span class="p">[</span><span class="n">snr</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">snr</span></div>
+
+
+<div class="viewcode-block" id="getBackgroundLevel"><a class="viewcode-back" href="../../../imgProcessor.SNR.html#imgProcessor.SNR.SNR.getBackgroundLevel">[docs]</a><span class="k">def</span> <span class="nf">getBackgroundLevel</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="c">#seems to be best one according of no-ref bg comparison</span>
+    <span class="c">#as done for SNR article in BEDRICH2016 JPV</span>
+    <span class="k">return</span> <span class="n">median_filter</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="mi">10</span><span class="p">:</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">:</span><span class="o">-</span><span class="mi">10</span><span class="p">],</span><span class="mi">7</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

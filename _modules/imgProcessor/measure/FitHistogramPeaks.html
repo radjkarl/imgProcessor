@@ -1,0 +1,495 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.measure.FitHistogramPeaks &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.measure.FitHistogramPeaks</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.measure.FitHistogramPeaks</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">fancytools.os.PathStr</span> <span class="kn">import</span> <span class="n">PathStr</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.equations.gaussian</span> <span class="kn">import</span> <span class="n">gaussian</span>
+
+
+
+<div class="viewcode-block" id="FitHistogramPeaks"><a class="viewcode-back" href="../../../imgProcessor.measure.html#imgProcessor.measure.FitHistogramPeaks.FitHistogramPeaks">[docs]</a><span class="k">class</span> <span class="nc">FitHistogramPeaks</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    try to fit the histogram of an image as an addition of 2 GAUSSian distributions</span>
+<span class="sd">    stores the position the the peaks in self.fitParams</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> 
+                 <span class="n">binEveryNPxVals</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                 <span class="n">fitFunction</span><span class="o">=</span><span class="n">gaussian</span><span class="p">,</span>
+                 <span class="n">maxNPeaks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                 <span class="n">debug</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        </span>
+<span class="sd">        :param binEveryNPxVals: how many intensities should be represented by one histogram bin</span>
+<span class="sd">        :param fitFunction: function to fit the histogram (currently only gaussian)</span>
+<span class="sd">        :param maxNPeaks: limit number of found peaks (biggest to smallest)</span>
+<span class="sd">        :param debug: whether to print error messages</span>
+<span class="sd">        </span>
+<span class="sd">        public attributes:</span>
+<span class="sd">        .fitParams -&gt; list of fit parameters (for gaussian: (intensity, position, standard deviation))</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c">#import here to decrease startup time</span>
+        <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitFunction</span> <span class="o">=</span> <span class="n">fitFunction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="s">&#39;gray&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">25000</span><span class="p">:</span>
+            <span class="c">#img is big enough: dot need to analyse full img</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">[::</span><span class="mi">10</span><span class="p">,::</span><span class="mi">10</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">yvals</span><span class="p">,</span> <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yvals</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="c">#move histogram range to representative area: </span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yvals</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">yvals</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">i0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">cdf</span><span class="o">&gt;</span><span class="mf">0.02</span><span class="p">)</span>
+        <span class="n">i1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">cdf</span><span class="o">&gt;</span><span class="mf">0.98</span><span class="p">)</span>
+        <span class="n">mnImg</span> <span class="o">=</span> <span class="n">bin_edges</span><span class="p">[</span><span class="n">i0</span><span class="p">]</span>
+        <span class="n">mxImg</span> <span class="o">=</span> <span class="n">bin_edges</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
+        <span class="c">#one bin for every  N pixelvalues</span>
+        <span class="n">nBins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span> <span class="p">(</span> <span class="n">mxImg</span> <span class="o">-</span> <span class="n">mnImg</span><span class="p">)</span>  <span class="o">/</span> <span class="n">binEveryNPxVals</span> <span class="p">),</span><span class="mi">25</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yvals</span><span class="p">,</span> <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">nBins</span><span class="p">,</span> 
+                                                 <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="n">mnImg</span><span class="p">,</span> <span class="n">mxImg</span><span class="p">))</span>
+        <span class="c">#bin edges give start and end of an area-&gt; move that to the middle:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xvals</span> <span class="o">=</span> <span class="n">bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span><span class="o">*</span><span class="mf">0.5</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitParams</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">yvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yvals</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">xvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xvals</span>
+        <span class="n">s0</span><span class="p">,</span><span class="n">s1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">minY</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="nb">float</span><span class="p">(</span><span class="n">s0</span><span class="o">*</span><span class="n">s1</span><span class="p">)</span><span class="o">/</span><span class="n">nBins</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span>
+        
+        <span class="n">peaks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_findPeaks</span><span class="p">(</span><span class="n">yvals</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span> <span class="n">maxNPeaks</span><span class="p">,</span> <span class="n">minY</span><span class="p">)</span>
+        <span class="n">valleys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_findValleys</span><span class="p">(</span><span class="n">yvals</span><span class="p">,</span> <span class="n">peaks</span><span class="p">)</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sortPositions</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span><span class="n">valleys</span><span class="p">)</span>
+
+        <span class="c">#FIT FUNCTION TO EACH PEAK:</span>
+        <span class="k">for</span> <span class="n">il</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">ir</span> <span class="ow">in</span> <span class="n">positions</span><span class="p">:</span>
+            <span class="c">#peak position/value:</span>
+            <span class="n">xp</span> <span class="o">=</span> <span class="n">xvals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">yp</span> <span class="o">=</span> <span class="n">yvals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            
+            <span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">xvals</span><span class="p">[</span><span class="n">ir</span><span class="p">]</span><span class="o">-</span><span class="n">xvals</span><span class="p">[</span><span class="n">il</span><span class="p">])</span>
+            <span class="n">xcut</span> <span class="o">=</span> <span class="n">xvals</span><span class="p">[</span><span class="n">il</span><span class="p">:</span><span class="n">ir</span><span class="p">]</span>
+            <span class="n">ycut</span> <span class="o">=</span> <span class="n">yvals</span><span class="p">[</span><span class="n">il</span><span class="p">:</span><span class="n">ir</span><span class="p">]</span>
+            <span class="n">init_guess</span> <span class="o">=</span> <span class="p">(</span><span class="n">yp</span><span class="p">,</span><span class="n">xp</span><span class="p">,</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="c">#FIT</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c">#fitting procedure using initial guess</span>
+                <span class="n">params</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitFunction</span><span class="p">,</span> <span class="n">xcut</span><span class="p">,</span> <span class="n">ycut</span><span class="p">,</span> 
+                                      <span class="n">p0</span><span class="o">=</span><span class="n">init_guess</span><span class="p">,</span>
+                                      <span class="n">sigma</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">xcut</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="mf">1e-8</span><span class="p">)</span>  
+            <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="s">&quot;couln&#39;t fit gaussians -&gt; result will will inaccurate&quot;</span>
+                <span class="c">#stay with initial guess: </span>
+                <span class="n">params</span> <span class="o">=</span> <span class="n">init_guess</span>
+<span class="c">#             except TypeError, err:</span>
+<span class="c">#                 print err</span>
+<span class="c">#                 #couldn&#39;t fit maybe because to less values were given</span>
+<span class="c">#                 continue</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="c">#has height</span>
+<span class="c">#                  and #has height</span>
+                <span class="c">#peak is within the image histogram</span>
+<span class="c">#                 mnImg &lt; params[1] &lt; mxImg</span>
+<span class="c">#                 (params[1]+2*params[2]&gt; mnImg </span>
+<span class="c">#                     or params[1]-2*params[2]&lt;mxImg) </span>
+                <span class="p">):</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+                <span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">fitParams</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+                
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xvals</span><span class="p">,</span><span class="o">*</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">yvals</span> <span class="o">-=</span> <span class="n">y</span> <span class="c">#peaks add up</span>
+            <span class="n">yvals</span><span class="p">[</span><span class="n">yvals</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span> <span class="c">#can&#39;t be negative</span>
+            
+        <span class="c">#sort for increasing x positions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitParams</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitParams</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_sortPositions</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">valleys</span><span class="p">):</span>
+        <span class="c">#make a set of  from where to where to fit</span>
+        <span class="c">#starting with widest peak</span>
+        <span class="c">#also ensure that every set is at least 3 values wide</span>
+                <span class="c">#FIT FUNCTION TO EACH PEAK:</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">valleys</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">peaks</span><span class="p">,</span><span class="n">valleys</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">positions</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">positions</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_findValleys</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span><span class="n">peaks</span><span class="p">):</span>
+        <span class="c">#find minimum between peaks</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p0</span><span class="p">,</span><span class="n">p1</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">peaks</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">peaks</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span> 
+            <span class="n">l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">p0</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">vals</span><span class="p">[</span><span class="n">p0</span><span class="p">:</span><span class="n">p1</span><span class="p">]))</span> <span class="p">)</span> <span class="c">#3 to ensure min points=3, needed for fitting</span>
+        <span class="c">#first valley</span>
+        <span class="n">l</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">peaks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="c">#last valley</span>
+        <span class="n">l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">p1</span><span class="o">+</span><span class="n">p1</span><span class="o">-</span><span class="n">l</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">l</span>
+        
+        
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_findPeaks</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">mindist</span><span class="p">,</span> <span class="n">maxPeaks</span><span class="p">,</span> <span class="n">minVal</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">argrelextrema</span><span class="c">#save startup time</span>
+    
+        <span class="c">#peak defined as local maximum that is not exceeded </span>
+        <span class="c">#within a minimum distance</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="n">argrelextrema</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">greater</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;wrap&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">peaks</span><span class="p">):</span>
+            <span class="n">r0</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">p</span><span class="o">-</span><span class="n">mindist</span><span class="p">)</span>
+            <span class="n">r1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">p</span><span class="o">+</span><span class="n">mindist</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">vals</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">minVal</span> <span class="ow">or</span>
+                <span class="n">vals</span><span class="p">[</span><span class="n">r0</span><span class="p">:</span><span class="n">r1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">vals</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="p">):</span>
+                <span class="n">valid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="bp">False</span> 
+        <span class="n">peaks</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+
+        <span class="c">#add first peak at i=0 if existent</span>
+        <span class="k">if</span> <span class="n">peaks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="n">vals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="n">minVal</span><span class="p">:</span>
+            <span class="n">peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">peaks</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">[</span><span class="n">peaks</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">peaks</span><span class="p">[:</span><span class="n">maxPeaks</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+   
+<div class="viewcode-block" id="FitHistogramPeaks.fitValues"><a class="viewcode-back" href="../../../imgProcessor.measure.html#imgProcessor.measure.FitHistogramPeaks.FitHistogramPeaks.fitValues">[docs]</a>    <span class="k">def</span> <span class="nf">fitValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xvals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">xvals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">xvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xvals</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">fitFunction</span><span class="p">(</span><span class="n">xvals</span><span class="p">,</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitParams</span><span class="p">]</span></div></div>
+        
+        
+        
+<div class="viewcode-block" id="plotFitResult"><a class="viewcode-back" href="../../../imgProcessor.measure.html#imgProcessor.measure.FitHistogramPeaks.plotFitResult">[docs]</a><span class="k">def</span> <span class="nf">plotFitResult</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="n">show_legend</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">show_plots</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">save_to_file</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">foldername</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="s">&#39;png&#39;</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+
+    <span class="n">xvals</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">xvals</span>
+    <span class="n">yvals</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">yvals</span>
+    
+    <span class="n">fit</span>  <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">fitValues</span><span class="p">(</span><span class="n">xvals</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xvals</span><span class="p">,</span> <span class="n">yvals</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;histogram&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fit</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xvals</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;peak </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+    <span class="n">l2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s">&#39;upper center&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">1.05</span><span class="p">),</span>
+      <span class="n">ncol</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">fancybox</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">l2</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="n">show_legend</span><span class="p">)</span>
+    
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;pixel value&#39;</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;number of pixels&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">save_to_file</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">PathStr</span><span class="p">(</span><span class="n">foldername</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">setFiletype</span><span class="p">(</span><span class="n">filetype</span><span class="p">)</span>
+        <span class="n">pyplot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">PathStr</span><span class="p">(</span><span class="n">foldername</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_params.csv&#39;</span> <span class="o">%</span><span class="n">filename</span><span class="p">),</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;#x, #y, #fit</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">ys</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">xvals</span><span class="p">,</span><span class="n">yvals</span><span class="p">)):</span>
+                <span class="n">fstr</span> <span class="o">=</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fit</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">fstr</span><span class="p">))</span>
+        
+    <span class="k">if</span> <span class="n">show_plots</span><span class="p">:</span>
+        <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<span class="c">#REMOVE? or into scripts</span>
+<div class="viewcode-block" id="plotSet"><a class="viewcode-back" href="../../../imgProcessor.measure.html#imgProcessor.measure.FitHistogramPeaks.plotSet">[docs]</a><span class="k">def</span> <span class="nf">plotSet</span><span class="p">(</span><span class="n">imgDir</span><span class="p">,</span> <span class="n">posExTime</span><span class="p">,</span> <span class="n">outDir</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">,</span> <span class="n">show_plots</span><span class="p">,</span> <span class="n">save_to_file</span><span class="p">,</span> <span class="n">ftype</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    creates plots showing both found GAUSSIAN peaks, the histogram, a smoothed histogram </span>
+<span class="sd">    from all images within [imgDir] </span>
+<span class="sd">    </span>
+<span class="sd">    posExTime - position range of the exposure time in the image name e.g.: img_30s.jpg -&gt; (4,5)</span>
+<span class="sd">    outDir - dirname to save the output images</span>
+<span class="sd">    show_legend - True/False</span>
+<span class="sd">    show_plots - display the result on screen</span>
+<span class="sd">    save_to_file - save the result to file</span>
+<span class="sd">    ftype - file type of the output images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+
+    <span class="n">xvals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">hist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">peaks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">exTimes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">max_border</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">imgDir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;image dir doesn&#39;t exist&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">imgDir</span><span class="p">):</span>
+        <span class="k">print</span> <span class="n">f</span>
+        <span class="k">try</span><span class="p">:</span>
+        <span class="c">#if imgDir.join(f).isfile():</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">imgDir</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">FitHistogramPeaks</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">xvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">xvals</span><span class="p">)</span>
+            <span class="n">hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">yvals</span><span class="p">)</span>
+<span class="c">#             smoothedHist.append(s.yvals2)</span>
+            <span class="n">peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">fitValues</span><span class="p">())</span>
+            
+            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">border</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">max_border</span><span class="p">:</span>
+                <span class="n">max_border</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">plotBorder</span><span class="p">()</span>
+                
+            <span class="n">exTimes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">posExTime</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">posExTime</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">ny</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span><span class="o">/</span><span class="n">nx</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span> <span class="o">%</span> <span class="n">nx</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">ny</span><span class="p">,</span><span class="n">nx</span><span class="p">)</span>
+    
+    <span class="c">#flatten 2d-ax list:</span>
+    <span class="k">if</span> <span class="n">nx</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">ax</span><span class="p">)]</span> <span class="c">#transpose 2d-list</span>
+        <span class="n">axx</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">xa</span> <span class="ow">in</span> <span class="n">ax</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ya</span> <span class="ow">in</span> <span class="n">xa</span><span class="p">:</span>
+                <span class="n">axx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ya</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axx</span>
+    
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">e</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xvals</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span><span class="n">peaks</span><span class="p">,</span> <span class="n">exTimes</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+
+        <span class="n">a</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;histogram&#39;</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="c">#         l1 = a.plot(x, s, label=&#39;smoothed&#39;)</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">pi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="n">l2</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;peak </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">n</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="n">max_border</span><span class="p">)</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> s&#39;</span> <span class="o">%</span><span class="n">e</span><span class="p">)</span>
+        
+<span class="c">#         pyplot.setp([l1,l2], linewidth=2)#, linestyle=&#39;--&#39;, color=&#39;r&#39;)       # set both to dashed</span>
+
+ 
+    <span class="n">l1</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span><span class="c">#loc=&#39;upper center&#39;, bbox_to_anchor=(0.7, 1.05),</span>
+    <span class="n">l1</span><span class="o">.</span><span class="n">draw_frame</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+
+
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;pixel value&#39;</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;number of pixels&#39;</span><span class="p">)</span>
+    
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="mi">7</span><span class="o">*</span><span class="n">nx</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">ny</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">save_to_file</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">PathStr</span><span class="p">(</span><span class="n">outDir</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;result&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setFiletype</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+        <span class="n">pyplot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&#39;tight&#39;</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">show_plots</span><span class="p">:</span>
+        <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">import</span> <span class="nn">imgProcessor</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="n">imgs</span> <span class="o">=</span>  <span class="n">PathStr</span><span class="p">(</span><span class="n">imgProcessor</span><span class="o">.</span><span class="n">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">dirname</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="s">&#39;media&#39;</span><span class="p">,</span> <span class="s">&#39;electroluminescence&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">imgs</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">FitHistogramPeaks</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">f</span><span class="o">.</span><span class="n">fitParams</span>
+        
+        <span class="k">if</span> <span class="s">&#39;no_window&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span> 
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+            <span class="n">plotFitResult</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">save_to_file</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

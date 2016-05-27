@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.filters package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor package" href="imgProcessor.html"/>
+        <link rel="next" title="imgProcessor.interpolate package" href="imgProcessor.interpolate.html"/>
+        <link rel="prev" title="imgProcessor.features package" href="imgProcessor.features.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">imgProcessor.filters package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.filters.FourierFilter">imgProcessor.filters.FourierFilter module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.filters.edgesFromBoolImg">imgProcessor.filters.edgesFromBoolImg module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.filters.fastNaNmedianFilter">imgProcessor.filters.fastNaNmedianFilter module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.filters.localizedMaximum">imgProcessor.filters.localizedMaximum module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.filters.medianThreshold">imgProcessor.filters.medianThreshold module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.filters.removeSinglePixels">imgProcessor.filters.removeSinglePixels module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.filters.standardDeviation">imgProcessor.filters.standardDeviation module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+    <li>imgProcessor.filters package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.filters.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.filters">
+<span id="imgprocessor-filters-package"></span><h1>imgProcessor.filters package<a class="headerlink" href="#module-imgProcessor.filters" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.filters.FourierFilter">
+<span id="imgprocessor-filters-fourierfilter-module"></span><h2>imgProcessor.filters.FourierFilter module<a class="headerlink" href="#module-imgProcessor.filters.FourierFilter" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.filters.FourierFilter.FourierFilter">
+<em class="property">class </em><code class="descclassname">imgProcessor.filters.FourierFilter.</code><code class="descname">FourierFilter</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/FourierFilter.html#FourierFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.FourierFilter.FourierFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p><a class="reference external" href="http://docs.opencv.org/trunk/doc/py_tutorials/py_imgproc/py_transforms/py_fourier_transform/py_fourier_transform.html">http://docs.opencv.org/trunk/doc/py_tutorials/py_imgproc/py_transforms/py_fourier_transform/py_fourier_transform.html</a></p>
+<p>Tsai, D.-M., Wu, S.-C., &amp; Li, W.-C. (2012). Defect detection of solar cells in electroluminescence images using Fourier image reconstruction. Solar Energy Materials and Solar Cells, 99, 250�262. doi:10.1016/j.solmat.2011.12.007</p>
+<dl class="method">
+<dt id="imgProcessor.filters.FourierFilter.FourierFilter.deleteArea">
+<code class="descname">deleteArea</code><span class="sig-paren">(</span><em>fromx</em>, <em>fromy</em>, <em>tox</em>, <em>toy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/FourierFilter.html#FourierFilter.deleteArea"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.FourierFilter.FourierFilter.deleteArea" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.filters.FourierFilter.FourierFilter.highPassFilter">
+<code class="descname">highPassFilter</code><span class="sig-paren">(</span><em>threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/FourierFilter.html#FourierFilter.highPassFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.FourierFilter.FourierFilter.highPassFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>remove all low frequencies by setting a square in the middle of the
+Fourier transformation of the size (2*threshold)^2 to zero
+threshold = 0...1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.filters.FourierFilter.FourierFilter.lowPassFilter">
+<code class="descname">lowPassFilter</code><span class="sig-paren">(</span><em>threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/FourierFilter.html#FourierFilter.lowPassFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.FourierFilter.FourierFilter.lowPassFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>remove all high frequencies by setting boundary around a quarry in the middle
+of the size (2*threshold)^2 to zero
+threshold = 0...1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.filters.FourierFilter.FourierFilter.magnitudeSpectrum">
+<code class="descname">magnitudeSpectrum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/FourierFilter.html#FourierFilter.magnitudeSpectrum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.FourierFilter.FourierFilter.magnitudeSpectrum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.filters.FourierFilter.FourierFilter.reconstructImage">
+<code class="descname">reconstructImage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/FourierFilter.html#FourierFilter.reconstructImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.FourierFilter.FourierFilter.reconstructImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>do inverse Fourier transform and return result</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.filters.FourierFilter.FourierFilter.suppressValuesBiggerThanThresholdToZero">
+<code class="descname">suppressValuesBiggerThanThresholdToZero</code><span class="sig-paren">(</span><em>threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/FourierFilter.html#FourierFilter.suppressValuesBiggerThanThresholdToZero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.FourierFilter.FourierFilter.suppressValuesBiggerThanThresholdToZero" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.filters.FourierFilter.FourierFilter.suppressValuesSmallerThanThresholdToZero">
+<code class="descname">suppressValuesSmallerThanThresholdToZero</code><span class="sig-paren">(</span><em>threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/FourierFilter.html#FourierFilter.suppressValuesSmallerThanThresholdToZero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.FourierFilter.FourierFilter.suppressValuesSmallerThanThresholdToZero" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.filters.edgesFromBoolImg">
+<span id="imgprocessor-filters-edgesfromboolimg-module"></span><h2>imgProcessor.filters.edgesFromBoolImg module<a class="headerlink" href="#module-imgProcessor.filters.edgesFromBoolImg" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.filters.edgesFromBoolImg.edgesFromBoolImg">
+<code class="descclassname">imgProcessor.filters.edgesFromBoolImg.</code><code class="descname">edgesFromBoolImg</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/edgesFromBoolImg.html#edgesFromBoolImg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.edgesFromBoolImg.edgesFromBoolImg" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes a binary image (usually a mask)
+and returns the edges of the object inside</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.filters.fastNaNmedianFilter">
+<span id="imgprocessor-filters-fastnanmedianfilter-module"></span><h2>imgProcessor.filters.fastNaNmedianFilter module<a class="headerlink" href="#module-imgProcessor.filters.fastNaNmedianFilter" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.filters.fastNaNmedianFilter.fastNaNmedianFilter">
+<code class="descclassname">imgProcessor.filters.fastNaNmedianFilter.</code><code class="descname">fastNaNmedianFilter</code><span class="sig-paren">(</span><em>arr</em>, <em>ksize=30</em>, <em>every=5</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/fastNaNmedianFilter.html#fastNaNmedianFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.fastNaNmedianFilter.fastNaNmedianFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>a fast 2d median filter for large kernel sizes that also
+works with nans
+the computation speed is increased because only &#8216;every&#8217;nsth position
+within the median kernel is evaluated</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.filters.localizedMaximum">
+<span id="imgprocessor-filters-localizedmaximum-module"></span><h2>imgProcessor.filters.localizedMaximum module<a class="headerlink" href="#module-imgProcessor.filters.localizedMaximum" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.filters.localizedMaximum.localizedMaximum">
+<code class="descclassname">imgProcessor.filters.localizedMaximum.</code><code class="descname">localizedMaximum</code><span class="sig-paren">(</span><em>img</em>, <em>thresh=0</em>, <em>min_increase=0</em>, <em>max_length=0</em>, <em>dtype=&lt;type 'bool'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/localizedMaximum.html#localizedMaximum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.localizedMaximum.localizedMaximum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the local maximum of a given 2d array</p>
+<p>thresh -&gt; if given, ignore all values below that value</p>
+<p>max_length -&gt; limit length between value has to vary  &gt; min_increase</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>                       <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>                       <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>                       <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>                        <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">localizedMaximum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="go">[[0 1 1 1 0 1 0]</span>
+<span class="go"> [0 0 0 0 1 0 0]</span>
+<span class="go"> [0 0 0 1 0 1 0]</span>
+<span class="go"> [0 0 1 1 0 1 0]</span>
+<span class="go"> [0 0 0 1 0 0 0]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.filters.medianThreshold">
+<span id="imgprocessor-filters-medianthreshold-module"></span><h2>imgProcessor.filters.medianThreshold module<a class="headerlink" href="#module-imgProcessor.filters.medianThreshold" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.filters.medianThreshold.medianThreshold">
+<code class="descclassname">imgProcessor.filters.medianThreshold.</code><code class="descname">medianThreshold</code><span class="sig-paren">(</span><em>img</em>, <em>threshold=0.1</em>, <em>size=3</em>, <em>condition='&gt;'</em>, <em>copy=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/medianThreshold.html#medianThreshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.medianThreshold.medianThreshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>set every the pixel value of the given [img] to the median filtered one
+of a given kernel [size]
+in case the relative [threshold] is exeeded
+condition = &#8216;&gt;&#8217; OR &#8216;&lt;&#8217;</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.filters.removeSinglePixels">
+<span id="imgprocessor-filters-removesinglepixels-module"></span><h2>imgProcessor.filters.removeSinglePixels module<a class="headerlink" href="#module-imgProcessor.filters.removeSinglePixels" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="imgProcessor.filters.removeSinglePixels.removeSinglePixels">
+<code class="descclassname">imgProcessor.filters.removeSinglePixels.</code><code class="descname">removeSinglePixels</code><a class="reference internal" href="_modules/imgProcessor/filters/removeSinglePixels.html#removeSinglePixels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.removeSinglePixels.removeSinglePixels" title="Permalink to this definition">¶</a></dt>
+<dd><p>img - boolean array
+remove all pixels that have no neighbour</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.filters.standardDeviation">
+<span id="imgprocessor-filters-standarddeviation-module"></span><h2>imgProcessor.filters.standardDeviation module<a class="headerlink" href="#module-imgProcessor.filters.standardDeviation" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.filters.standardDeviation.standardDeviation2d">
+<code class="descclassname">imgProcessor.filters.standardDeviation.</code><code class="descname">standardDeviation2d</code><span class="sig-paren">(</span><em>img</em>, <em>ksize=5</em>, <em>blurred=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/filters/standardDeviation.html#standardDeviation2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.filters.standardDeviation.standardDeviation2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the spatial resolved standard deviation
+for a given 2d array</p>
+<p>ksize   -&gt; kernel size</p>
+<dl class="docutils">
+<dt>blurred(optional) -&gt; with same ksize gaussian filtered image</dt>
+<dd>setting this parameter reduces processing time</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.interpolate.html" class="btn btn-neutral float-right" title="imgProcessor.interpolate package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imgProcessor.features.html" class="btn btn-neutral" title="imgProcessor.features package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+imgProcessor.camera package
+===========================
+
+.. automodule:: imgProcessor.camera
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.camera.CameraCalibration module
+--------------------------------------------
+
+.. automodule:: imgProcessor.camera.CameraCalibration
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.camera.DarkCurrentMap module
+-----------------------------------------
+
+.. automodule:: imgProcessor.camera.DarkCurrentMap
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.camera.FlatFieldFromImgFit module
+----------------------------------------------
+
+.. automodule:: imgProcessor.camera.FlatFieldFromImgFit
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.camera.LensDistortion module
+-----------------------------------------
+
+.. automodule:: imgProcessor.camera.LensDistortion
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.camera.NoiseLevelFunction module
+---------------------------------------------
+
+.. automodule:: imgProcessor.camera.NoiseLevelFunction
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.camera.PerspectiveCorrection module
+------------------------------------------------
+
+.. automodule:: imgProcessor.camera.PerspectiveCorrection
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.camera.flatFieldFromCalibration module
+---------------------------------------------------
+
+.. automodule:: imgProcessor.camera.flatFieldFromCalibration
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.transformations &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.transformations</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.transformations</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">various image transformation functions</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="toUIntArray"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.transformations.toUIntArray">[docs]</a><span class="k">def</span> <span class="nf">toUIntArray</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cutNegative</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cutHigh</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> 
+                <span class="nb">range</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    transform a float to an unsigned integer array of a fitting dtype</span>
+<span class="sd">    adds an offset, to get rid of negative values</span>
+<span class="sd">    </span>
+<span class="sd">    range = (min, max) - scale values between given range</span>
+<span class="sd">    </span>
+<span class="sd">    cutNegative - all values &lt;0 will be set to 0</span>
+<span class="sd">    cutHigh - set to False to rather scale values to fit</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">mn</span><span class="p">,</span><span class="n">mx</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span><span class="bp">None</span>
+    <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">mn</span><span class="p">,</span> <span class="n">mx</span> <span class="o">=</span> <span class="nb">range</span>
+    
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">mx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span> <span class="k">if</span> <span class="n">mx</span><span class="o">&gt;</span><span class="mi">255</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span>
+    
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">img</span>
+
+    <span class="c">#get max px value:</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;uint8&#39;</span><span class="p">:</span><span class="mi">255</span><span class="p">,</span> 
+         <span class="s">&#39;uint16&#39;</span><span class="p">:</span><span class="mi">65535</span><span class="p">,</span> 
+         <span class="s">&#39;uint32&#39;</span><span class="p">:</span><span class="mi">4294967295</span><span class="p">,</span> 
+         <span class="s">&#39;uint64&#39;</span><span class="p">:</span><span class="mi">18446744073709551615</span><span class="p">}[</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+ 
+    <span class="k">if</span> <span class="n">copy</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+ 
+    <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">img</span> <span class="o">-=</span> <span class="n">mn</span>
+        <span class="c">#img[img&lt;0]=0</span>
+        <span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">mn</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">b</span>
+
+        <span class="n">img</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">mx</span><span class="o">-</span><span class="n">mn</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">mn</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">b</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cutNegative</span><span class="p">:</span>
+            <span class="n">img</span><span class="p">[</span><span class="n">img</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#add an offset to all values:</span>
+            <span class="n">mn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">mn</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">img</span> <span class="o">-=</span> <span class="n">mn</span><span class="c">#set minimum to 0</span>
+                
+        <span class="k">if</span> <span class="n">cutHigh</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">img</span> <span class="o">&gt;</span> <span class="n">b</span>
+            <span class="c">#img[img &gt; b] = b</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#scale values</span>
+            <span class="n">mx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="n">mx</span><span class="p">)</span>
+            
+    <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">cutHigh</span><span class="p">:</span>
+        <span class="n">img</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="toFloatArray"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.transformations.toFloatArray">[docs]</a><span class="k">def</span> <span class="nf">toFloatArray</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    transform an unsigned integer array into a</span>
+<span class="sd">    float array of the right size</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">_D</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span><span class="c">#uint8</span>
+      <span class="mi">2</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span><span class="c">#uint16</span>
+      <span class="mi">4</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span><span class="c">#uint32</span>
+      <span class="mi">8</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">}</span><span class="c">#uint64</span>
+    <span class="k">return</span> <span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">_D</span><span class="p">[</span><span class="n">img</span><span class="o">.</span><span class="n">itemsize</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="toNoUintArray"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.transformations.toNoUintArray">[docs]</a><span class="k">def</span> <span class="nf">toNoUintArray</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    cast array to the next higher integer array</span>
+<span class="sd">    if dtype=unsigned integer</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;u&#39;</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">,</span> 
+                          <span class="mi">2</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                          <span class="mi">4</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">}[</span><span class="n">d</span><span class="o">.</span><span class="n">itemsize</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">arr</span></div>
+
+
+<div class="viewcode-block" id="isColor"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.transformations.isColor">[docs]</a><span class="k">def</span> <span class="nf">isColor</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span> <span class="ow">and</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="toColor"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.transformations.toColor">[docs]</a><span class="k">def</span> <span class="nf">toColor</span><span class="p">(</span><span class="n">img</span><span class="p">):</span> 
+    <span class="c">#color order is assumed to be RGB (red,  green, blue)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span><span class="c">#one gray scale img</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">out</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span><span class="c">#*(1/3.0)#0.114</span>
+        <span class="n">out</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span><span class="c">#*(1/3.0)#0.587</span>
+        <span class="n">out</span><span class="p">[:,:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span><span class="c">#*(1/3.0)#0.299</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span> <span class="c">#mutliple gray scale images</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">out</span><span class="p">[:,:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span><span class="c">#*(1/3.0)#0.114</span>
+        <span class="n">out</span><span class="p">[:,:,:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span><span class="c">#*(1/3.0)#0.587</span>
+        <span class="n">out</span><span class="p">[:,:,:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span><span class="c">#*(1/3.0)#0.299  </span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c">#assume is already multilayer color img</span>
+        <span class="k">return</span> <span class="n">img</span> 
+    <span class="k">return</span> <span class="n">out</span>     </div>
+
+
+<div class="viewcode-block" id="toGray"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.transformations.toGray">[docs]</a><span class="k">def</span> <span class="nf">toGray</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    weights see </span>
+<span class="sd">    https://en.wikipedia.org/wiki/Grayscale#Colorimetric_.28luminance-prese</span>
+<span class="sd">    http://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html#cvtcolor</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.299</span><span class="p">,</span><span class="c">#red</span>
+                                            <span class="mf">0.587</span><span class="p">,</span><span class="c">#green</span>
+                                            <span class="mf">0.114</span><span class="p">))</span><span class="c">#blue</span></div>
+
+
+<div class="viewcode-block" id="transpose"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.transformations.transpose">[docs]</a><span class="k">def</span> <span class="nf">transpose</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span><span class="c">#is color</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">img</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="rot90"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.transformations.rot90">[docs]</a><span class="k">def</span> <span class="nf">rot90</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    rotate one or multiple grayscale or color images 90 degrees</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">):</span> <span class="c">#color image</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+                <span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">img</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span><span class="c">#mutliple grayscale</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span><span class="c">#one grayscale</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">s</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">):</span><span class="c">#multiple color</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span><span class="c">#for each img</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">3</span><span class="p">]):</span><span class="c">#for each channel</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">,:,:,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="n">i</span><span class="p">,:,:,</span><span class="n">j</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">NotImplemented</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

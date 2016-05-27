@@ -1,0 +1,764 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.camera.CameraCalibration &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.camera.CameraCalibration</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.camera.CameraCalibration</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.camera.LensDistortion</span> <span class="kn">import</span> <span class="n">LensDistortion</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.features.SingleTimeEffectDetection</span> <span class="kn">import</span> <span class="n">SingleTimeEffectDetection</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.camera</span> <span class="kn">import</span> <span class="n">NoiseLevelFunction</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.filters.medianThreshold</span> <span class="kn">import</span> <span class="n">medianThreshold</span>
+
+
+
+<span class="n">DATE_FORMAT</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%d</span><span class="s"> %b %y&quot;</span>
+
+
+
+<span class="k">def</span> <span class="nf">_toDate</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">date</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">localtime</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">DATE_FORMAT</span><span class="p">)</span>
+
+<span class="c"># def newest(dates):</span>
+<span class="c">#     return np.argmax([time.mktime(t) for t in dates])</span>
+
+
+<span class="k">def</span> <span class="nf">_insertDateIndex</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    returns the index to insert the given date in a list</span>
+<span class="sd">    where each items first value is a date</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">date</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_getFromDate</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    returns the index of given or best fitting date</span>
+<span class="sd">    &#39;&#39;&#39;</span>        
+    <span class="k">if</span> <span class="n">date</span><span class="p">:</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">_toDate</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">_insertDateIndex</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+
+<div class="viewcode-block" id="CameraCalibration"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration">[docs]</a><span class="k">class</span> <span class="nc">CameraCalibration</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Collect a arrays and parameters needed for camera calibration (.add###)</span>
+<span class="sd">    Load and save to hard drive (.loadFromFile, .saveToFile)</span>
+<span class="sd">    and correct images (.correct)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">ftype</span> <span class="o">=</span> <span class="s">&#39;.cal&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_level_function</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span><span class="s">&#39;no camera&#39;</span><span class="p">,</span>
+            <span class="s">&#39;max value&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>       <span class="c"># maximum integer value depending of the bit depth of the camera</span>
+            <span class="s">&#39;light spectra&#39;</span><span class="p">:[],</span> <span class="c"># available light spectra e.g. [&#39;light&#39;, &#39;IR&#39;]</span>
+            <span class="s">&#39;dark current&#39;</span><span class="p">:[],</span><span class="c"># [ [date, [slope, intercept], info, (error)],[...] ]</span>
+            <span class="s">&#39;flat field&#39;</span> <span class="p">:</span> <span class="p">{},</span><span class="c"># {light:[[date, info, array, (error)],[...] ]</span>
+            <span class="s">&#39;lens&#39;</span><span class="p">:</span> <span class="p">{},</span>       <span class="c"># {light:[[ date, info, LensDistortion]         ,[...] ]</span>
+            <span class="s">&#39;noise&#39;</span><span class="p">:</span> <span class="p">[],</span>      <span class="c"># [ [date, info, NoiseLevelFunction]            ,[...] ]</span>
+            <span class="s">&#39;psf&#39;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s">&#39;shape&#39;</span><span class="p">:</span><span class="bp">None</span><span class="p">,</span>
+            <span class="s">&#39;balance&#39;</span><span class="p">:{}</span> <span class="c">#factor sharpness/smoothness of image used for wiener deconvolution</span>
+            <span class="p">}</span>
+
+    <span class="c">#TODO: rename</span>
+    <span class="k">def</span> <span class="nf">_getC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">,</span> <span class="n">light</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="n">typ</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">light</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;need light spectrum given to access [</span><span class="si">%s</span><span class="s">]&#39;</span> <span class="o">%</span><span class="n">typ</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">light</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span>        
+
+
+<div class="viewcode-block" id="CameraCalibration.dates"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.dates">[docs]</a>    <span class="k">def</span> <span class="nf">dates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">,</span> <span class="n">light</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            typ: type of calibration to look for. See .coeffs.keys() for all types available</span>
+<span class="sd">            light (Optional[str]): restrict to calibrations, done given light source</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list: All calibration dates available for given typ</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getC</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="n">light</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_toDateStr</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">d</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span></div>
+  
+  
+<div class="viewcode-block" id="CameraCalibration.infos"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.infos">[docs]</a>    <span class="k">def</span> <span class="nf">infos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">,</span> <span class="n">light</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            typ: type of calibration to look for. See .coeffs.keys() for all types available</span>
+<span class="sd">            date (Optional[str]): date of calibration</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list: all infos available for given typ</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getC</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="n">light</span><span class="p">)</span>        
+        <span class="k">if</span> <span class="n">date</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">d</span><span class="p">]</span>
+        <span class="c">#TODO: not struct time, but time in ms since epoch </span>
+        <span class="k">return</span> <span class="n">_getFromDate</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">date</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CameraCalibration.overview"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.overview">[docs]</a>    <span class="k">def</span> <span class="nf">overview</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str: an overview covering all calibrations </span>
+<span class="sd">            infos and shapes</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="s">&#39;camera name: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span>
+        <span class="n">out</span><span class="o">+=</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">max value: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;max value&#39;</span><span class="p">]</span>
+        <span class="n">out</span><span class="o">+=</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">light spectra: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;light spectra&#39;</span><span class="p">]</span>
+        
+        <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">dark current:&#39;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="p">(</span><span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">),</span> <span class="n">error</span><span class="p">)</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;dark current&#39;</span><span class="p">]:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t</span><span class="s"> date: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_toDateStr</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t\t</span><span class="s"> info: </span><span class="si">%s</span><span class="s">; slope:</span><span class="si">%s</span><span class="s">, intercept:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">slope</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">intercept</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">flat field:&#39;</span>
+        <span class="k">for</span> <span class="n">light</span><span class="p">,</span> <span class="n">vals</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;flat field&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t</span><span class="s"> light: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">light</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t\t</span><span class="s"> date: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_toDateStr</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t\t\t</span><span class="s"> info: </span><span class="si">%s</span><span class="s">; array:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">lens:&#39;</span>
+        <span class="k">for</span> <span class="n">light</span><span class="p">,</span> <span class="n">vals</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;lens&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t</span><span class="s"> light: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">light</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">)</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t\t</span><span class="s"> date: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_toDateStr</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t\t\t</span><span class="s"> info: </span><span class="si">%s</span><span class="s">; coeffs:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">noise:&#39;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">nlf_coeff</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;noise&#39;</span><span class="p">]:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t</span><span class="s"> date: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_toDateStr</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t\t</span><span class="s"> info: </span><span class="si">%s</span><span class="s">; coeffs:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">nlf_coeff</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">Point spread function:&#39;</span>
+        <span class="k">for</span> <span class="n">light</span><span class="p">,</span> <span class="n">vals</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;psf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t</span><span class="s"> light: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">light</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">psf</span><span class="p">)</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t\t</span><span class="s"> date: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_toDateStr</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n\t\t\t</span><span class="s"> info: </span><span class="si">%s</span><span class="s">; shape:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">psf</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+        
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_toDateStr</span><span class="p">(</span><span class="n">date_struct</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">DATE_FORMAT</span><span class="p">,</span> <span class="n">date_struct</span><span class="p">)</span>
+    
+    
+    <span class="nd">@staticmethod</span>        
+<div class="viewcode-block" id="CameraCalibration.currentTime"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.currentTime">[docs]</a>    <span class="k">def</span> <span class="nf">currentTime</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">DATE_FORMAT</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_registerLight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">light_spectrum</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;light spectra&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;light spectra&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">light_spectrum</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CameraCalibration.setCamera"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.setCamera">[docs]</a>    <span class="k">def</span> <span class="nf">setCamera</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">camera_name</span><span class="p">,</span> <span class="n">bit_depth</span><span class="o">=</span><span class="mi">16</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            camera_name (str): Name of the camera</span>
+<span class="sd">            bit_depth (int): depth (bit) of the camera sensor</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">camera_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;max value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">bit_depth</span><span class="o">-</span><span class="mi">1</span></div>
+        
+
+<div class="viewcode-block" id="CameraCalibration.addDarkCurrent"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.addDarkCurrent">[docs]</a>    <span class="k">def</span> <span class="nf">addDarkCurrent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            slope (np.array)</span>
+<span class="sd">            intercept (np.array)</span>
+<span class="sd">            error (numpy.array)</span>
+<span class="sd">            slope (float): dPx/dExposureTime[sec]</span>
+<span class="sd">            error (float): absolute</span>
+<span class="sd">            date (str): &quot;DD Mon YY&quot; e.g. &quot;30 Nov 16&quot;</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">_toDate</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkShape</span><span class="p">(</span><span class="n">slope</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkShape</span><span class="p">(</span><span class="n">intercept</span><span class="p">)</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;dark current&#39;</span><span class="p">]</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span> <span class="n">_insertDateIndex</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="n">d</span><span class="p">),</span> <span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="p">(</span><span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">),</span> <span class="n">error</span><span class="p">]</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CameraCalibration.addNoise"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.addNoise">[docs]</a>    <span class="k">def</span> <span class="nf">addNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nlf_coeff</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            nlf_coeff (list)</span>
+<span class="sd">            error (float): absolute</span>
+<span class="sd">            info (str): additional information</span>
+<span class="sd">            date (str): &quot;DD Mon YY&quot; e.g. &quot;30 Nov 16&quot;</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">_toDate</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;noise&#39;</span><span class="p">]</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span> <span class="n">_insertDateIndex</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="n">d</span><span class="p">),</span> <span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">nlf_coeff</span><span class="p">,</span> <span class="n">error</span><span class="p">]</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CameraCalibration.addDeconvolutionBalance"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.addDeconvolutionBalance">[docs]</a>    <span class="k">def</span> <span class="nf">addDeconvolutionBalance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">balance</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> 
+                                <span class="n">light_spectrum</span><span class="o">=</span><span class="s">&#39;visible&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registerLight</span><span class="p">(</span><span class="n">light_spectrum</span><span class="p">)</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">_toDate</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;balance&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">light_spectrum</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">_insertDateIndex</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]),</span>
+                                           <span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">balance</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="CameraCalibration.addPSF"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.addPSF">[docs]</a>    <span class="k">def</span> <span class="nf">addPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="o">=</span><span class="s">&#39;visible&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        add a new point spread function</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registerLight</span><span class="p">(</span><span class="n">light_spectrum</span><span class="p">)</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">_toDate</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;psf&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">light_spectrum</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">_insertDateIndex</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]),</span>
+                                           <span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">psf</span><span class="p">])</span></div>
+        
+        
+    <span class="k">def</span> <span class="nf">_checkShape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;shape&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;shape&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">elif</span> <span class="n">s</span> <span class="o">!=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;array shapes are different: stored(</span><span class="si">%s</span><span class="s">), given(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="CameraCalibration.addFlatField"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.addFlatField">[docs]</a>    <span class="k">def</span> <span class="nf">addFlatField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="o">=</span><span class="s">&#39;visible&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        light_spectrum = light, IR ...</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registerLight</span><span class="p">(</span><span class="n">light_spectrum</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkShape</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">_toDate</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;flat field&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">light_spectrum</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">_insertDateIndex</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]),</span>
+                                           <span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">error</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="CameraCalibration.addLens"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.addLens">[docs]</a>    <span class="k">def</span> <span class="nf">addLens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lens</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="o">=</span><span class="s">&#39;visible&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        lens -&gt; instance of LensDistortion or saved file</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registerLight</span><span class="p">(</span><span class="n">light_spectrum</span><span class="p">)</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">_toDate</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lens</span><span class="p">,</span> <span class="n">LensDistortion</span><span class="p">):</span> 
+            <span class="n">l</span> <span class="o">=</span> <span class="n">LensDistortion</span><span class="p">()</span>
+            <span class="n">l</span><span class="o">.</span><span class="n">readFromFile</span><span class="p">(</span><span class="n">lens</span><span class="p">)</span>
+            <span class="n">lens</span> <span class="o">=</span> <span class="n">l</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;lens&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">light_spectrum</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">_insertDateIndex</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="n">f</span><span class="p">[</span><span class="n">light_spectrum</span><span class="p">]),</span>
+                                           <span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">lens</span><span class="o">.</span><span class="n">coeffs</span><span class="p">])</span></div>
+     
+
+<div class="viewcode-block" id="CameraCalibration.clearOldCalibrations"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.clearOldCalibrations">[docs]</a>    <span class="k">def</span> <span class="nf">clearOldCalibrations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        if not only a specific date than remove all except of the youngest calibration</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;dark current&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;dark current&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;noise&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;noise&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        
+        <span class="k">for</span> <span class="n">light</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;flat field&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;flat field&#39;</span><span class="p">][</span><span class="n">light</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;flat field&#39;</span><span class="p">][</span><span class="n">light</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">light</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;lens&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;lens&#39;</span><span class="p">][</span><span class="n">light</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;lens&#39;</span><span class="p">][</span><span class="n">light</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_correctPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ftype</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ftype</span>
+        <span class="k">return</span> <span class="n">path</span>
+
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="CameraCalibration.loadFromFile"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.loadFromFile">[docs]</a>    <span class="k">def</span> <span class="nf">loadFromFile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">cal</span> <span class="o">=</span> <span class="n">CameraCalibration</span><span class="p">()</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">cal</span><span class="o">.</span><span class="n">_correctPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="s">&#39;rb&#39;</span><span class="p">))</span>
+        <span class="n">cal</span><span class="o">.</span><span class="n">coeffs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cal</span></div>
+
+
+<div class="viewcode-block" id="CameraCalibration.saveToFile"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.saveToFile">[docs]</a>    <span class="k">def</span> <span class="nf">saveToFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_correctPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">HIGHEST_PROTOCOL</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="CameraCalibration.correct"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.correct">[docs]</a>    <span class="k">def</span> <span class="nf">correct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  
+                <span class="n">image1</span><span class="p">,</span>
+                <span class="n">image2</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">bgImages</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">exposure_time</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">light_spectrum</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                <span class="n">keep_size</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                <span class="n">date</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">deblur</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        exposure_time [s]</span>
+<span class="sd">        </span>
+<span class="sd">        date -&gt; string e.g. &#39;30. Nov 15&#39; to get a calibration on from date</span>
+<span class="sd">             -&gt; {&#39;dark current&#39;:&#39;30. Nov 15&#39;,</span>
+<span class="sd">                 &#39;flat field&#39;:&#39;15. Nov 15&#39;,</span>
+<span class="sd">                 &#39;lens&#39;:&#39;14. Nov 15&#39;,</span>
+<span class="sd">                 &#39;noise&#39;:&#39;01. Nov 15&#39;}</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">)</span> <span class="ow">or</span> <span class="n">date</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">date</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;dark current&#39;</span><span class="p">:</span><span class="n">date</span><span class="p">,</span>
+                 <span class="s">&#39;flat field&#39;</span><span class="p">:</span><span class="n">date</span><span class="p">,</span>
+                 <span class="s">&#39;lens&#39;</span><span class="p">:</span><span class="n">date</span><span class="p">,</span>
+                 <span class="s">&#39;noise&#39;</span><span class="p">:</span><span class="n">date</span><span class="p">,</span>
+                 <span class="s">&#39;psf&#39;</span><span class="p">:</span><span class="n">date</span><span class="p">}</span>
+        
+        <span class="k">if</span> <span class="n">light_spectrum</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">light_spectrum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;light spectra&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            
+        <span class="k">assert</span> <span class="n">exposure_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">bgImages</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">,</span><span class="s">&#39;either exposureTime or bgImages has to be given&#39;</span>
+
+        <span class="c">#0.NOISE</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;noise&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_level_function</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">_getFromDate</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">date</span><span class="p">[</span><span class="s">&#39;noise&#39;</span><span class="p">])[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">noise_level_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">NoiseLevelFunction</span><span class="o">.</span><span class="n">boundedFunction</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="c">#1. STE REMOVAL ONLY IF 2 IMAGES ARE GIVEN:</span>
+        <span class="n">image1orig</span> <span class="o">=</span> <span class="n">image1</span>
+        <span class="n">image1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">imread</span><span class="p">(</span><span class="n">image1</span><span class="p">))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkShape</span><span class="p">(</span><span class="n">image1</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">image2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image1</span>
+            <span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">image1orig</span><span class="p">)</span> <span class="o">==</span> <span class="nb">id</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">imread</span><span class="p">(</span><span class="n">image2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_checkShape</span><span class="p">(</span><span class="n">image2</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;... remove single-time-effects&#39;</span><span class="p">)</span>
+            <span class="n">ste</span> <span class="o">=</span> <span class="n">SingleTimeEffectDetection</span><span class="p">((</span><span class="n">image1</span><span class="p">,</span><span class="n">image2</span><span class="p">),</span> <span class="n">nStd</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
+                            <span class="n">noise_level_function</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_level_function</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">ste</span><span class="o">.</span><span class="n">noSTE</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_level_function</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">noise_level_function</span> <span class="o">=</span> <span class="n">ste</span><span class="o">.</span><span class="n">noise_level_function</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_light_spectrum</span> <span class="o">=</span> <span class="n">light_spectrum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_img</span> <span class="o">=</span> <span class="n">image</span>
+        <span class="c">#2. BACKGROUND REMOVAL</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;... remove background&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_correctDarkCurrent</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">exposure_time</span><span class="p">,</span> <span class="n">bgImages</span><span class="p">,</span> 
+                                        <span class="n">date</span><span class="p">[</span><span class="s">&#39;dark current&#39;</span><span class="p">])</span>
+
+        <span class="c">#3. VIGNETTING/SENSITIVITY CORRECTION:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;... remove vignetting and sensitivity&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_correctVignetting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> 
+                                       <span class="n">date</span><span class="p">[</span><span class="s">&#39;flat field&#39;</span><span class="p">])</span>
+
+        <span class="c">#4. REPLACE DECECTIVE PX WITH MEDIAN FILTERED FALUE</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;... remove artefacts&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_correctArtefacts</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+
+        <span class="c">#5. DEBLUR</span>
+        <span class="k">if</span> <span class="n">deblur</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;... remove blur&#39;</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_correctBlur</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">[</span><span class="s">&#39;psf&#39;</span><span class="p">])</span>
+        <span class="c">#5. LENS CORRECTION:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;... correct lens distortion&#39;</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_correctLens</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">[</span><span class="s">&#39;lens&#39;</span><span class="p">],</span> 
+                                 <span class="n">keep_size</span><span class="p">)</span>
+
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;DONE&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_correctDarkCurrent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">exposuretime</span><span class="p">,</span> <span class="n">bgImages</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        open OR calculate a background image: f(t)=m*t+n</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">bgImages</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span> <span class="nb">type</span><span class="p">(</span><span class="n">bgImages</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> 
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">bgImages</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">bgImages</span><span class="o">.</span><span class="n">ndim</span><span class="o">==</span><span class="mi">3</span><span class="p">)</span> <span class="p">):</span>
+                <span class="c">#if multiple images are given: do STE removal:</span>
+                <span class="n">bg</span> <span class="o">=</span> <span class="n">SingleTimeEffectDetection</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">imread</span><span class="p">(</span><span class="n">bgImages</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">imread</span><span class="p">(</span><span class="n">bgImages</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span> <span class="n">nStd</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">noSTE</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">bg</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">bgImages</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;dark current&#39;</span><span class="p">]</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">_getFromDate</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+            <span class="c">#calculate bg image:</span>
+            <span class="n">offs</span><span class="p">,</span><span class="n">ascent</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">bg</span> <span class="o">=</span> <span class="n">offs</span> <span class="o">+</span> <span class="n">ascent</span><span class="o">*</span><span class="n">exposuretime</span>
+            <span class="n">mx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;max value&#39;</span><span class="p">]</span>
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">invalid</span><span class="o">=</span><span class="s">&#39;ignore&#39;</span><span class="p">):</span>
+                <span class="n">bg</span><span class="p">[</span><span class="n">bg</span><span class="o">&gt;</span><span class="n">mx</span><span class="p">]</span> <span class="o">=</span> <span class="n">mx</span>    
+        <span class="n">image</span><span class="o">-=</span><span class="n">bg</span>
+
+
+    <span class="k">def</span> <span class="nf">_correctVignetting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCoeff</span><span class="p">(</span><span class="s">&#39;flat field&#39;</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">d</span><span class="o">!=</span><span class="mi">0</span>
+        <span class="n">image</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/=</span><span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+<span class="c">#         with np.errstate(divide=&#39;ignore&#39;):</span>
+<span class="c">#             out = image / d</span>
+<span class="c">#         #set </span>
+<span class="c">#         </span>
+<span class="c">#         out[i]=image[i]</span>
+        <span class="c">#return image</span>
+
+
+
+    <span class="k">def</span> <span class="nf">_correctBlur</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="c">#save startup time</span>
+        <span class="kn">from</span> <span class="nn">skimage.restoration.deconvolution</span> <span class="kn">import</span> <span class="n">unsupervised_wiener</span><span class="p">,</span> <span class="n">wiener</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCoeff</span><span class="p">(</span><span class="s">&#39;psf&#39;</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;skip deconvolution // no PSF set&#39;</span>
+            <span class="k">return</span> <span class="n">image</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">mx</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">image</span><span class="o">/=</span><span class="n">mx</span>
+        
+        <span class="n">balance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCoeff</span><span class="p">(</span><span class="s">&#39;balance&#39;</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">balance</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;no balance value for wiener deconvolution found // use unsupervised_wiener instead // this will take some time&#39;</span>
+            <span class="n">deconvolved</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">unsupervised_wiener</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">psf</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">deconvolved</span> <span class="o">=</span> <span class="n">wiener</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">balance</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">deconvolved</span><span class="p">[</span><span class="n">deconvolved</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+        <span class="n">deconvolved</span><span class="o">*=</span><span class="n">mx</span>
+        <span class="k">return</span> <span class="n">deconvolved</span>
+   
+    
+    <span class="k">def</span> <span class="nf">_correctArtefacts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Apply a thresholded median replacing high gradients </span>
+<span class="sd">        and values beyond the boundaries</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">medianThreshold</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CameraCalibration.getLens"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.getLens">[docs]</a>    <span class="k">def</span> <span class="nf">getLens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCoeff</span><span class="p">(</span><span class="s">&#39;lens&#39;</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">LensDistortion</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>        </div>
+
+
+    <span class="k">def</span> <span class="nf">_correctLens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">keep_size</span><span class="p">):</span>
+        <span class="n">lens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getLens</span><span class="p">(</span><span class="n">light_spectrum</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lens</span><span class="o">.</span><span class="n">correct</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">keepSize</span><span class="o">=</span><span class="n">keep_size</span><span class="p">)</span> 
+  
+
+<div class="viewcode-block" id="CameraCalibration.deleteCoeff"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.deleteCoeff">[docs]</a>    <span class="k">def</span> <span class="nf">deleteCoeff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">light</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">light</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="c">#not light dependent</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">_toDate</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">_insertDateIndex</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">c</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;no coeff </span><span class="si">%s</span><span class="s"> for date </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">date</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="CameraCalibration.getCoeff"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.getCoeff">[docs]</a>    <span class="k">def</span> <span class="nf">getCoeff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">light</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        try to get calibration for right light source, but</span>
+<span class="sd">        use another if they is none existent</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">light</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">k</span><span class="p">,</span><span class="n">i</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;no calibration found for [</span><span class="si">%s</span><span class="s">] - using [</span><span class="si">%s</span><span class="s">] instead&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">light</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="c">#coeff not dependent on light source</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="k">return</span> <span class="n">_getFromDate</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CameraCalibration.uncertainty"><a class="viewcode-back" href="../../../imgProcessor.camera.html#imgProcessor.camera.CameraCalibration.CameraCalibration.uncertainty">[docs]</a>    <span class="k">def</span> <span class="nf">uncertainty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">light_spectrum</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c">#TODO: review</span>
+        <span class="k">if</span> <span class="n">img</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_img</span>
+        <span class="k">if</span> <span class="n">light_spectrum</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">light_spectrum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_light_spectrum</span>
+
+        <span class="n">s</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;lenses&#39;</span><span class="p">][</span><span class="n">light_spectrum</span><span class="p">]</span><span class="o">.</span><span class="n">getUncertainty</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">intensity</span> <span class="o">=</span> <span class="p">(</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;dark_RMSE&#39;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;vignetting_relUncert&#39;</span><span class="p">][</span><span class="n">light_spectrum</span><span class="p">]</span><span class="o">*</span><span class="n">img</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;sensitivity_RMSE&#39;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="c">#make relative:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">img</span><span class="p">[</span><span class="n">img</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+        <span class="n">intensity</span> <span class="o">/=</span> <span class="n">img</span>
+        <span class="c">#apply lens distortuion:</span>
+        <span class="n">intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="s">&#39;lenses&#39;</span><span class="p">][</span><span class="n">light_spectrum</span><span class="p">]</span><span class="o">.</span><span class="n">correct</span><span class="p">(</span>
+                                            <span class="n">intensity</span><span class="p">,</span><span class="n">keepSize</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> 
+        <span class="k">return</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">position</span></div></div>
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c">#TODO: generate synthetic distortion img and calibration</span>
+    <span class="k">pass</span>
+<span class="c">#     from fancytools.os.PathStr import PathStr</span>
+<span class="c">#     import imgProcessor</span>
+<span class="c">#     c = CameraCalibration.loadFromFile(</span>
+<span class="c">#             &#39;C:\\Users\\elkb4\\Desktop\\PhD\\Measurements\\cameraCalibrations\\HuLC5.cal&#39;)</span>
+<span class="c">#     print c.overview()</span>
+<span class="c"># </span>
+<span class="c"># </span>
+<span class="c">#     p = PathStr(&#39;C:\Users\elkb4\Desktop\PhD\Measurements\HuLC\erik_storm_damage\\0275\\100&#39;)</span>
+<span class="c">#     i1 = p.join(&#39;erik_0275_e30000_g4_b1_V42-029_I9-432_T19-062_p1-2_n1__1.tif&#39;)</span>
+<span class="c">#     i2 = p.join(&#39;erik_0275_e30000_g4_b1_V42-143_I9-432_T19-062_p1-2_n0__0.tif&#39;)</span>
+<span class="c">#     </span>
+<span class="c">#     imgProcessor.ARRAYS_ORDER_IS_XY = True</span>
+<span class="c">#     </span>
+<span class="c">#     i3 = c.correct(i1,i2,</span>
+<span class="c">#                 exposure_time=30,</span>
+<span class="c">#                 threshold=0.2,</span>
+<span class="c">#                 keep_size=True,</span>
+<span class="c">#                 date=None,</span>
+<span class="c">#                 deblur=True)</span>
+<span class="c">#     print i3.shape</span>
+<span class="c">#     print i3</span>
+<span class="c">#     import pylab as plt</span>
+<span class="c">#     plt.imshow(i3)</span>
+<span class="c">#     plt.show()</span>
+<span class="c">#     np.save(&#39;corrected&#39;, i3)</span>
+<span class="c">#     </span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

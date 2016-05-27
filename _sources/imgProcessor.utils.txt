@@ -1,0 +1,76 @@
+imgProcessor.utils package
+==========================
+
+.. automodule:: imgProcessor.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.utils.baseClasses module
+-------------------------------------
+
+.. automodule:: imgProcessor.utils.baseClasses
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.utils.calcAspectRatioFromCorners module
+----------------------------------------------------
+
+.. automodule:: imgProcessor.utils.calcAspectRatioFromCorners
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.utils.decompHomography module
+------------------------------------------
+
+.. automodule:: imgProcessor.utils.decompHomography
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.utils.genericCameraMatrix module
+---------------------------------------------
+
+.. automodule:: imgProcessor.utils.genericCameraMatrix
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.utils.imgPointToWorldCoord module
+----------------------------------------------
+
+.. automodule:: imgProcessor.utils.imgPointToWorldCoord
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.utils.sortCorners module
+-------------------------------------
+
+.. automodule:: imgProcessor.utils.sortCorners
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.utils.speed_GPU_vs_CPU module
+------------------------------------------
+
+.. automodule:: imgProcessor.utils.speed_GPU_vs_CPU
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.utils.webcamTakePhotos module
+------------------------------------------
+
+.. automodule:: imgProcessor.utils.webcamTakePhotos
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

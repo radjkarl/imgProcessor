@@ -1,0 +1,52 @@
+imgProcessor.equations package
+==============================
+
+.. automodule:: imgProcessor.equations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.equations.defocusThroughDepth module
+-------------------------------------------------
+
+.. automodule:: imgProcessor.equations.defocusThroughDepth
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.equations.gaussian module
+--------------------------------------
+
+.. automodule:: imgProcessor.equations.gaussian
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.equations.gaussian2d module
+----------------------------------------
+
+.. automodule:: imgProcessor.equations.gaussian2d
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.equations.poisson module
+-------------------------------------
+
+.. automodule:: imgProcessor.equations.poisson
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.equations.vignetting module
+----------------------------------------
+
+.. automodule:: imgProcessor.equations.vignetting
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

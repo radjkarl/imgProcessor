@@ -1,0 +1,60 @@
+imgProcessor.transform package
+==============================
+
+.. automodule:: imgProcessor.transform
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.transform.PerspectiveTransformation module
+-------------------------------------------------------
+
+.. automodule:: imgProcessor.transform.PerspectiveTransformation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.transform.StitchImages module
+------------------------------------------
+
+.. automodule:: imgProcessor.transform.StitchImages
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.transform.alignImageAlongLine module
+-------------------------------------------------
+
+.. automodule:: imgProcessor.transform.alignImageAlongLine
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.transform.equalizeImage module
+-------------------------------------------
+
+.. automodule:: imgProcessor.transform.equalizeImage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.transform.imgAverage module
+----------------------------------------
+
+.. automodule:: imgProcessor.transform.imgAverage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.transform.linearBlend module
+-----------------------------------------
+
+.. automodule:: imgProcessor.transform.linearBlend
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

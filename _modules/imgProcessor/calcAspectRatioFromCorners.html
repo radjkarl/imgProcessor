@@ -1,0 +1,307 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.calcAspectRatioFromCorners &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.calcAspectRatioFromCorners</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.calcAspectRatioFromCorners</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">fancytools.math</span> <span class="kn">import</span> <span class="n">line</span>
+
+
+
+<div class="viewcode-block" id="calcAspectRatioFromCorners"><a class="viewcode-back" href="../../imgProcessor.html#imgProcessor.calcAspectRatioFromCorners.calcAspectRatioFromCorners">[docs]</a><span class="k">def</span> <span class="nf">calcAspectRatioFromCorners</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">in_plane</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    simple and better alg. than below</span>
+<span class="sd">    in_plane -&gt; whether object has no tilt, but only rotation and translation</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">q</span> <span class="o">=</span>  <span class="n">corners</span>
+    <span class="n">l0</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="n">l1</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span>
+
+    <span class="n">l2</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="n">l3</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span>    
+
+    <span class="n">a1</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">length</span><span class="p">(</span><span class="n">l0</span><span class="p">)</span> <span class="o">/</span> <span class="n">line</span><span class="o">.</span><span class="n">length</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>                    
+    <span class="n">a2</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">length</span><span class="p">(</span><span class="n">l2</span><span class="p">)</span> <span class="o">/</span> <span class="n">line</span><span class="o">.</span><span class="n">length</span><span class="p">(</span><span class="n">l3</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">in_plane</span><span class="p">:</span>
+        <span class="c">#take aspect ration from more rectangular corner</span>
+        <span class="k">if</span> <span class="p">(</span>    <span class="nb">abs</span><span class="p">(</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">angle2</span><span class="p">(</span><span class="n">l0</span><span class="p">,</span> <span class="n">l1</span><span class="p">))</span> <span class="p">)</span>
+               <span class="o">&lt;</span> <span class="nb">abs</span><span class="p">(</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">angle2</span><span class="p">(</span><span class="n">l2</span><span class="p">,</span> <span class="n">l3</span><span class="p">))</span> <span class="p">)</span> <span class="p">):</span>
+            <span class="k">return</span> <span class="n">a1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">a2</span>
+ 
+    <span class="k">return</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">a1</span><span class="o">+</span><span class="n">a2</span><span class="p">)</span></div>
+
+<span class="c">##############</span>
+<span class="c">#TODO: maybe define sqewness and than decide whether to use easy or complicated alg</span>
+<span class="c">#############</span>
+<span class="c"># </span>
+<span class="c"># def calcAspectRatioFromCorners_old(corners):</span>
+<span class="c">#     &#39;&#39;&#39;</span>
+<span class="c">#     this code monster is taken from:</span>
+<span class="c">#     http://stackoverflow.com/questions/1194352/proportions-of-a-perspective-deformed-rectangle</span>
+<span class="c">#     which cites:</span>
+<span class="c">#     Zhengyou Zhang , Li-Wei He, &quot;Whiteboard scanning and image enhancement&quot; </span>
+<span class="c">#     http://research.microsoft.com/en-us/um/people/zhang/papers/tr03-39.pdf</span>
+<span class="c">#     &#39;&#39;&#39;      </span>
+<span class="c">#     m1x,m1y = float(corners[0][0]), float(corners[0][1])</span>
+<span class="c">#     m2x,m2y = float(corners[1][0]), float(corners[1][1])</span>
+<span class="c">#     m4x,m4y = float(corners[2][0]), float(corners[2][1])</span>
+<span class="c">#     m3x,m3y = float(corners[3][0]), float(corners[3][1])</span>
+<span class="c">#     </span>
+<span class="c">#     try:</span>
+<span class="c">#         res = np.sqrt(((((m1y - m4y)*m2x - (m1x - m4x)*m2y + m1x*m4y -</span>
+<span class="c">#         m1y*m4x)/((m3y - m4y)*m2x - (m3x - m4x)*m2y + m3x*m4y - m3y*m4x) -</span>
+<span class="c">#         1)*(((m1y - m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y - m1y*m4x)/((m2y -</span>
+<span class="c">#         m4y)*m3x - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x) - 1)*(((m1y -</span>
+<span class="c">#         m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y - m1y*m4x)*m2y/((m2y - m4y)*m3x</span>
+<span class="c">#         - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x) - m1y)**2/((((m1y - m4y)*m2x -</span>
+<span class="c">#         (m1x - m4x)*m2y + m1x*m4y - m1y*m4x)*m3y/((m3y - m4y)*m2x - (m3x -</span>
+<span class="c">#         m4x)*m2y + m3x*m4y - m3y*m4x) - m1y)*(((m1y - m4y)*m3x - (m1x -</span>
+<span class="c">#         m4x)*m3y + m1x*m4y - m1y*m4x)*m2y/((m2y - m4y)*m3x - (m2x - m4x)*m3y</span>
+<span class="c">#         + m2x*m4y - m2y*m4x) - m1y) + (((m1y - m4y)*m2x - (m1x - m4x)*m2y +</span>
+<span class="c">#         m1x*m4y - m1y*m4x)*m3x/((m3y - m4y)*m2x - (m3x - m4x)*m2y + m3x*m4y</span>
+<span class="c">#         - m3y*m4x) - m1x)*(((m1y - m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y -</span>
+<span class="c">#         m1y*m4x)*m2x/((m2y - m4y)*m3x - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x)</span>
+<span class="c">#         - m1x)) + (((m1y - m4y)*m2x - (m1x - m4x)*m2y + m1x*m4y -</span>
+<span class="c">#         m1y*m4x)/((m3y - m4y)*m2x - (m3x - m4x)*m2y + m3x*m4y - m3y*m4x) -</span>
+<span class="c">#         1)*(((m1y - m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y - m1y*m4x)/((m2y -</span>
+<span class="c">#         m4y)*m3x - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x) - 1)*(((m1y -</span>
+<span class="c">#         m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y - m1y*m4x)*m2x/((m2y - m4y)*m3x</span>
+<span class="c">#         - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x) - m1x)**2/((((m1y - m4y)*m2x -</span>
+<span class="c">#         (m1x - m4x)*m2y + m1x*m4y - m1y*m4x)*m3y/((m3y - m4y)*m2x - (m3x -</span>
+<span class="c">#         m4x)*m2y + m3x*m4y - m3y*m4x) - m1y)*(((m1y - m4y)*m3x - (m1x -</span>
+<span class="c">#         m4x)*m3y + m1x*m4y - m1y*m4x)*m2y/((m2y - m4y)*m3x - (m2x - m4x)*m3y</span>
+<span class="c">#         + m2x*m4y - m2y*m4x) - m1y) + (((m1y - m4y)*m2x - (m1x - m4x)*m2y +</span>
+<span class="c">#         m1x*m4y - m1y*m4x)*m3x/((m3y - m4y)*m2x - (m3x - m4x)*m2y + m3x*m4y</span>
+<span class="c">#         - m3y*m4x) - m1x)*(((m1y - m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y -</span>
+<span class="c">#         m1y*m4x)*m2x/((m2y - m4y)*m3x - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x)</span>
+<span class="c">#         - m1x)) - (((m1y - m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y -</span>
+<span class="c">#         m1y*m4x)/((m2y - m4y)*m3x - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x) -</span>
+<span class="c">#         1)**2)/((((m1y - m4y)*m2x - (m1x - m4x)*m2y + m1x*m4y -</span>
+<span class="c">#         m1y*m4x)/((m3y - m4y)*m2x - (m3x - m4x)*m2y + m3x*m4y - m3y*m4x) -</span>
+<span class="c">#         1)*(((m1y - m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y - m1y*m4x)/((m2y -</span>
+<span class="c">#         m4y)*m3x - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x) - 1)*(((m1y -</span>
+<span class="c">#         m4y)*m2x - (m1x - m4x)*m2y + m1x*m4y - m1y*m4x)*m3y/((m3y - m4y)*m2x</span>
+<span class="c">#         - (m3x - m4x)*m2y + m3x*m4y - m3y*m4x) - m1y)**2/((((m1y - m4y)*m2x -</span>
+<span class="c">#         (m1x - m4x)*m2y + m1x*m4y - m1y*m4x)*m3y/((m3y - m4y)*m2x - (m3x -</span>
+<span class="c">#         m4x)*m2y + m3x*m4y - m3y*m4x) - m1y)*(((m1y - m4y)*m3x - (m1x -</span>
+<span class="c">#         m4x)*m3y + m1x*m4y - m1y*m4x)*m2y/((m2y - m4y)*m3x - (m2x - m4x)*m3y</span>
+<span class="c">#         + m2x*m4y - m2y*m4x) - m1y) + (((m1y - m4y)*m2x - (m1x - m4x)*m2y +</span>
+<span class="c">#         m1x*m4y - m1y*m4x)*m3x/((m3y - m4y)*m2x - (m3x - m4x)*m2y + m3x*m4y</span>
+<span class="c">#         - m3y*m4x) - m1x)*(((m1y - m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y -</span>
+<span class="c">#         m1y*m4x)*m2x/((m2y - m4y)*m3x - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x)</span>
+<span class="c">#         - m1x)) + (((m1y - m4y)*m2x - (m1x - m4x)*m2y + m1x*m4y -</span>
+<span class="c">#         m1y*m4x)/((m3y - m4y)*m2x - (m3x - m4x)*m2y + m3x*m4y - m3y*m4x) -</span>
+<span class="c">#         1)*(((m1y - m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y - m1y*m4x)/((m2y -</span>
+<span class="c">#         m4y)*m3x - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x) - 1)*(((m1y -</span>
+<span class="c">#         m4y)*m2x - (m1x - m4x)*m2y + m1x*m4y - m1y*m4x)*m3x/((m3y - m4y)*m2x</span>
+<span class="c">#         - (m3x - m4x)*m2y + m3x*m4y - m3y*m4x) - m1x)**2/((((m1y - m4y)*m2x -</span>
+<span class="c">#         (m1x - m4x)*m2y + m1x*m4y - m1y*m4x)*m3y/((m3y - m4y)*m2x - (m3x -</span>
+<span class="c">#         m4x)*m2y + m3x*m4y - m3y*m4x) - m1y)*(((m1y - m4y)*m3x - (m1x -</span>
+<span class="c">#         m4x)*m3y + m1x*m4y - m1y*m4x)*m2y/((m2y - m4y)*m3x - (m2x - m4x)*m3y</span>
+<span class="c">#         + m2x*m4y - m2y*m4x) - m1y) + (((m1y - m4y)*m2x - (m1x - m4x)*m2y +</span>
+<span class="c">#         m1x*m4y - m1y*m4x)*m3x/((m3y - m4y)*m2x - (m3x - m4x)*m2y + m3x*m4y</span>
+<span class="c">#         - m3y*m4x) - m1x)*(((m1y - m4y)*m3x - (m1x - m4x)*m3y + m1x*m4y -</span>
+<span class="c">#         m1y*m4x)*m2x/((m2y - m4y)*m3x - (m2x - m4x)*m3y + m2x*m4y - m2y*m4x)</span>
+<span class="c">#         - m1x)) - (((m1y - m4y)*m2x - (m1x - m4x)*m2y + m1x*m4y -</span>
+<span class="c">#         m1y*m4x)/((m3y - m4y)*m2x - (m3x - m4x)*m2y + m3x*m4y - m3y*m4x) -</span>
+<span class="c">#         1)**2))</span>
+<span class="c">#         </span>
+<span class="c">#         if res == 0 or np.isnan(res):</span>
+<span class="c">#             raise ZeroDivisionError()</span>
+<span class="c">#         return res </span>
+<span class="c">#     except ZeroDivisionError:</span>
+<span class="c">#         #code doesnt work if quad is parallelogram</span>
+<span class="c">#         #print &quot;couln&#39;t determine aspect ratio&quot;</span>
+<span class="c">#         #following is stable but not accurate:</span>
+<span class="c">#         l14 = ((m4x-m1x)**2+(m4y-m1y)**2)**0.5</span>
+<span class="c">#         l12 = ((m2x-m1x)**2+(m2y-m1y)**2)**0.5</span>
+<span class="c">#         return l14/l12</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

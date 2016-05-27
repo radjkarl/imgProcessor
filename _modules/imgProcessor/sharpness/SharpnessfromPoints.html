@@ -1,0 +1,497 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.sharpness.SharpnessfromPoints &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.sharpness.SharpnessfromPoints</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.sharpness.SharpnessfromPoints</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
+
+<span class="kn">import</span> <span class="nn">cv2</span>
+
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
+
+<span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="kn">import</span> <span class="n">maximum_filter</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage.interpolation</span> <span class="kn">import</span> <span class="n">map_coordinates</span>
+
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">restoration</span>
+
+<span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span><span class="p">,</span> <span class="n">imwrite</span><span class="p">,</span> <span class="n">out</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.equations.gaussian2d</span> <span class="kn">import</span> <span class="n">gaussian2d</span>
+<span class="kn">from</span> <span class="nn">fancytools.math.boundingBox</span> <span class="kn">import</span> <span class="n">boundingBox</span>
+
+<span class="c">#local</span>
+<span class="kn">from</span> <span class="nn">_base</span> <span class="kn">import</span> <span class="n">SharpnessBase</span>
+
+
+
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_findPoints</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">min_dist</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+    <span class="n">gx</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">gy</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">px</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">gx</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">gy</span><span class="p">):</span>
+            <span class="n">px</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">px</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">l</span><span class="p">:</span>
+                    <span class="k">return</span>
+                <span class="n">points</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
+                <span class="n">points</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="n">n</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="c">#get kernel boundaries:</span>
+                <span class="n">xmn</span> <span class="o">=</span> <span class="n">i</span><span class="o">-</span><span class="n">min_dist</span>
+                <span class="k">if</span> <span class="n">xmn</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">xmn</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">xmx</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="n">min_dist</span>
+                <span class="k">if</span> <span class="n">xmx</span> <span class="o">&gt;</span> <span class="n">gx</span><span class="p">:</span>
+                    <span class="n">xmx</span> <span class="o">=</span> <span class="n">gx</span>
+                    
+                <span class="n">ymn</span> <span class="o">=</span> <span class="n">j</span><span class="o">-</span><span class="n">min_dist</span>
+                <span class="k">if</span> <span class="n">ymn</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">ymn</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">ymx</span> <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="n">min_dist</span>
+                <span class="k">if</span> <span class="n">ymx</span> <span class="o">&gt;</span> <span class="n">gy</span><span class="p">:</span>
+                    <span class="n">ymx</span> <span class="o">=</span> <span class="n">gy</span>
+                <span class="c">#set surrounding area to zero</span>
+                <span class="c">#to ignore it</span>
+                <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">xmx</span><span class="o">-</span><span class="n">xmn</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">ymx</span><span class="o">-</span><span class="n">ymn</span><span class="p">):</span>
+                        <span class="n">img</span><span class="p">[</span><span class="n">xmn</span><span class="o">+</span><span class="n">ii</span><span class="p">,</span><span class="n">ymn</span><span class="o">+</span><span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    
+            
+<div class="viewcode-block" id="SharpnessfromPointSources"><a class="viewcode-back" href="../../../imgProcessor.sharpness.html#imgProcessor.sharpness.SharpnessfromPoints.SharpnessfromPointSources">[docs]</a><span class="k">class</span> <span class="nc">SharpnessfromPointSources</span><span class="p">(</span><span class="n">SharpnessBase</span><span class="p">):</span>
+<div class="viewcode-block" id="SharpnessfromPointSources.__init__"><a class="viewcode-back" href="../../../imgProcessor.sharpness.html#imgProcessor.sharpness.SharpnessfromPoints.SharpnessfromPointSources.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_dist</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_kernel_size</span><span class="o">=</span><span class="mi">51</span><span class="p">,</span> 
+                 <span class="n">max_points</span><span class="o">=</span><span class="mi">3000</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_points</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_points</span> <span class="o">=</span> <span class="n">max_points</span>
+        <span class="c">#ensure odd number:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">k</span> <span class="o">=</span> <span class="n">max_kernel_size</span><span class="o">//</span><span class="mi">2</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span>
+        
+        <span class="k">if</span> <span class="n">min_dist</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">min_dist</span> <span class="o">=</span> <span class="n">max_kernel_size</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_dist</span> <span class="o">=</span> <span class="n">min_dist</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SharpnessfromPointSources.addImg"><a class="viewcode-back" href="../../../imgProcessor.sharpness.html#imgProcessor.sharpness.SharpnessfromPoints.SharpnessfromPointSources.addImg">[docs]</a>    <span class="k">def</span> <span class="nf">addImg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">roi</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        img - background, flat field, ste corrected image</span>
+<span class="sd">        roi - [(x1,y1),...,(x4,y4)] -  boundaries where points are</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="s">&#39;gray&#39;</span><span class="p">)</span>
+
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span>
+        <span class="n">hk</span> <span class="o">=</span> <span class="n">k</span><span class="o">//</span><span class="mi">2</span>
+
+        <span class="c">#mask image</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">fillConvexPoly</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">img2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">img2</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        
+        <span class="n">bg</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">mask</span>
+        <span class="n">img2</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="c">#find points from local maxima:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_points</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">thresh</span> <span class="o">=</span> <span class="mf">0.8</span><span class="o">*</span><span class="n">bg</span> <span class="o">+</span> <span class="mf">0.2</span><span class="o">*</span><span class="n">im</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        
+        <span class="n">_findPoints</span><span class="p">(</span><span class="n">img2</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_dist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[:</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="c">#remove points that are too close to their neighbour or the border</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">maximum_filter</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">hk</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">mask</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]]:</span> <span class="c">#too close to border</span>
+                <span class="n">i</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">:]:</span>
+                    <span class="k">if</span> <span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="o">-</span><span class="n">pp</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">hk</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span> 
+                        <span class="n">i</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="bp">False</span>
+        <span class="n">isum</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">ll</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">-</span><span class="n">isum</span>
+        <span class="k">print</span> <span class="s">&#39;found </span><span class="si">%s</span><span class="s"> points&#39;</span> <span class="o">%</span><span class="n">isum</span>
+        <span class="k">if</span> <span class="n">ll</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;removed </span><span class="si">%s</span><span class="s"> points (too close to border or other points)&#39;</span> <span class="o">%</span><span class="n">ll</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                 
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_points</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+
+        <span class="c">#for finding best peak position:</span>
+        <span class="k">def</span> <span class="nf">fn</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="n">cx</span><span class="p">,</span><span class="n">cy</span><span class="p">):</span><span class="c">#par</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="o">-</span><span class="p">(((</span><span class="n">x</span><span class="o">-</span><span class="n">cx</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span><span class="o">-</span><span class="n">cy</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="mi">8</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> 
+        
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="c">#for shifting peak:</span>
+        <span class="n">xx</span><span class="p">,</span><span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">xx</span> <span class="o">=</span> <span class="n">xx</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">yy</span> <span class="o">=</span> <span class="n">yy</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">:</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">hk</span><span class="p">:</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">hk</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">hk</span><span class="p">:</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">hk</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+            <span class="c">#SHIFT SUB ARRAY to align peak maximum exactly in middle:</span>
+                <span class="c">#only eval a 5x5 array in middle of sub:</span>
+            <span class="n">peak</span> <span class="o">=</span> <span class="n">sub</span><span class="p">[</span><span class="n">hk</span><span class="o">-</span><span class="mi">2</span><span class="p">:</span><span class="n">hk</span><span class="o">+</span><span class="mi">3</span><span class="p">,</span><span class="n">hk</span><span class="o">-</span><span class="mi">2</span><span class="p">:</span><span class="n">hk</span><span class="o">+</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">peak</span> <span class="o">-=</span> <span class="n">peak</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="n">peak</span><span class="o">/=</span><span class="n">peak</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">peak</span> <span class="o">=</span> <span class="n">peak</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                <span class="c">#fit paraboloid to get shift in x,y:</span>
+            <span class="n">p</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">peak</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xx</span><span class="o">+</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">yy</span><span class="o">+</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="c">#shift array:</span>
+            <span class="n">sub</span> <span class="o">=</span>  <span class="n">map_coordinates</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> 
+                        <span class="n">mode</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">)</span>
+            <span class="c">#normalize:</span>
+            <span class="n">sub</span><span class="o">-=</span><span class="n">bg</span>
+            <span class="n">sub</span> <span class="o">/=</span> <span class="n">sub</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">+=</span><span class="n">sub</span></div>
+
+
+<div class="viewcode-block" id="SharpnessfromPointSources.psf"><a class="viewcode-back" href="../../../imgProcessor.sharpness.html#imgProcessor.sharpness.SharpnessfromPoints.SharpnessfromPointSources.psf">[docs]</a>    <span class="k">def</span> <span class="nf">psf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">correct_size</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">filter_below</span><span class="o">=</span><span class="mf">0.00</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c">#filter background oscillations</span>
+        <span class="k">if</span> <span class="n">filter_below</span><span class="p">:</span>
+            <span class="n">mn</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[</span><span class="mi">4</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">mn</span> <span class="o">+=</span><span class="n">filter_below</span><span class="o">*</span><span class="n">p</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">-</span><span class="n">mn</span>
+            <span class="n">ibg</span> <span class="o">=</span> <span class="n">p</span><span class="o">&lt;</span><span class="n">mn</span>
+            <span class="n">p</span><span class="p">[</span><span class="n">ibg</span><span class="p">]</span> <span class="o">=</span> <span class="n">mn</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ibg</span> <span class="o">=</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">p</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            
+        <span class="c">#decrease kernel size if possible</span>
+        <span class="k">if</span> <span class="n">correct_size</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">boundingBox</span><span class="p">(</span><span class="o">~</span><span class="n">ibg</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">ix</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+            <span class="n">iy</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">ix</span><span class="p">:</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">ix</span><span class="p">,</span><span class="n">iy</span><span class="p">:</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">iy</span><span class="p">]</span>
+        
+        <span class="c">#scale</span>
+        <span class="n">p</span><span class="o">-=</span><span class="n">p</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">/=</span><span class="n">p</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_corrPsf</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="k">return</span> <span class="n">p</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_fn</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">sx</span><span class="p">,</span><span class="n">sy</span><span class="p">,</span><span class="n">rho</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">gaussian2d</span><span class="p">((</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rho</span><span class="p">)</span>
+        <span class="n">r</span><span class="o">/=</span><span class="n">r</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+
+<div class="viewcode-block" id="SharpnessfromPointSources.drawPoints"><a class="viewcode-back" href="../../../imgProcessor.sharpness.html#imgProcessor.sharpness.SharpnessfromPoints.SharpnessfromPointSources.drawPoints">[docs]</a>    <span class="k">def</span> <span class="nf">drawPoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">img</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">img</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">:</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div></div>
+
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c">#TODO: generic example</span>
+    <span class="k">pass</span>
+    
+<span class="c">#     from fancytools.os.PathStr import PathStr</span>
+<span class="c">#     from imgProcessor.zDenoise import zDenoise</span>
+<span class="c">#     from matplotlib import pyplot as plt</span>
+<span class="c"># </span>
+<span class="c"># </span>
+<span class="c">#     def correct(i1,i2,bg1,bg2):</span>
+<span class="c">#         folder = i1.dirname()</span>
+<span class="c">#         i1 = imread(i1)</span>
+<span class="c">#         i2 = imread(i2)</span>
+<span class="c">#         bg1 = imread(bg1)</span>
+<span class="c">#         bg2 = imread(bg2)</span>
+<span class="c"># </span>
+<span class="c">#         i = zDenoise([i1,i2])[0]</span>
+<span class="c">#         bg = zDenoise([bg1,bg2])[0]</span>
+<span class="c">#         corr = i.astype(int)-bg</span>
+<span class="c">#         imwrite(folder.join(&#39;corrected.tif&#39;), corr)</span>
+<span class="c"># </span>
+<span class="c"># </span>
+<span class="c">#     f = PathStr(&#39;C:\\Users\\elkb4\\Desktop\\PhD\\Measurements\\HuLC\\Calibration\\psfFromPoints&#39;)</span>
+<span class="c">#     f1 = f.join(&#39;1&#39;)</span>
+<span class="c">#     f2 = f.join(&#39;2&#39;)</span>
+<span class="c">#     f3 = f.join(&#39;3&#39;)</span>
+<span class="c">#     </span>
+<span class="c">#     #imgs = f1.all()[1:]</span>
+<span class="c">#     #correct(imgs[2],imgs[3],imgs[0],imgs[1])</span>
+<span class="c">#     #imgs = f2.all()[1:]</span>
+<span class="c">#     #correct(imgs[2],imgs[3],imgs[0],imgs[1])</span>
+<span class="c"># #     imgs = f3.all()[1:]</span>
+<span class="c"># #     correct(imgs[2],imgs[3],imgs[0],imgs[1])</span>
+<span class="c"># </span>
+<span class="c">#     p = SharpnessfromPointSources()</span>
+<span class="c"># </span>
+<span class="c"># </span>
+<span class="c"># #     img = f1.join(&#39;corrected.tif&#39;)</span>
+<span class="c"># #     roi = [(1483,1353),</span>
+<span class="c"># #            (1781,1344),</span>
+<span class="c"># #            (1797,727),</span>
+<span class="c"># #            (1499,703)]</span>
+<span class="c"># #     p.addImg(img, roi)</span>
+<span class="c"># # </span>
+<span class="c"># #     </span>
+<span class="c">#     img = f2.join(&#39;corrected.tif&#39;)</span>
+<span class="c"># #     roi = [(1083,1814),</span>
+<span class="c"># #            (1378,1817),</span>
+<span class="c"># #            (1358,1192),</span>
+<span class="c"># #            (1076,1180)]</span>
+<span class="c"># #     p.addImg(img, roi)    </span>
+<span class="c">#      </span>
+<span class="c"># </span>
+<span class="c">#     img = f3.join(&#39;corrected.tif&#39;)</span>
+<span class="c">#     roi = [(794,1870),</span>
+<span class="c">#            (2275,1874),</span>
+<span class="c">#            (2290,925),</span>
+<span class="c">#            (798,878)]</span>
+<span class="c">#     p.addImg(img, roi)   </span>
+<span class="c">#     print &#39;found %s points&#39; %p.n_points</span>
+<span class="c">#      </span>
+<span class="c">#     psf = p.psf(filter_below=0.05)</span>
+<span class="c">#     print &#39;standard deviation: %s&#39; %p.stdDev()</span>
+<span class="c">#     #p._std = 0.7</span>
+<span class="c">#     #psf = p.gaussianPsf()</span>
+<span class="c">#     </span>
+<span class="c">#     np.save(f.join(&#39;psf.npy&#39;), psf)</span>
+<span class="c">#     </span>
+<span class="c">#     </span>
+<span class="c">#     </span>
+<span class="c">#     plt.imshow(psf, interpolation=&#39;none&#39;)</span>
+<span class="c">#     plt.colorbar()</span>
+<span class="c">#     plt.show()</span>
+<span class="c">#     </span>
+<span class="c">#     img = p.drawPoints()</span>
+<span class="c">#     plt.imshow(img)</span>
+<span class="c">#     plt.colorbar()</span>
+<span class="c">#     plt.show()</span>
+<span class="c">#     </span>
+<span class="c">#     #SHARPEN:</span>
+<span class="c">#     #img = imread(f2.join(&#39;corrected.tif&#39;), &#39;gray&#39;, float)</span>
+<span class="c"># </span>
+<span class="c">#     img = imread(&#39;C:\\Users\\elkb4\Desktop\\PhD\Measurements\\EL round robin\\HULC el round robin\\mod7\\mod7_e180_g4_b1_V38-970_I7-801_T19-062_p2-2_n1__3.tif&#39;, &#39;gray&#39;, float)</span>
+<span class="c"># </span>
+<span class="c"># </span>
+<span class="c">#     mx = img.max()</span>
+<span class="c">#     img/=mx</span>
+<span class="c">#     #BEST:</span>
+<span class="c">#     deconvolved, _ = restoration.unsupervised_wiener(img, psf)</span>
+<span class="c">#     </span>
+<span class="c">#     #FAST BUT STILL BLURRY:</span>
+<span class="c">#     #deconvolved = restoration.wiener(img, psf, balance=0.1)</span>
+<span class="c">#     </span>
+<span class="c">#     #AS GOOD AS unsupervised, BUT SLOWER:</span>
+<span class="c">#     #deconvolved = restoration.richardson_lucy(img, psf,  iterations=4, clip=True)</span>
+<span class="c">#     </span>
+<span class="c">#     deconvolved*=mx</span>
+<span class="c">#     </span>
+<span class="c">#     imwrite(f.join(&#39;deblurred.tif&#39;), deconvolved)</span>
+<span class="c">#     plt.imshow(deconvolved)</span>
+<span class="c">#     plt.colorbar()</span>
+<span class="c">#     plt.show()  </span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

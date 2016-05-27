@@ -1,0 +1,804 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.cameraCalibration.PerspectiveCorrection &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.cameraCalibration.PerspectiveCorrection</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.cameraCalibration.PerspectiveCorrection</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">from</span> <span class="nn">transforms3d</span> <span class="kn">import</span> <span class="n">euler</span>
+
+<span class="kn">from</span> <span class="nn">fancytools.math.Point3D</span> <span class="kn">import</span> <span class="n">Point3D</span>
+
+<span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.sortCorners</span> <span class="kn">import</span>  <span class="n">sortCorners</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.genericCameraMatrix</span> <span class="kn">import</span> <span class="n">genericCameraMatrix</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.equations.vignetting</span> <span class="kn">import</span> <span class="n">tiltFactor</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.equations.defocusThroughDepth</span> <span class="kn">import</span> <span class="n">defocusThroughDepth</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.imgPointToWorldCoord</span> <span class="kn">import</span> <span class="n">imgPointToWorldCoord</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.PatternRecognition</span> <span class="kn">import</span> <span class="n">PatternRecognition</span>
+<span class="kn">from</span> <span class="nn">imgProcessor.calcAspectRatioFromCorners</span> <span class="kn">import</span> <span class="n">calcAspectRatioFromCorners</span>
+
+
+
+<div class="viewcode-block" id="PerspectiveCorrection"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection">[docs]</a><span class="k">class</span> <span class="nc">PerspectiveCorrection</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    
+<div class="viewcode-block" id="PerspectiveCorrection.__init__"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">img_shape</span><span class="p">,</span>
+                 <span class="n">obj_height_mm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">obj_width_mm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">cameraMatrix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">distCoeffs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">do_correctIntensity</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                 <span class="n">new_size</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">in_plane</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                 <span class="n">cv2_opts</span><span class="o">=</span><span class="p">{}</span> <span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        correction(warp+intensity factor) + uncertainty due to perspective distortion</span>
+<span class="sd">        </span>
+<span class="sd">        new_size = (sizey, sizex)</span>
+<span class="sd">            if either sizey or sizex is None the resulting size will set </span>
+<span class="sd">            using an (assumed) aspect ratio </span>
+<span class="sd">        </span>
+<span class="sd">        in_plane=True --&gt; object has to tilt, only rotation and translation</span>
+<span class="sd">        </span>
+<span class="sd">        this class saves all parameter maps in self.maps</span>
+<span class="sd">        !!!</span>
+<span class="sd">        given images need to be already free from lens distortion</span>
+<span class="sd">        and distCoeffs should be 0</span>
+<span class="sd">        !!!</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;obj_height_mm&#39;</span><span class="p">:</span><span class="n">obj_height_mm</span><span class="p">,</span>
+                     <span class="s">&#39;obj_width_mm&#39;</span><span class="p">:</span><span class="n">obj_width_mm</span><span class="p">,</span>
+                     <span class="s">&#39;distCoeffs&#39;</span><span class="p">:</span><span class="n">distCoeffs</span><span class="p">,</span>
+                     <span class="s">&#39;do_correctIntensity&#39;</span><span class="p">:</span><span class="n">do_correctIntensity</span><span class="p">,</span>
+                     <span class="s">&#39;new_size&#39;</span><span class="p">:</span><span class="n">new_size</span><span class="p">,</span>
+                     <span class="s">&#39;in_plane&#39;</span><span class="p">:</span><span class="n">in_plane</span><span class="p">,</span>
+                     <span class="s">&#39;cv2_opts&#39;</span><span class="p">:</span><span class="n">cv2_opts</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">cameraMatrix</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">cameraMatrix</span> <span class="o">=</span> <span class="n">genericCameraMatrix</span><span class="p">(</span><span class="n">img_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;cameraMatrix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cameraMatrix</span></div>
+
+
+<div class="viewcode-block" id="PerspectiveCorrection.setReference"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection.setReference">[docs]</a>    <span class="k">def</span> <span class="nf">setReference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        ref  ... either quad, grid, homography or reference image</span>
+<span class="sd">        </span>
+<span class="sd">        quad --&gt; list of four image points(x,y) marking the edges of the quad</span>
+<span class="sd">               to correct</span>
+<span class="sd">        homography --&gt; h. matrix to correct perspective distortion</span>
+<span class="sd">        referenceImage --&gt; image of same object without perspective distortion</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maps</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quad</span><span class="o">=</span><span class="bp">None</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj_points</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_camera_position</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_homography</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_homography_is_fixed</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rvec</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+  
+        <span class="c">#evaluate input:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ref</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">):</span>
+            <span class="c">#REF IS HOMOGRAPHY</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_homography</span> <span class="o">=</span> <span class="n">ref</span>
+            <span class="c">#REF IS QUAD</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">quad</span> <span class="o">=</span> <span class="n">sortCorners</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+            <span class="c">#REF IS IMAGE</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">PatternRecognition</span><span class="p">(</span><span class="n">imread</span><span class="p">(</span><span class="n">ref</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_homography_is_fixed</span> <span class="o">=</span> <span class="bp">False</span></div>
+
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">homography</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_homography</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">quad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="c">#GET HOMOGRAPHIE FROM QUAD</span>
+                <span class="n">fixedX</span><span class="p">,</span><span class="n">fixedY</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span><span class="bp">None</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c">#is new size is given</span>
+                    <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;new_size&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">sx</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">sy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">fixedY</span> <span class="o">=</span> <span class="n">sy</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">()</span>
+                    <span class="k">elif</span> <span class="n">sx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">sy</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">fixedX</span> <span class="o">=</span> <span class="n">sx</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c">#estimate size</span>
+                        <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;obj_width_mm&#39;</span><span class="p">]</span>
+                        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;obj_height_mm&#39;</span><span class="p">]</span>
+                        <span class="n">aspectRatio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">)</span><span class="o">/</span><span class="n">h</span>
+                    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                        <span class="n">aspectRatio</span> <span class="o">=</span> <span class="n">calcAspectRatioFromCorners</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quad</span><span class="p">,</span> 
+                                                                <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;in_plane&#39;</span><span class="p">])</span>
+                        <span class="k">print</span> <span class="s">&#39;aspect ratio assumed to be </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">aspectRatio</span>
+                    <span class="c">#new image border keeping aspect ratio</span>
+                    <span class="k">if</span> <span class="n">fixedX</span> <span class="ow">or</span> <span class="n">fixedY</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">fixedX</span><span class="p">:</span>
+                            <span class="n">sx</span> <span class="o">=</span> <span class="n">fixedX</span>
+                            <span class="n">sy</span> <span class="o">=</span> <span class="n">sx</span><span class="o">/</span><span class="n">aspectRatio</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">sy</span> <span class="o">=</span> <span class="n">fixedY</span>
+                            <span class="n">sx</span> <span class="o">=</span> <span class="n">sy</span><span class="o">*</span><span class="n">aspectRatio</span>
+                    <span class="k">else</span><span class="p">:</span>                                        
+                        <span class="n">sx</span><span class="p">,</span><span class="n">sy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calcQuadSize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quad</span><span class="p">,</span> <span class="n">aspectRatio</span><span class="p">)</span>
+                            
+                <span class="bp">self</span><span class="o">.</span><span class="n">_newBorders</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">sx</span><span class="p">)),</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">sy</span><span class="p">)))</span>
+                <span class="c">#image edges:</span>
+                <span class="n">objP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+                            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                            <span class="p">[</span><span class="n">sx</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                            <span class="p">[</span><span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">],</span>
+                            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">sy</span><span class="p">],</span>
+                            <span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_homography</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getPerspectiveTransform</span><span class="p">(</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">quad</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">objP</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c">#GET HOMOGRAPHY USING PATTERN RECOGNITION</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_Hinv</span> <span class="o">=</span> <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">findHomography</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_homography</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">invertHomography</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_newBorders</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_homography</span>
+
+
+<div class="viewcode-block" id="PerspectiveCorrection.distort"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection.distort">[docs]</a>    <span class="k">def</span> <span class="nf">distort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">img</span><span class="p">,</span> <span class="n">rotX</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rotY</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">quad</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Apply perspective distortion ion self.img</span>
+<span class="sd">        angles are in DEG and need to be positive to fit into image</span>
+<span class="sd">        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="c">#fit old image to self.quad:</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correct</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">)</span>   
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">quad</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">wquad</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quad</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">quad</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            
+            <span class="n">win_width</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">win_height</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c">#project quad:</span>
+            <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">wquad</span><span class="p">):</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">Point3D</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">rotateX</span><span class="p">(</span><span class="o">-</span><span class="n">rotX</span><span class="p">)</span><span class="o">.</span><span class="n">rotateY</span><span class="p">(</span><span class="o">-</span><span class="n">rotY</span><span class="p">)</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">win_width</span><span class="p">,</span> <span class="n">win_height</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">wquad</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">p</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">wquad</span><span class="o">=</span> <span class="n">sortCorners</span><span class="p">(</span><span class="n">wquad</span><span class="p">)</span>
+            <span class="c">#scale result so that longest side of quad and wquad are equal</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">wquad</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">wquad</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">wquad</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">wquad</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">w</span><span class="p">,</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">h</span><span class="p">)</span>
+            <span class="c">#scale:</span>
+            <span class="n">wquad</span> <span class="o">=</span> <span class="p">(</span><span class="n">wquad</span><span class="o">*</span><span class="n">scale</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wquad</span> <span class="o">=</span> <span class="n">sortCorners</span><span class="p">(</span><span class="n">quad</span><span class="p">)</span>
+        <span class="n">wquad</span> <span class="o">-=</span> <span class="n">wquad</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+  
+        <span class="n">lx</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ly</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">objP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+                    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="p">[</span><span class="n">lx</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="p">[</span><span class="n">lx</span><span class="p">,</span> <span class="n">ly</span><span class="p">],</span>
+                    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">ly</span><span class="p">],</span>
+                    <span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="n">homography</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getPerspectiveTransform</span><span class="p">(</span><span class="n">wquad</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">objP</span><span class="p">)</span>
+        <span class="c">#distort corr:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">wquad</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">wquad</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">wquad</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">wquad</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> 
+        <span class="c">#(int(w),int(h))</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">homography</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">w</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">)),</span> <span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_CUBIC</span> <span class="o">|</span> <span class="n">cv2</span><span class="o">.</span><span class="n">WARP_INVERSE_MAP</span><span class="p">)</span>
+
+        <span class="c">#move middle of dist to middle of the old quad: </span>
+        <span class="n">bg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">rmn</span> <span class="o">=</span> <span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">bg</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        
+        <span class="n">ss</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">mn</span> <span class="o">=</span> <span class="p">(</span><span class="n">ss</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">ss</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="c">#wquad.mean(axis=0)</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">rmn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">mn</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">rmn</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">mn</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">bg</span><span class="p">[</span><span class="n">ref</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">ss</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">ref</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ref</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">ss</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">ref</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">dist</span>
+        
+        <span class="c">#finally move quad into right position:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quad</span> <span class="o">=</span> <span class="n">wquad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quad</span> <span class="o">+=</span> <span class="p">(</span><span class="n">ref</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">ref</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="n">bg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_homography</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_poseFromQuad</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;do_correctIntensity&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getTiltFactor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_getTiltFactor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="c">#CALCULATE VIGNETTING OF WARPED OBJECT:</span>
+        <span class="n">_</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="p">()</span>
+        <span class="n">eulerAngles</span> <span class="o">=</span> <span class="n">euler</span><span class="o">.</span><span class="n">mat2euler</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">Rodrigues</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axes</span><span class="o">=</span><span class="s">&#39;rzxy&#39;</span><span class="p">)</span>
+        
+        <span class="n">tilt</span> <span class="o">=</span> <span class="n">eulerAngles</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">rot</span> <span class="o">=</span> <span class="n">eulerAngles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;cameraMatrix&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="s">&#39;tilt_factor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfunction</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="n">tiltFactor</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> 
+                                              <span class="n">f</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="n">tilt</span><span class="p">,</span> <span class="n">rot</span><span class="o">=</span><span class="n">rot</span><span class="p">),</span> <span class="n">s</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="c">#if img is color:</span>
+        <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">s</span><span class="p">:</span>
+            <span class="n">tf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tf</span>
+
+
+<div class="viewcode-block" id="PerspectiveCorrection.correctGrid"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection.correctGrid">[docs]</a>    <span class="k">def</span> <span class="nf">correctGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">grid</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        grid -&gt; array of polylines=((p0x,p0y),(p1x,p1y),,,)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">homography</span><span class="c">#TODO: cleanup only needed to get newBorder attr.</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;do_correctIntensity&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getTiltFactor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">)</span>
+
+        <span class="n">snew</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_newBorders</span>
+        <span class="n">warped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">snew</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">s0</span><span class="p">,</span><span class="n">s1</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">nx</span><span class="p">,</span><span class="n">ny</span> <span class="o">=</span> <span class="n">s0</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">s1</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">sy</span><span class="p">,</span><span class="n">sx</span> <span class="o">=</span> <span class="n">snew</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">nx</span><span class="p">,</span><span class="n">snew</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">ny</span>
+        
+        <span class="n">objP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+                         <span class="p">[</span><span class="n">sx</span><span class="p">,</span><span class="mi">0</span> <span class="p">],</span>
+                         <span class="p">[</span><span class="n">sx</span><span class="p">,</span><span class="n">sy</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">sy</span><span class="p">]</span> <span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">nx</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">iy</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">ny</span><span class="p">):</span>
+                <span class="n">quad</span> <span class="o">=</span> <span class="n">grid</span><span class="p">[</span><span class="n">ix</span><span class="p">:</span><span class="n">ix</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span><span class="n">iy</span><span class="p">:</span><span class="n">iy</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">])]</span>
+                <span class="n">hcell</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getPerspectiveTransform</span><span class="p">(</span>
+                                <span class="n">quad</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">objP</span><span class="p">)</span>
+
+                <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">,</span> <span class="n">hcell</span><span class="p">,</span> <span class="p">(</span><span class="n">sx</span><span class="p">,</span><span class="n">sy</span><span class="p">),</span>
+                                    <span class="n">warped</span><span class="p">[</span><span class="n">iy</span><span class="o">*</span><span class="n">sy</span> <span class="p">:</span> <span class="p">(</span><span class="n">iy</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">sy</span><span class="p">,</span>
+                                           <span class="n">ix</span><span class="o">*</span><span class="n">sx</span> <span class="p">:</span> <span class="p">(</span><span class="n">ix</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">sx</span><span class="p">],</span>
+                                    <span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LANCZOS4</span><span class="p">,</span>
+                                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;cv2_opts&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">warped</span>    </div>
+
+
+<div class="viewcode-block" id="PerspectiveCorrection.correct"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection.correct">[docs]</a>    <span class="k">def</span> <span class="nf">correct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        ...from perspective distortion: </span>
+<span class="sd">         --&gt; perspective transformation</span>
+<span class="sd">         --&gt; apply tilt factor (view factor) correction </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_homography_is_fixed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_homography</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">homography</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;do_correctIntensity&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getTiltFactor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">warped</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">,</span> 
+                                     <span class="n">h</span><span class="p">,</span> 
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">_newBorders</span><span class="p">,</span>
+                                     <span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LANCZOS4</span><span class="p">,</span>
+                                     <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;cv2_opts&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">warped</span></div>
+
+
+<div class="viewcode-block" id="PerspectiveCorrection.correctPoints"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection.correctPoints">[docs]</a>    <span class="k">def</span> <span class="nf">correctPoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pts</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_homography_is_fixed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_homography</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">homography</span>
+<span class="c">#         #normalize</span>
+<span class="c">#         h /= h[2,2]</span>
+<span class="c">#         #invert homography</span>
+<span class="c">#         h = np.linalg.inv(h)</span>
+
+        <span class="k">if</span> <span class="n">pts</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">pts</span> <span class="o">=</span> <span class="n">pts</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">*</span><span class="n">pts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> 
+        <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">perspectiveTransform</span><span class="p">(</span><span class="n">pts</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">h</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">camera_position</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        returns camera position in world coordinates using self.rvec and self.tvec</span>
+<span class="sd">        from http://stackoverflow.com/questions/14515200/python-opencv-solvepnp-yields-wrong-translation-vector</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">t</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera_position</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_camera_position</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">Rodrigues</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera_position</span>
+
+
+<div class="viewcode-block" id="PerspectiveCorrection.standardUncertainties"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection.standardUncertainties">[docs]</a>    <span class="k">def</span> <span class="nf">standardUncertainties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">focal_Length_mm</span><span class="p">,</span> <span class="n">f_number</span><span class="p">,</span> 
+                    <span class="n">focusAtYX</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">sigma_best_focus</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">quad_pos_err</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">shape</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">uncertainties</span><span class="o">=</span><span class="p">(</span> <span class="p">(),(),()</span> <span class="p">)</span> <span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        focusAtXY - image position with is in focus</span>
+<span class="sd">            if not set it is assumed that the image middle is in focus</span>
+<span class="sd">        sigma_best_focus - standard deviation of the PSF</span>
+<span class="sd">                             within the best focus (default blur)</span>
+<span class="sd">        uncertainties - contibutors for standard uncertainty</span>
+<span class="sd">                        these need to be perspective transformed to fit the new </span>
+<span class="sd">                        image shape</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c">#TODO: consider quad_pos_error</span>
+        <span class="c">############################## (also influences intensity corr map)</span>
+        
+        <span class="n">cam</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;cameraMatrix&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">shape</span>
+
+        <span class="c"># 1. DEFOCUS DUE TO DEPTH OF FIELD</span>
+        <span class="c">################################## </span>
+        <span class="n">t</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="p">()</span>
+        <span class="n">worldCoord</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfunction</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="n">imgPointToWorldCoord</span><span class="p">((</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">cam</span><span class="p">),</span> <span class="n">s</span><span class="p">)</span>
+        <span class="n">depthMap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">worldCoord</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_position</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">worldCoord</span>
+
+        <span class="k">if</span> <span class="n">focusAtYX</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c">#assume image middle is in-focus:</span>
+            <span class="n">focusAtYX</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">infocusDepth</span> <span class="o">=</span> <span class="n">depthMap</span><span class="p">[</span><span class="n">focusAtYX</span><span class="p">]</span>
+        <span class="n">depthOfField_blur</span> <span class="o">=</span> <span class="n">defocusThroughDepth</span><span class="p">(</span><span class="n">depthMap</span><span class="p">,</span> <span class="n">infocusDepth</span><span class="p">,</span> <span class="n">focal_Length_mm</span><span class="p">,</span> <span class="n">f_number</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mf">2.335</span><span class="p">)</span>
+
+        <span class="c">#2. INCREAASED PIXEL SIZE DUE TO INTERPOLATION BETWEEN </span>
+        <span class="c">#   PIXELS MOVED APARD</span>
+        <span class="c">######################################################</span>
+        <span class="c">#index maps:</span>
+        <span class="n">py</span><span class="p">,</span> <span class="n">px</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">:</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="c">#warped index maps:</span>
+        <span class="n">wx</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">px</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">homography</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_newBorders</span><span class="p">,</span>
+                                 <span class="n">borderValue</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                                 <span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LANCZOS4</span>  <span class="p">)</span>
+        <span class="n">wy</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">py</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">homography</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_newBorders</span><span class="p">,</span>
+                                 <span class="n">borderValue</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                                 <span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LANCZOS4</span>  <span class="p">)</span>
+
+        <span class="n">pxSizeFactorX</span><span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">wx</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">pxSizeFactorY</span><span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">wy</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="s">&#39;depthMap&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">depthMap</span>
+
+        <span class="c">#AREA RATIO AFTER/BEFORE:</span>
+            <span class="c">#AREA OF QUADRILATERAL:</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quad</span>
+        <span class="n">quad_size</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span> <span class="nb">abs</span><span class="p">(</span> <span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> 
+                               <span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">sx</span><span class="p">,</span><span class="n">sy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_newBorders</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">areaRatio</span> <span class="o">=</span> <span class="p">(</span><span class="n">sx</span><span class="o">*</span><span class="n">sy</span><span class="p">)</span><span class="o">/</span><span class="n">quad_size</span>
+
+        <span class="c">#WARP ALL FIELD TO NEW PERSPECTIVE AND MULTIPLY WITH PXSIZE FACTOR:  </span>
+        <span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="n">pxSizeFactorX</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">pxSizeFactorY</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="s">&#39;depthOfField_blur&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">depthOfField_blur</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span>
+                                 <span class="n">depthOfField_blur</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">homography</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_newBorders</span><span class="p">,</span>
+                                 <span class="n">borderValue</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                                 <span class="p">)</span><span class="o">*</span><span class="n">f</span>
+
+        <span class="c">#perspective transform given uncertainties:</span>
+        <span class="n">warpedU</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">uncertainties</span><span class="p">:</span>
+            <span class="n">warpedU</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">u</span><span class="p">:</span>
+                <span class="c">#print i, type(i), isinstance(i, np.ndarray)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">i</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">homography</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_newBorders</span><span class="p">,</span>
+                                 <span class="n">borderValue</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                                 <span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LANCZOS4</span><span class="p">)</span><span class="o">*</span><span class="n">f</span>
+                                 
+                <span class="k">else</span><span class="p">:</span>
+                <span class="c">#multiply with area ratio: after/before perspective warp</span>
+                    <span class="n">i</span><span class="o">*=</span><span class="bp">self</span><span class="o">.</span><span class="n">areaRatio</span>
+                      
+                <span class="n">warpedU</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="n">delectionUncertX</span> <span class="o">=</span> <span class="p">(</span><span class="n">pxSizeFactorX</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="mi">3</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">delectionUncertY</span> <span class="o">=</span> <span class="p">(</span><span class="n">pxSizeFactorY</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="mi">3</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="n">warpedU</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">delectionUncertX</span><span class="p">,</span> <span class="n">depthOfField_blur</span><span class="p">))</span>
+        <span class="n">warpedU</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">delectionUncertY</span><span class="p">,</span> <span class="n">depthOfField_blur</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">warpedU</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="PerspectiveCorrection.pose"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection.pose">[docs]</a>    <span class="k">def</span> <span class="nf">pose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tvec</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">quad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_poseFromQuad</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_poseFromHomography</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rvec</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_poseFromHomography</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sy</span><span class="p">,</span><span class="n">sx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c">#image edges:</span>
+        <span class="n">objP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span>
+                    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="p">[</span><span class="n">sx</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="p">[</span><span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">],</span>
+                    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">sy</span><span class="p">],</span>
+                    <span class="p">]],</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">quad</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">perspectiveTransform</span><span class="p">(</span><span class="n">objP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Hinv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_poseFromQuad</span><span class="p">(</span><span class="n">quad</span><span class="p">)</span>
+        
+
+    <span class="k">def</span> <span class="nf">_poseFromQuad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quad</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        estimate the pose of the object plane using quad</span>
+<span class="sd">            setting:</span>
+<span class="sd">        self.rvec -&gt; rotation vector</span>
+<span class="sd">        self.tvec -&gt; translation vector</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">quad</span> <span class="ow">is</span>  <span class="bp">None</span><span class="p">:</span>
+            <span class="n">quad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quad</span>
+        <span class="c"># http://answers.opencv.org/question/1073/what-format-does-cv2solvepnp-use-for-points-in/</span>
+        <span class="c"># Find the rotation and translation vectors.        </span>
+        <span class="n">retval</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tvec</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">solvePnP</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">obj_points</span><span class="p">,</span> 
+                    <span class="n">quad</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> 
+                    <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;cameraMatrix&#39;</span><span class="p">],</span> 
+                    <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;distCoeffs&#39;</span><span class="p">],</span>
+                    <span class="c">#flags=cv2.CV_ITERATIVE </span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="n">retval</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Couln&#39;t estimate pose&quot;</span><span class="p">)</span>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">obj_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_points</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;obj_height_mm&#39;</span><span class="p">]</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;obj_width_mm&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">h</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">w</span><span class="p">,</span><span class="n">h</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span><span class="mi">100</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+                        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+                        <span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                        <span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_points</span>
+
+
+<div class="viewcode-block" id="PerspectiveCorrection.drawQuad"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection.drawQuad">[docs]</a>    <span class="k">def</span> <span class="nf">drawQuad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">img</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">quad</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Draw the quad into given img </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">img</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span>
+        <span class="k">if</span> <span class="n">quad</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">quad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quad</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">quad</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">c</span><span class="p">,</span> <span class="n">thickness</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">c</span><span class="p">,</span> <span class="n">thickness</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span> <span class="n">c</span><span class="p">,</span> <span class="n">thickness</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">c</span><span class="p">,</span> <span class="n">thickness</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="PerspectiveCorrection.draw3dCoordAxis"><a class="viewcode-back" href="../../../imgProcessor.cameraCalibration.html#imgProcessor.cameraCalibration.PerspectiveCorrection.PerspectiveCorrection.draw3dCoordAxis">[docs]</a>    <span class="k">def</span> <span class="nf">draw3dCoordAxis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">img</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        draw the 3d coordinate axes into given image</span>
+<span class="sd">        if image == False:</span>
+<span class="sd">            create an empty image</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">img</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span>
+        <span class="k">elif</span> <span class="n">img</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="c"># project 3D points to image plane:</span>
+        <span class="n">w</span><span class="p">,</span><span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;obj_width_mm&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;obj_height_mm&#39;</span><span class="p">]</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([[</span><span class="mf">0.5</span><span class="o">*</span><span class="n">w</span><span class="p">,</span><span class="mf">0.5</span><span class="o">*</span><span class="n">h</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                           <span class="p">[</span> <span class="n">w</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">h</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> 
+                           <span class="p">[</span><span class="mf">0.5</span><span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> 
+                           <span class="p">[</span><span class="mf">0.5</span><span class="o">*</span><span class="n">w</span><span class="p">,</span><span class="mf">0.5</span><span class="o">*</span><span class="n">h</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">w</span><span class="p">]])</span>
+        <span class="n">t</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="p">()</span>
+        <span class="n">imgpts</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">projectPoints</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> 
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;cameraMatrix&#39;</span><span class="p">],</span> 
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;distCoeffs&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    
+        <span class="n">mx</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">imgpts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">imgpts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">mx</span><span class="p">),</span> <span class="n">thickness</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">imgpts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">mx</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">thickness</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">imgpts</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span> <span class="p">(</span><span class="n">mx</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">thickness</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+    
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_calcQuadSize</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">aspectRatio</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        return the size of a rectangle in perspective distortion in [px]</span>
+<span class="sd">        DEBUG: PUT THAT BACK IN??::</span>
+<span class="sd">            if aspectRatio is not given is will be determined</span>
+<span class="sd">        &#39;&#39;&#39;</span>           
+        <span class="k">if</span> <span class="n">aspectRatio</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> <span class="c">#x is bigger -&gt; reduce y</span>
+            <span class="n">x_length</span> <span class="o">=</span> <span class="n">PerspectiveCorrection</span><span class="o">.</span><span class="n">_quadXLength</span><span class="p">(</span><span class="n">corners</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">x_length</span> <span class="o">/</span> <span class="n">aspectRatio</span>
+            <span class="k">return</span> <span class="n">x_length</span><span class="p">,</span> <span class="n">y</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c"># y is bigger -&gt; reduce x</span>
+            <span class="n">y_length</span> <span class="o">=</span> <span class="n">PerspectiveCorrection</span><span class="o">.</span><span class="n">_quadYLength</span><span class="p">(</span><span class="n">corners</span><span class="p">)</span>          
+            <span class="n">x</span> <span class="o">=</span> <span class="n">y_length</span><span class="o">*</span><span class="n">aspectRatio</span>
+            <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_length</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_quadYLength</span><span class="p">(</span><span class="n">corners</span><span class="p">):</span>
+        <span class="n">ll</span> <span class="o">=</span> <span class="n">PerspectiveCorrection</span><span class="o">.</span><span class="n">_linelength</span>
+        <span class="n">l0</span> <span class="o">=</span> <span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">corners</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">l1</span> <span class="o">=</span> <span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">corners</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">ll</span><span class="p">(</span><span class="n">l0</span><span class="p">),</span> <span class="n">ll</span><span class="p">(</span><span class="n">l1</span><span class="p">))</span> 
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_quadXLength</span><span class="p">(</span><span class="n">corners</span><span class="p">):</span>
+        <span class="n">ll</span> <span class="o">=</span> <span class="n">PerspectiveCorrection</span><span class="o">.</span><span class="n">_linelength</span>
+        <span class="n">l0</span> <span class="o">=</span> <span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">corners</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">l1</span> <span class="o">=</span> <span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">corners</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">ll</span><span class="p">(</span><span class="n">l0</span><span class="p">),</span> <span class="n">ll</span><span class="p">(</span><span class="n">l1</span><span class="p">))</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_linelength</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+        <span class="n">p0</span><span class="p">,</span><span class="n">p1</span> <span class="o">=</span> <span class="n">line</span>
+        <span class="n">x0</span><span class="p">,</span><span class="n">y0</span> <span class="o">=</span> <span class="n">p0</span>
+        <span class="n">x1</span><span class="p">,</span><span class="n">y1</span> <span class="o">=</span> <span class="n">p1</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">x1</span><span class="o">-</span><span class="n">x0</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">y1</span><span class="o">-</span><span class="n">y0</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">dy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span></div>
+
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c">#in this example we will rotate a given image in perspective</span>
+    <span class="c">#and then correct the perspective with given corners or a reference</span>
+    <span class="c">#(the undistorted original) image</span>
+    <span class="kn">from</span> <span class="nn">fancytools.os.PathStr</span> <span class="kn">import</span> <span class="n">PathStr</span>
+    <span class="kn">import</span> <span class="nn">imgProcessor</span>
+    <span class="kn">from</span> <span class="nn">imgProcessor.transformations</span> <span class="kn">import</span> <span class="n">toUIntArray</span>
+
+    <span class="c">#1. LOAD TEST IMAGE</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">PathStr</span><span class="p">(</span><span class="n">imgProcessor</span><span class="o">.</span><span class="n">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">dirname</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="s">&#39;media&#39;</span><span class="p">,</span> <span class="s">&#39;electroluminescence&#39;</span><span class="p">,</span> <span class="s">&#39;EL_module_orig.PNG&#39;</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    
+    <span class="c">#DEFINE OBJECT CORNERS:</span>
+    <span class="n">sy</span><span class="p">,</span><span class="n">sx</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="c">#x,y</span>
+    <span class="n">obj_corners</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">8</span><span class="p">,</span>  <span class="mi">2</span><span class="p">),</span>
+                   <span class="p">(</span><span class="mi">198</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span>
+                   <span class="p">(</span><span class="mi">198</span><span class="p">,</span><span class="mi">410</span><span class="p">),</span>
+                   <span class="p">(</span><span class="mi">9</span><span class="p">,</span>  <span class="mi">411</span><span class="p">)]</span>
+    <span class="c">#LOAD CLASS:</span>
+    <span class="n">pc</span> <span class="o">=</span> <span class="n">PerspectiveCorrection</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                               <span class="n">do_correctIntensity</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                               <span class="n">obj_height_mm</span><span class="o">=</span><span class="n">sy</span><span class="p">,</span>
+                               <span class="n">obj_width_mm</span><span class="o">=</span><span class="n">sx</span><span class="p">)</span>
+    <span class="n">pc</span><span class="o">.</span><span class="n">setReference</span><span class="p">(</span><span class="n">obj_corners</span><span class="p">)</span>
+    <span class="n">img2</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">pc</span><span class="o">.</span><span class="n">drawQuad</span><span class="p">(</span><span class="n">img2</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+ 
+    <span class="c">#2. DISTORT THE IMAGE:</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">distort</span><span class="p">(</span><span class="n">img2</span><span class="p">,</span> <span class="n">rotX</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">rotY</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+    <span class="n">dist2</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">pc</span><span class="o">.</span><span class="n">draw3dCoordAxis</span><span class="p">(</span><span class="n">dist2</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">pc</span><span class="o">.</span><span class="n">drawQuad</span><span class="p">(</span><span class="n">dist2</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="c">#3a. CORRECT WITH QUAD:</span>
+    <span class="n">corr</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">correct</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+ 
+    <span class="c">#3b. CORRECT WITH WITHEN REFERENCE IMAGE</span>
+<span class="c">#     pc.img = dist</span>
+    <span class="n">pc</span><span class="o">.</span><span class="n">setReference</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="n">corr2</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">correct</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+
+    <span class="c">#DISLAY</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s">&quot;1. original&quot;</span><span class="p">,</span> <span class="n">img2</span><span class="p">)</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s">&quot;2. distorted&quot;</span><span class="p">,</span> <span class="n">toUIntArray</span><span class="p">(</span><span class="n">dist2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s">&quot;3a. corr. with quad&quot;</span><span class="p">,</span> <span class="n">toUIntArray</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s">&quot;3b. corr. with ref. image&quot;</span><span class="p">,</span> <span class="n">toUIntArray</span><span class="p">(</span><span class="n">corr2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

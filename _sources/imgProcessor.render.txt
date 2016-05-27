@@ -1,0 +1,28 @@
+imgProcessor.render package
+===========================
+
+.. automodule:: imgProcessor.render
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.render.closestConnectedDistance module
+---------------------------------------------------
+
+.. automodule:: imgProcessor.render.closestConnectedDistance
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.render.closestDirectDistance module
+------------------------------------------------
+
+.. automodule:: imgProcessor.render.closestDirectDistance
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

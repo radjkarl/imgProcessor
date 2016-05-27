@@ -1,0 +1,332 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.interpolate.interpolateCircular2dStructuredIDW &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.interpolate.interpolateCircular2dStructuredIDW</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.interpolate.interpolateCircular2dStructuredIDW</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">atan2</span>
+
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<div class="viewcode-block" id="interpolateCircular2dStructuredIDW"><a class="viewcode-back" href="../../../imgProcessor.interpolate.html#imgProcessor.interpolate.interpolateCircular2dStructuredIDW.interpolateCircular2dStructuredIDW">[docs]</a><span class="k">def</span> <span class="nf">interpolateCircular2dStructuredIDW</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
+                               <span class="n">fr</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fphi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cy</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    same as interpolate2dStructuredIDW</span>
+<span class="sd">    but calculation distance to neighbour using polar coordinates</span>
+<span class="sd">    fr, fphi --&gt; weight factors for radian and radius differences</span>
+<span class="sd">    cx,cy -&gt; polar center of the array e.g. middle-&gt;(sx//2+1,sy//2+1) </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">gx</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">gy</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c">#FOR EVERY PIXEL</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">gx</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">gy</span><span class="p">):</span>
+            
+            <span class="k">if</span> <span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]:</span>
+                
+                <span class="n">xmn</span> <span class="o">=</span> <span class="n">i</span><span class="o">-</span><span class="n">kernel</span>
+                <span class="k">if</span> <span class="n">xmn</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">xmn</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">xmx</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="n">kernel</span>
+                <span class="k">if</span> <span class="n">xmx</span> <span class="o">&gt;</span> <span class="n">gx</span><span class="p">:</span>
+                    <span class="n">xmx</span> <span class="o">=</span> <span class="n">gx</span>
+                    
+                <span class="n">ymn</span> <span class="o">=</span> <span class="n">j</span><span class="o">-</span><span class="n">kernel</span>
+                <span class="k">if</span> <span class="n">ymn</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">ymn</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">ymx</span> <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="n">kernel</span>
+                <span class="k">if</span> <span class="n">ymx</span> <span class="o">&gt;</span> <span class="n">gx</span><span class="p">:</span>
+                    <span class="n">ymx</span> <span class="o">=</span> <span class="n">gy</span>
+                    
+                <span class="n">sumWi</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="mf">0.0</span> 
+
+                <span class="c">#radius and radian to polar center:</span>
+                <span class="n">R</span> <span class="o">=</span> <span class="p">((</span><span class="n">i</span><span class="o">-</span><span class="n">cx</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="n">j</span><span class="o">-</span><span class="n">cy</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+                <span class="n">PHI</span> <span class="o">=</span> <span class="n">atan2</span><span class="p">(</span><span class="n">j</span><span class="o">-</span><span class="n">cy</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="n">cx</span><span class="p">)</span>
+                
+                <span class="c">#FOR EVERY NEIGHBOUR IN KERNEL              </span>
+                <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">xmn</span><span class="p">,</span><span class="n">xmx</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">ymn</span><span class="p">,</span><span class="n">ymx</span><span class="p">):</span>
+                        <span class="k">if</span>  <span class="p">(</span><span class="n">xi</span> <span class="o">!=</span> <span class="n">i</span> <span class="ow">or</span> <span class="n">yi</span> <span class="o">!=</span> <span class="n">j</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">mask</span><span class="p">[</span><span class="n">xi</span><span class="p">,</span><span class="n">yi</span><span class="p">]:</span>
+                            <span class="n">nR</span> <span class="o">=</span> <span class="p">((</span><span class="n">xi</span><span class="o">-</span><span class="n">cx</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="n">yi</span><span class="o">-</span><span class="n">cy</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+                            <span class="n">dr</span> <span class="o">=</span>  <span class="n">R</span> <span class="o">-</span> <span class="n">nR</span>
+                            <span class="c">#average radius between both p:</span>
+                            <span class="n">midR</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">R</span><span class="o">+</span><span class="n">nR</span><span class="p">)</span>
+                            <span class="c">#radian of neighbour p:</span>
+                            <span class="n">nphi</span> <span class="o">=</span> <span class="n">atan2</span><span class="p">(</span><span class="n">yi</span><span class="o">-</span><span class="n">cy</span><span class="p">,</span> <span class="n">xi</span><span class="o">-</span><span class="n">cx</span><span class="p">)</span>
+                            <span class="c">#relative angle between both points:</span>
+                            <span class="n">dphi</span> <span class="o">=</span> <span class="nb">min</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">PHI</span> <span class="o">-</span> <span class="n">nphi</span><span class="p">),</span> 
+                                       <span class="nb">abs</span><span class="p">(</span><span class="n">PHI</span> <span class="o">-</span> <span class="n">nphi</span><span class="p">))</span>    
+                            <span class="n">dphi</span><span class="o">*=</span><span class="n">midR</span>       
+                            
+                            <span class="n">dist</span> <span class="o">=</span> <span class="p">((</span><span class="n">fr</span><span class="o">*</span><span class="n">dr</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="n">fphi</span><span class="o">*</span><span class="n">dphi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+                            <span class="n">wi</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">dist</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">power</span><span class="p">)</span>
+                            <span class="n">sumWi</span> <span class="o">+=</span> <span class="n">wi</span>
+                            <span class="n">value</span> <span class="o">+=</span> <span class="n">wi</span> <span class="o">*</span> <span class="n">grid</span><span class="p">[</span><span class="n">xi</span><span class="p">,</span><span class="n">yi</span><span class="p">]</span>  
+                <span class="k">if</span> <span class="n">sumWi</span><span class="p">:</span>
+                    <span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">/</span><span class="n">sumWi</span>               
+
+    <span class="k">return</span> <span class="n">grid</span></div>
+
+
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+    
+    <span class="c">#this is part or a point spread function</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.00091412</span><span class="p">,</span>  <span class="mf">0.00092669</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.00071046</span><span class="p">,</span>  <span class="mf">0.00087626</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.00174763</span><span class="p">,</span>  <span class="mf">0.00316936</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.00802817</span><span class="p">,</span>  <span class="mf">0.01606653</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.00052719</span><span class="p">,</span>  <span class="mf">0.00165561</span><span class="p">,</span>  <span class="mf">0.00208777</span><span class="p">,</span>  <span class="mf">0.00212379</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.01836601</span><span class="p">,</span>  <span class="mf">0.04002059</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.00052719</span><span class="p">,</span>  <span class="mf">0.00257932</span><span class="p">,</span>  <span class="mf">0.00291309</span><span class="p">,</span>  <span class="mf">0.00914339</span><span class="p">,</span>  <span class="mf">0.02844799</span><span class="p">,</span>
+         <span class="mf">0.04823197</span><span class="p">,</span>  <span class="mf">0.05040033</span><span class="p">,</span>  <span class="mf">0.06361089</span><span class="p">,</span>  <span class="mf">0.04638128</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.00225948</span><span class="p">,</span>  <span class="mf">0.00222627</span><span class="p">,</span>  <span class="mf">0.00755744</span><span class="p">,</span>  <span class="mf">0.0133372</span> <span class="p">,</span>
+         <span class="mf">0.02761284</span><span class="p">,</span>  <span class="mf">0.06116419</span><span class="p">,</span>  <span class="mf">0.07565894</span><span class="p">,</span>  <span class="mf">0.05202775</span><span class="p">,</span>  <span class="mf">0.01511698</span><span class="p">,</span>
+         <span class="mf">0.00697312</span><span class="p">,</span>  <span class="mf">0.00270475</span><span class="p">,</span>  <span class="mf">0.00077251</span><span class="p">,</span>  <span class="mf">0.00067585</span><span class="p">,</span>  <span class="mf">0.00055524</span><span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.0532791</span> <span class="p">,</span>  <span class="mf">0.06633063</span><span class="p">,</span>  <span class="mf">0.07244685</span><span class="p">,</span>  <span class="mf">0.03513939</span><span class="p">,</span>
+         <span class="mf">0.01519723</span><span class="p">,</span>  <span class="mf">0.00217622</span><span class="p">,</span>  <span class="mf">0.00107757</span><span class="p">,</span>  <span class="mf">0.00076782</span><span class="p">,</span>  <span class="mf">0.0004534</span> <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.04717624</span><span class="p">,</span>  <span class="mf">0.03095101</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.00164764</span><span class="p">,</span>  <span class="mf">0.00137625</span><span class="p">,</span>  <span class="mf">0.00075694</span><span class="p">,</span>  <span class="mf">0.00076486</span><span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.02333552</span><span class="p">,</span>  <span class="mf">0.01279662</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.00623037</span><span class="p">,</span>  <span class="mf">0.00400915</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.00128086</span><span class="p">,</span>  <span class="mf">0.00131918</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.00080955</span><span class="p">,</span>  <span class="mf">0.00085656</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">],</span>
+       <span class="p">[</span> <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.00094004</span><span class="p">,</span>  <span class="mf">0.00078282</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>
+         <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">]])</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">arr</span><span class="o">==</span><span class="mi">0</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">cx</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">cy</span> <span class="o">=</span>  <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">fit</span> <span class="o">=</span> <span class="n">interpolateCircular2dStructuredIDW</span><span class="p">(</span>
+        <span class="n">arr</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">mask</span><span class="p">,</span> <span class="n">fr</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fphi</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">cx</span><span class="o">=</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="o">=</span><span class="n">cy</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">&#39;no_window&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;original&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;fit&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

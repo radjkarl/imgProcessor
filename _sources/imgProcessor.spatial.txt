@@ -1,0 +1,28 @@
+imgProcessor.spatial package
+============================
+
+.. automodule:: imgProcessor.spatial
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+imgProcessor.spatial.closestConnectedDistance module
+----------------------------------------------------
+
+.. automodule:: imgProcessor.spatial.closestConnectedDistance
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.spatial.closestDirectDistance module
+-------------------------------------------------
+
+.. automodule:: imgProcessor.spatial.closestDirectDistance
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

@@ -1,0 +1,366 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.features package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor package" href="imgProcessor.html"/>
+        <link rel="next" title="imgProcessor.filters package" href="imgProcessor.filters.html"/>
+        <link rel="prev" title="imgProcessor.equations package" href="imgProcessor.equations.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">imgProcessor.features package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.features.PatternRecognition">imgProcessor.features.PatternRecognition module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.features.QuadDetection">imgProcessor.features.QuadDetection module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.features.SingleTimeEffectDetection">imgProcessor.features.SingleTimeEffectDetection module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.features.hog">imgProcessor.features.hog module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.features.minimumLineInArray">imgProcessor.features.minimumLineInArray module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.features.polylinesFromBinImage">imgProcessor.features.polylinesFromBinImage module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+    <li>imgProcessor.features package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.features.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.features">
+<span id="imgprocessor-features-package"></span><h1>imgProcessor.features package<a class="headerlink" href="#module-imgProcessor.features" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.features.PatternRecognition">
+<span id="imgprocessor-features-patternrecognition-module"></span><h2>imgProcessor.features.PatternRecognition module<a class="headerlink" href="#module-imgProcessor.features.PatternRecognition" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.features.PatternRecognition.PatternRecognition">
+<em class="property">class </em><code class="descclassname">imgProcessor.features.PatternRecognition.</code><code class="descname">PatternRecognition</code><span class="sig-paren">(</span><em>image</em>, <em>fineKernelSize=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/PatternRecognition.html#PatternRecognition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.PatternRecognition.PatternRecognition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="imgProcessor.features.PatternRecognition.PatternRecognition.findHomography">
+<code class="descname">findHomography</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/PatternRecognition.html#PatternRecognition.findHomography"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.PatternRecognition.PatternRecognition.findHomography" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find homography of the image through pattern
+comparison with the base image</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.features.PatternRecognition.PatternRecognition.invertHomography">
+<code class="descname">invertHomography</code><span class="sig-paren">(</span><em>H</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/PatternRecognition.html#PatternRecognition.invertHomography"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.PatternRecognition.PatternRecognition.invertHomography" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.features.QuadDetection">
+<span id="imgprocessor-features-quaddetection-module"></span><h2>imgProcessor.features.QuadDetection module<a class="headerlink" href="#module-imgProcessor.features.QuadDetection" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.features.QuadDetection.QuadDetection">
+<em class="property">class </em><code class="descclassname">imgProcessor.features.QuadDetection.</code><code class="descname">QuadDetection</code><span class="sig-paren">(</span><em>img=None</em>, <em>vertices=None</em>, <em>refinePositions=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/QuadDetection.html#QuadDetection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.QuadDetection.QuadDetection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>detect the corners of a (bright) quadrilateral object in an image
+e.g. a PV cell/module in an EL image</p>
+<dl class="method">
+<dt id="imgProcessor.features.QuadDetection.QuadDetection.correct">
+<code class="descname">correct</code><span class="sig-paren">(</span><em>img=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/QuadDetection.html#QuadDetection.correct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.QuadDetection.QuadDetection.correct" title="Permalink to this definition">¶</a></dt>
+<dd><p>correct perspective
+forwards kwargs to PerspectiveCorrection</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.features.QuadDetection.QuadDetection.drawVertices">
+<code class="descname">drawVertices</code><span class="sig-paren">(</span><em>img=None</em>, <em>color=None</em>, <em>thickness=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/QuadDetection.html#QuadDetection.drawVertices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.QuadDetection.QuadDetection.drawVertices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.features.SingleTimeEffectDetection">
+<span id="imgprocessor-features-singletimeeffectdetection-module"></span><h2>imgProcessor.features.SingleTimeEffectDetection module<a class="headerlink" href="#module-imgProcessor.features.SingleTimeEffectDetection" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.features.SingleTimeEffectDetection.SingleTimeEffectDetection">
+<em class="property">class </em><code class="descclassname">imgProcessor.features.SingleTimeEffectDetection.</code><code class="descname">SingleTimeEffectDetection</code><span class="sig-paren">(</span><em>images</em>, <em>noise_level_function=None</em>, <em>nStd=4</em>, <em>save_ste_indices=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/SingleTimeEffectDetection.html#SingleTimeEffectDetection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.SingleTimeEffectDetection.SingleTimeEffectDetection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Detect and remove Single-time-effects (STE) using min. 2 equivalent images
+public attributes:</p>
+<p>.mask_clean &#8211;&gt; STE-free indices
+.mask_STE   &#8211;&gt; STE indices (only avail. if save_ste_indices=True)
+.noSTE      &#8211;&gt; STE free image</p>
+<dl class="method">
+<dt id="imgProcessor.features.SingleTimeEffectDetection.SingleTimeEffectDetection.addImage">
+<code class="descname">addImage</code><span class="sig-paren">(</span><em>image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/SingleTimeEffectDetection.html#SingleTimeEffectDetection.addImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.SingleTimeEffectDetection.SingleTimeEffectDetection.addImage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.features.SingleTimeEffectDetection.SingleTimeEffectDetection.countSTE">
+<code class="descname">countSTE</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/SingleTimeEffectDetection.html#SingleTimeEffectDetection.countSTE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.SingleTimeEffectDetection.SingleTimeEffectDetection.countSTE" title="Permalink to this definition">¶</a></dt>
+<dd><p>return number of found STE</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.features.SingleTimeEffectDetection.SingleTimeEffectDetection.intensityDistributionSTE">
+<code class="descname">intensityDistributionSTE</code><span class="sig-paren">(</span><em>bins=10</em>, <em>range=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/SingleTimeEffectDetection.html#SingleTimeEffectDetection.intensityDistributionSTE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.SingleTimeEffectDetection.SingleTimeEffectDetection.intensityDistributionSTE" title="Permalink to this definition">¶</a></dt>
+<dd><p>return distribution of STE intensity</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.features.SingleTimeEffectDetection.SingleTimeEffectDetection.relativeAreaSTE">
+<code class="descname">relativeAreaSTE</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/SingleTimeEffectDetection.html#SingleTimeEffectDetection.relativeAreaSTE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.SingleTimeEffectDetection.SingleTimeEffectDetection.relativeAreaSTE" title="Permalink to this definition">¶</a></dt>
+<dd><p>return STE area - relative to image area</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.features.hog">
+<span id="imgprocessor-features-hog-module"></span><h2>imgProcessor.features.hog module<a class="headerlink" href="#module-imgProcessor.features.hog" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.features.hog.hog">
+<code class="descclassname">imgProcessor.features.hog.</code><code class="descname">hog</code><span class="sig-paren">(</span><em>image</em>, <em>orientations=6</em>, <em>ksize=(5</em>, <em>5)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/hog.html#hog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.hog.hog" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the Histogram of Oriented Gradients</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ksize</strong> &#8211; convolution kernel size as (y,x) - needs to be odd</li>
+<li><strong>orientations</strong> &#8211; number of orientations in between rad=0 and rad=pi</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>similar to <a class="reference external" href="http://scikit-image.org/docs/dev/auto_examples/plot_hog.html">http://scikit-image.org/docs/dev/auto_examples/plot_hog.html</a>
+but faster and with less options</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.features.minimumLineInArray">
+<span id="imgprocessor-features-minimumlineinarray-module"></span><h2>imgProcessor.features.minimumLineInArray module<a class="headerlink" href="#module-imgProcessor.features.minimumLineInArray" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.features.minimumLineInArray.minimumLineInArray">
+<code class="descclassname">imgProcessor.features.minimumLineInArray.</code><code class="descname">minimumLineInArray</code><span class="sig-paren">(</span><em>arr</em>, <em>relative=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/minimumLineInArray.html#minimumLineInArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.minimumLineInArray.minimumLineInArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>find closest minimum position next to middle line
+relative: return position relative to middle line</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.features.polylinesFromBinImage">
+<span id="imgprocessor-features-polylinesfrombinimage-module"></span><h2>imgProcessor.features.polylinesFromBinImage module<a class="headerlink" href="#module-imgProcessor.features.polylinesFromBinImage" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.features.polylinesFromBinImage.polylinesFromBinImage">
+<code class="descclassname">imgProcessor.features.polylinesFromBinImage.</code><code class="descname">polylinesFromBinImage</code><span class="sig-paren">(</span><em>img</em>, <em>minimum_cluster_size=6</em>, <em>remove_small_obj_size=3</em>, <em>reconnect_size=3</em>, <em>max_n_contours=None</em>, <em>max_len_contour=None</em>, <em>copy=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/features/polylinesFromBinImage.html#polylinesFromBinImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.features.polylinesFromBinImage.polylinesFromBinImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a list of arrays of un-branching contours</p>
+<p>img -&gt; (boolean) array</p>
+<p>minimum_cluster_size -&gt; minimum number of pixels connected together to build a contour</p>
+<p>##search_kernel_size -&gt; TODO
+##min_search_kernel_moment -&gt; TODO</p>
+<p>max_n_contours -&gt; maximum number of possible contours in img
+max_len_contour -&gt; maximum contour length</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.filters.html" class="btn btn-neutral float-right" title="imgProcessor.filters package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imgProcessor.equations.html" class="btn btn-neutral" title="imgProcessor.equations package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

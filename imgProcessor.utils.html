@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.utils package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor package" href="imgProcessor.html"/>
+        <link rel="prev" title="imgProcessor.transform package" href="imgProcessor.transform.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">imgProcessor.utils package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.utils.baseClasses">imgProcessor.utils.baseClasses module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.utils.calcAspectRatioFromCorners">imgProcessor.utils.calcAspectRatioFromCorners module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.utils.decompHomography">imgProcessor.utils.decompHomography module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.utils.genericCameraMatrix">imgProcessor.utils.genericCameraMatrix module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#imgprocessor-utils-imgpointtoworldcoord-module">imgProcessor.utils.imgPointToWorldCoord module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.utils.sortCorners">imgProcessor.utils.sortCorners module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.utils.speed_GPU_vs_CPU">imgProcessor.utils.speed_GPU_vs_CPU module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.utils.webcamTakePhotos">imgProcessor.utils.webcamTakePhotos module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+    <li>imgProcessor.utils package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.utils.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.utils">
+<span id="imgprocessor-utils-package"></span><h1>imgProcessor.utils package<a class="headerlink" href="#module-imgProcessor.utils" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.utils.baseClasses">
+<span id="imgprocessor-utils-baseclasses-module"></span><h2>imgProcessor.utils.baseClasses module<a class="headerlink" href="#module-imgProcessor.utils.baseClasses" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.utils.baseClasses.Iteratives">
+<em class="property">class </em><code class="descclassname">imgProcessor.utils.baseClasses.</code><code class="descname">Iteratives</code><span class="sig-paren">(</span><em>max_iter=10000.0</em>, <em>max_dev=1e-05</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/utils/baseClasses.html#Iteratives"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.utils.baseClasses.Iteratives" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="imgProcessor.utils.baseClasses.Iteratives.checkConverence">
+<code class="descname">checkConverence</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/utils/baseClasses.html#Iteratives.checkConverence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.utils.baseClasses.Iteratives.checkConverence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.utils.calcAspectRatioFromCorners">
+<span id="imgprocessor-utils-calcaspectratiofromcorners-module"></span><h2>imgProcessor.utils.calcAspectRatioFromCorners module<a class="headerlink" href="#module-imgProcessor.utils.calcAspectRatioFromCorners" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.utils.calcAspectRatioFromCorners.calcAspectRatioFromCorners">
+<code class="descclassname">imgProcessor.utils.calcAspectRatioFromCorners.</code><code class="descname">calcAspectRatioFromCorners</code><span class="sig-paren">(</span><em>corners</em>, <em>in_plane=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/utils/calcAspectRatioFromCorners.html#calcAspectRatioFromCorners"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.utils.calcAspectRatioFromCorners.calcAspectRatioFromCorners" title="Permalink to this definition">¶</a></dt>
+<dd><p>simple and better alg. than below
+in_plane -&gt; whether object has no tilt, but only rotation and translation</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.utils.decompHomography">
+<span id="imgprocessor-utils-decomphomography-module"></span><h2>imgProcessor.utils.decompHomography module<a class="headerlink" href="#module-imgProcessor.utils.decompHomography" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.utils.decompHomography.decompHomography">
+<code class="descclassname">imgProcessor.utils.decompHomography.</code><code class="descname">decompHomography</code><span class="sig-paren">(</span><em>H</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/utils/decompHomography.html#decompHomography"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.utils.decompHomography.decompHomography" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;param H Homography matrix
+&#64;returns ((translationx, translationy), rotation, (scalex, scaley), shear)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.utils.genericCameraMatrix">
+<span id="imgprocessor-utils-genericcameramatrix-module"></span><h2>imgProcessor.utils.genericCameraMatrix module<a class="headerlink" href="#module-imgProcessor.utils.genericCameraMatrix" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.utils.genericCameraMatrix.genericCameraMatrix">
+<code class="descclassname">imgProcessor.utils.genericCameraMatrix.</code><code class="descname">genericCameraMatrix</code><span class="sig-paren">(</span><em>shape</em>, <em>angularField=60</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/utils/genericCameraMatrix.html#genericCameraMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.utils.genericCameraMatrix.genericCameraMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a generic camera matrix
+[[fx, 0, cx],
+[ 0, fy, cy],
+[ 0, 0,   1]]
+for a given image shape</p>
+</dd></dl>
+
+</div>
+<div class="section" id="imgprocessor-utils-imgpointtoworldcoord-module">
+<h2>imgProcessor.utils.imgPointToWorldCoord module<a class="headerlink" href="#imgprocessor-utils-imgpointtoworldcoord-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-imgProcessor.utils.imgPointToWorldCoord"></span><dl class="function">
+<dt id="imgProcessor.utils.imgPointToWorldCoord.imgPointToWorldCoord">
+<code class="descclassname">imgProcessor.utils.imgPointToWorldCoord.</code><code class="descname">imgPointToWorldCoord</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/utils/imgPointToWorldCoord.html#imgPointToWorldCoord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.utils.imgPointToWorldCoord.imgPointToWorldCoord" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;returns 3d object coords</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>(ix,iy)</strong> &#8211; list of 2d points (x,y) in image</li>
+<li><strong>zconst</strong> &#8211; height above image plane (if 0, than on image plane)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference external" href="http://answers.opencv.org/question/62779/image-coordinate-to-world-coordinate-opencv/">http://answers.opencv.org/question/62779/image-coordinate-to-world-coordinate-opencv/</a>
+and
+<a class="reference external" href="http://stackoverflow.com/questions/12299870/computing-x-y-coordinate-3d-from-image-point">http://stackoverflow.com/questions/12299870/computing-x-y-coordinate-3d-from-image-point</a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.utils.sortCorners">
+<span id="imgprocessor-utils-sortcorners-module"></span><h2>imgProcessor.utils.sortCorners module<a class="headerlink" href="#module-imgProcessor.utils.sortCorners" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.utils.sortCorners.sortCorners">
+<code class="descclassname">imgProcessor.utils.sortCorners.</code><code class="descname">sortCorners</code><span class="sig-paren">(</span><em>corners</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/utils/sortCorners.html#sortCorners"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.utils.sortCorners.sortCorners" title="Permalink to this definition">¶</a></dt>
+<dd><p>sort the corners of a given quadrilateral of the type
+corners : [ [xi,yi],... ]</p>
+<p>to an anti-clockwise order starting with the bottom left corner</p>
+<p>or (if plotted as image where y increases to the bottom):
+clockwise, starting top left</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.utils.speed_GPU_vs_CPU">
+<span id="imgprocessor-utils-speed-gpu-vs-cpu-module"></span><h2>imgProcessor.utils.speed_GPU_vs_CPU module<a class="headerlink" href="#module-imgProcessor.utils.speed_GPU_vs_CPU" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.utils.webcamTakePhotos">
+<span id="imgprocessor-utils-webcamtakephotos-module"></span><h2>imgProcessor.utils.webcamTakePhotos module<a class="headerlink" href="#module-imgProcessor.utils.webcamTakePhotos" title="Permalink to this headline">¶</a></h2>
+<p>a simple script to see and save photos in a given folder
+... in case you can&#8217;t find your webcam app</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="imgProcessor.transform.html" class="btn btn-neutral" title="imgProcessor.transform package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.spatial.closestConnectedDistance &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.spatial.closestConnectedDistance</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.spatial.closestConnectedDistance</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
+
+<span class="kn">from</span> <span class="nn">imgProcessor.interpolate.interpolate2dStructuredIDW</span> <span class="kn">import</span> <span class="n">interpolate2dStructuredIDW</span>
+
+
+<span class="n">DIRECT_NEIGHBOURS</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+
+
+<div class="viewcode-block" id="closestConnectedDistance"><a class="viewcode-back" href="../../../imgProcessor.spatial.html#imgProcessor.spatial.closestConnectedDistance.closestConnectedDistance">[docs]</a><span class="k">def</span> <span class="nf">closestConnectedDistance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">walls</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                             <span class="n">max_len_border_line</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+                             <span class="n">max_n_path</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                             <span class="n">concentrate_every_n_pixel</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    returns an array with contains the closest distance from every pixel</span>
+<span class="sd">    the next position where target == 1</span>
+
+<span class="sd">    [walls] binary 2darray - e.g. walls in a labyrinth that have to be surrounded in order to get to the target</span>
+<span class="sd">     </span>
+<span class="sd">    [target] binary 2darray - positions given by 1</span>
+<span class="sd">        </span>
+<span class="sd">    [concentrate_every_n_pixel] often the distance of neighbour pixels is similar</span>
+<span class="sd">            to speed up calculation set this value to e.g. 3 to calculate only </span>
+<span class="sd">            the distance for every 3. pixel and interpolate in between</span>
+<span class="sd">    </span>
+<span class="sd">        recommended are values up to 3-5</span>
+<span class="sd">    </span>
+<span class="sd">    [max_len_border_line]</span>
+<span class="sd">    this function calculates distances travelled using region growth</span>
+<span class="sd">    e.g.</span>
+<span class="sd">    </span>
+<span class="sd">    0123</span>
+<span class="sd">    1123</span>
+<span class="sd">    2223</span>
+<span class="sd">    3333</span>
+<span class="sd">    </span>
+<span class="sd">    the last steps (e.g. for all steps 3 border_line=7) are stored in an array of limited</span>
+<span class="sd">    length defined in &#39;max_len_border_line&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    [max_n_path]</span>
+<span class="sd">    how many paths are possible between every pixel and the target</span>
+<span class="sd">    only needed if fast==False</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">concentrate_every_n_pixel</span>    
+    <span class="k">assert</span> <span class="n">c</span> <span class="o">&gt;=</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">walls</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">walls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span>
+    <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">200</span><span class="p">:</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">c</span><span class="p">,</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">c</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
+    <span class="c">#temporary arrays:</span>
+    <span class="n">growth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
+
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">max_len_border_line</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
+    <span class="n">new_steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">max_len_border_line</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
+
+    <span class="c">#run calculation:</span>
+    <span class="n">_calc</span><span class="p">(</span><span class="n">growth</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">walls</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">new_steps</span><span class="p">,</span> 
+          <span class="n">res</span><span class="p">,</span> <span class="n">concentrate_every_n_pixel</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">c</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c">#if concentrate_every_n_pixel &gt; 1</span>
+        <span class="c">#the resized output array</span>
+        <span class="c">#will have wrong values close to the wall</span>
+        <span class="c">#therefore substitute all wall value (-1)</span>
+        <span class="c">#with an average of their closest neighbours</span>
+        <span class="n">interpolate2dStructuredIDW</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">out</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">s</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">walls</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+    
+
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_calc</span><span class="p">(</span><span class="n">growth</span><span class="p">,</span> <span class="n">dists</span><span class="p">,</span> <span class="n">walls</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">new_steps</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> 
+          <span class="n">concentrate_every_n_pixel</span><span class="p">):</span>
+    <span class="n">s0</span><span class="p">,</span><span class="n">s1</span> <span class="o">=</span> <span class="n">walls</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c">#for every pixel:</span>
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span><span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">s0</span><span class="p">,</span><span class="n">concentrate_every_n_pixel</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">jj</span><span class="p">,</span><span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">s1</span><span class="p">,</span><span class="n">concentrate_every_n_pixel</span><span class="p">)):</span> 
+            <span class="k">if</span> <span class="n">walls</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]:</span>
+                <span class="k">continue</span>
+            <span class="c">#get the number of steps needed:</span>
+            <span class="n">_grow</span><span class="p">(</span><span class="n">growth</span><span class="p">,</span> <span class="n">walls</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">new_steps</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="c">#approximate travelled distance as number of growth steps taken</span>
+                <span class="c">#this is fast but will return a too short path</span>
+                <span class="n">dists</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span><span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">growth</span><span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="o">+</span> <span class="mi">1</span>
+               
+    
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_grow</span><span class="p">(</span><span class="n">growth</span><span class="p">,</span> <span class="n">walls</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">new_steps</span><span class="p">,</span> <span class="n">res</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    fills [res] with [distance to next position where target == 1, </span>
+<span class="sd">                      x coord.,</span>
+<span class="sd">                      y coord. of that position in target]</span>
+<span class="sd">     using region growth</span>
+<span class="sd">    </span>
+<span class="sd">    i,j -&gt; pixel position</span>
+<span class="sd">     growth -&gt; a work array, needed to measure the distance</span>
+<span class="sd">     steps, new_steps -&gt; current and last positions of the region growth steps</span>
+<span class="sd">        using this instead of looking for the right step position in [growth]</span>
+<span class="sd">        should speed up the process</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c">#clean array:</span>
+    <span class="n">growth</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">target</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]:</span>
+        <span class="c">#pixel is in target</span>
+        <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+        <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">i</span>
+        <span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="n">j</span>
+        <span class="k">return</span>
+    
+    <span class="n">step</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">s0</span><span class="p">,</span><span class="n">s1</span> <span class="o">=</span> <span class="n">growth</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">step_len</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">new_step_ind</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="n">steps</span><span class="p">[</span><span class="n">new_step_ind</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+    <span class="n">steps</span><span class="p">[</span><span class="n">new_step_ind</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
+    <span class="n">growth</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">step_len</span><span class="p">):</span>
+            <span class="n">i</span><span class="p">,</span><span class="n">j</span> <span class="o">=</span> <span class="n">steps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">ii</span><span class="p">,</span><span class="n">jj</span> <span class="ow">in</span>  <span class="n">DIRECT_NEIGHBOURS</span><span class="p">:</span>
+                    <span class="n">pi</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="n">ii</span>
+                    <span class="n">pj</span> <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="n">jj</span>
+                    
+                    <span class="c">#if in image:</span>
+                    <span class="k">if</span> <span class="mi">0</span><span class="o">&lt;=</span><span class="n">pi</span><span class="o">&lt;</span><span class="n">s0</span> <span class="ow">and</span> <span class="mi">0</span><span class="o">&lt;=</span><span class="n">pj</span><span class="o">&lt;</span><span class="n">s1</span><span class="p">:</span>
+                        <span class="c">#is growth array is empty and there are no walls:</span>
+                            <span class="c">#fill growth with current step</span>
+                        <span class="k">if</span> <span class="n">growth</span><span class="p">[</span><span class="n">pi</span><span class="p">,</span><span class="n">pj</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">walls</span><span class="p">[</span><span class="n">pi</span><span class="p">,</span><span class="n">pj</span><span class="p">]:</span>
+                            <span class="n">growth</span><span class="p">[</span><span class="n">pi</span><span class="p">,</span><span class="n">pj</span><span class="p">]</span> <span class="o">=</span> <span class="n">step</span>
+                            <span class="k">if</span> <span class="n">target</span><span class="p">[</span><span class="n">pi</span><span class="p">,</span><span class="n">pj</span><span class="p">]:</span>
+                                <span class="c">#found destination</span>
+                                <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+                                <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">pi</span>
+                                <span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="n">pj</span>
+                                <span class="k">return</span>
+                            
+                            <span class="n">new_steps</span><span class="p">[</span><span class="n">new_step_ind</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">pi</span>
+                            <span class="n">new_steps</span><span class="p">[</span><span class="n">new_step_ind</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">pj</span>                            
+                            <span class="n">new_step_ind</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">new_step_ind</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c">#couldn&#39;t populate any more because growth is full</span>
+                <span class="c">#and all possible steps are gone</span>
+            <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+            <span class="k">return</span>
+        
+        <span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">steps</span><span class="p">,</span><span class="n">new_steps</span>  <span class="o">=</span> <span class="n">new_steps</span><span class="p">,</span> <span class="n">steps</span>
+        <span class="n">step_len</span> <span class="o">=</span> <span class="n">new_step_ind</span>
+        <span class="n">new_step_ind</span> <span class="o">=</span> <span class="mi">0</span>
+      
+
+  
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+    
+    <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="mi">60</span><span class="p">)</span>
+
+    <span class="n">walls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="c">#add walls</span>
+    <span class="n">walls</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">35</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">walls</span><span class="p">[</span><span class="mi">35</span><span class="p">:</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">walls</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">20</span><span class="p">:</span><span class="mi">34</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">walls</span><span class="p">[</span><span class="mi">35</span><span class="p">,</span> <span class="mi">20</span><span class="p">:</span><span class="mi">35</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+
+    <span class="c">#draw diag:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">):</span>
+        <span class="n">walls</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+    
+    <span class="n">target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">target</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">target</span><span class="p">[:,</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+
+    <span class="n">dists</span> <span class="o">=</span> <span class="n">closestConnectedDistance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">walls</span><span class="p">,</span> 
+                                     <span class="n">concentrate_every_n_pixel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">dists</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">dists</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;Walls=Blue, Target=Red&#39;</span><span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">dists</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+  
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

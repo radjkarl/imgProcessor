@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.transform.equalizeImage &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../imgProcessor.html">imgProcessor package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imgProcessor.transform.equalizeImage</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imgProcessor.transform.equalizeImage</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">exposure</span>
+
+<span class="kn">from</span> <span class="nn">fancytools.os.PathStr</span> <span class="kn">import</span> <span class="n">PathStr</span>
+
+
+<span class="c">#TODO: check whether name_additive and save_path still needed</span>
+<div class="viewcode-block" id="equalizeImage"><a class="viewcode-back" href="../../../imgProcessor.transform.html#imgProcessor.transform.equalizeImage.equalizeImage">[docs]</a><span class="k">def</span> <span class="nf">equalizeImage</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name_additive</span><span class="o">=</span><span class="s">&#39;_eqHist&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Equalize the histogram (contrast) of an image</span>
+<span class="sd">    works with RGB/multi-channel images</span>
+<span class="sd">    and flat-arrays</span>
+<span class="sd">    </span>
+<span class="sd">    @param img  - image_path or np.array</span>
+<span class="sd">    @param save_path if given output images will be saved there</span>
+<span class="sd">    @param name_additive if given this additive will be appended to output images </span>
+
+<span class="sd">    @return output images if input images are numpy.arrays and no save_path is given</span>
+<span class="sd">    @return None elsewise </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">PathStr</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">img</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;image path doesn&#39;t exist&quot;</span><span class="p">)</span>
+        <span class="n">img_name</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">basename</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span><span class="n">name_additive</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">save_path</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">dirname</span><span class="p">()</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+    
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;uint8&#39;</span><span class="p">):</span>
+        <span class="c">#openCV cannot work with float arrays or uint &gt; 8bit</span>
+        <span class="n">eqFn</span> <span class="o">=</span> <span class="n">_equalizeHistogram</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">eqFn</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">equalizeHist</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span><span class="c">#multi channel img like rgb</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+            <span class="n">img</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">eqFn</span><span class="p">(</span><span class="n">img</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">])</span> 
+    <span class="k">else</span><span class="p">:</span> <span class="c"># grey scale image </span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">eqFn</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">save_path</span><span class="p">:</span>
+        <span class="n">img_name</span> <span class="o">=</span> <span class="n">PathStr</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">img_name</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">img_name</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+<span class="k">def</span> <span class="nf">_equalizeHistogram</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    histogram equalisation not bounded to int() or an image depth of 8 bit</span>
+<span class="sd">    works also with negative numbers</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c">#to float if int:</span>
+    <span class="n">intType</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="s">&#39;f&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">str</span><span class="p">:</span>
+        <span class="n">TO_FLOAT_TYPES</span> <span class="o">=</span> <span class="p">{</span>  <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;uint8&#39;</span><span class="p">):</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;uint16&#39;</span><span class="p">):</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;uint32&#39;</span><span class="p">):</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;uint64&#39;</span><span class="p">):</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">}</span> 
+
+        <span class="n">intType</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">TO_FLOAT_TYPES</span><span class="p">[</span><span class="n">intType</span><span class="p">],</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    
+    <span class="c">#get image deph</span>
+    <span class="n">DEPTH_TO_NBINS</span> <span class="o">=</span> <span class="p">{</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float16&#39;</span><span class="p">):</span><span class="mi">256</span><span class="p">,</span> <span class="c">#uint8</span>
+                      <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">):</span><span class="mi">32768</span><span class="p">,</span> <span class="c">#uint16</span>
+                      <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">):</span><span class="mi">2147483648</span><span class="p">}</span> <span class="c">#uint32</span>
+    <span class="n">nBins</span> <span class="o">=</span> <span class="n">DEPTH_TO_NBINS</span><span class="p">[</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span>
+
+    <span class="c">#scale to -1 to 1 due to skikit-image restrictions</span>
+    <span class="n">mn</span><span class="p">,</span> <span class="n">mx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mn</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mx</span><span class="p">):</span>
+        <span class="n">mx</span> <span class="o">=</span> <span class="n">mn</span>
+    <span class="n">img</span> <span class="o">/=</span> <span class="n">mx</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">exposure</span><span class="o">.</span><span class="n">equalize_hist</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="n">nBins</span><span class="p">)</span>
+    
+    <span class="n">img</span> <span class="o">*=</span> <span class="n">mx</span>
+    
+    <span class="k">if</span> <span class="n">intType</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">intType</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">img</span>
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="kn">import</span> <span class="nn">imgProcessor</span>
+    <span class="kn">from</span> <span class="nn">imgProcessor.imgIO</span> <span class="kn">import</span> <span class="n">imread</span>
+
+    <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">PathStr</span><span class="p">(</span><span class="n">imgProcessor</span><span class="o">.</span><span class="n">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">dirname</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="s">&#39;media&#39;</span><span class="p">,</span> <span class="s">&#39;electroluminescence&#39;</span><span class="p">,</span> <span class="s">&#39;EL_module_orig.PNG&#39;</span><span class="p">))</span>
+    
+    <span class="n">eq</span> <span class="o">=</span> <span class="n">equalizeImage</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+    
+    <span class="k">if</span> <span class="s">&#39;no_window&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;original&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&#39;equalised histogram&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+    
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

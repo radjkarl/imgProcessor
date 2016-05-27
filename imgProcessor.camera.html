@@ -1,0 +1,857 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.camera package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor package" href="imgProcessor.html"/>
+        <link rel="next" title="imgProcessor.equations package" href="imgProcessor.equations.html"/>
+        <link rel="prev" title="imgProcessor package" href="imgProcessor.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">imgProcessor.camera package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.camera.CameraCalibration">imgProcessor.camera.CameraCalibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.camera.DarkCurrentMap">imgProcessor.camera.DarkCurrentMap module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.camera.FlatFieldFromImgFit">imgProcessor.camera.FlatFieldFromImgFit module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.camera.LensDistortion">imgProcessor.camera.LensDistortion module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.camera.NoiseLevelFunction">imgProcessor.camera.NoiseLevelFunction module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.camera.PerspectiveCorrection">imgProcessor.camera.PerspectiveCorrection module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-imgProcessor.camera.flatFieldFromCalibration">imgProcessor.camera.flatFieldFromCalibration module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+    <li>imgProcessor.camera package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.camera.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.camera">
+<span id="imgprocessor-camera-package"></span><h1>imgProcessor.camera package<a class="headerlink" href="#module-imgProcessor.camera" title="Permalink to this headline">¶</a></h1>
+<p>A collection to execute a camera calibration
+and to correct am image, removing lens, perspective etc. distortions</p>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.camera.CameraCalibration">
+<span id="imgprocessor-camera-cameracalibration-module"></span><h2>imgProcessor.camera.CameraCalibration module<a class="headerlink" href="#module-imgProcessor.camera.CameraCalibration" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration">
+<em class="property">class </em><code class="descclassname">imgProcessor.camera.CameraCalibration.</code><code class="descname">CameraCalibration</code><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Collect a arrays and parameters needed for camera calibration (.add###)
+Load and save to hard drive (.loadFromFile, .saveToFile)
+and correct images (.correct)</p>
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.addDarkCurrent">
+<code class="descname">addDarkCurrent</code><span class="sig-paren">(</span><em>slope</em>, <em>intercept</em>, <em>date=None</em>, <em>info=''</em>, <em>error=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.addDarkCurrent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.addDarkCurrent" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>slope</strong> (<em>float</em>) &#8211; </li>
+<li><strong>intercept</strong> (<em>np.array</em>) &#8211; </li>
+<li><strong>error</strong> (<em>float</em>) &#8211; </li>
+<li><strong>slope</strong> &#8211; dPx/dExposureTime[sec]</li>
+<li><strong>error</strong> &#8211; absolute</li>
+<li><strong>date</strong> (<em>str</em>) &#8211; &#8220;DD Mon YY&#8221; e.g. &#8220;30 Nov 16&#8221;</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.addDeconvolutionBalance">
+<code class="descname">addDeconvolutionBalance</code><span class="sig-paren">(</span><em>balance</em>, <em>date=None</em>, <em>info=''</em>, <em>light_spectrum='visible'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.addDeconvolutionBalance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.addDeconvolutionBalance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.addFlatField">
+<code class="descname">addFlatField</code><span class="sig-paren">(</span><em>arr</em>, <em>date=None</em>, <em>info=''</em>, <em>error=None</em>, <em>light_spectrum='visible'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.addFlatField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.addFlatField" title="Permalink to this definition">¶</a></dt>
+<dd><p>light_spectrum = light, IR ...</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.addLens">
+<code class="descname">addLens</code><span class="sig-paren">(</span><em>lens</em>, <em>date</em>, <em>info=''</em>, <em>light_spectrum='visible'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.addLens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.addLens" title="Permalink to this definition">¶</a></dt>
+<dd><p>lens -&gt; instance of LensDistortion or saved file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.addNoise">
+<code class="descname">addNoise</code><span class="sig-paren">(</span><em>nlf_coeff</em>, <em>date=None</em>, <em>info=''</em>, <em>error=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.addNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.addNoise" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nlf_coeff</strong> (<em>list</em>) &#8211; </li>
+<li><strong>error</strong> (<em>float</em>) &#8211; absolute</li>
+<li><strong>info</strong> (<em>str</em>) &#8211; additional information</li>
+<li><strong>date</strong> (<em>str</em>) &#8211; &#8220;DD Mon YY&#8221; e.g. &#8220;30 Nov 16&#8221;</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.addPSF">
+<code class="descname">addPSF</code><span class="sig-paren">(</span><em>psf</em>, <em>date=None</em>, <em>info=''</em>, <em>light_spectrum='visible'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.addPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.addPSF" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a new point spread function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.clearOldCalibrations">
+<code class="descname">clearOldCalibrations</code><span class="sig-paren">(</span><em>date=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.clearOldCalibrations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.clearOldCalibrations" title="Permalink to this definition">¶</a></dt>
+<dd><p>if not only a specific date than remove all except of the youngest calibration</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.correct">
+<code class="descname">correct</code><span class="sig-paren">(</span><em>image1</em>, <em>image2=None</em>, <em>bgImages=None</em>, <em>exposure_time=None</em>, <em>light_spectrum=None</em>, <em>threshold=0.2</em>, <em>keep_size=True</em>, <em>date=None</em>, <em>deblur=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.correct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.correct" title="Permalink to this definition">¶</a></dt>
+<dd><p>exposure_time [s]</p>
+<dl class="docutils">
+<dt>date -&gt; string e.g. &#8216;30. Nov 15&#8217; to get a calibration on from date</dt>
+<dd><dl class="first last docutils">
+<dt>-&gt; {&#8216;dark current&#8217;:&#8216;30. Nov 15&#8217;,</dt>
+<dd>&#8216;flat field&#8217;:&#8216;15. Nov 15&#8217;,
+&#8216;lens&#8217;:&#8216;14. Nov 15&#8217;,
+&#8216;noise&#8217;:&#8216;01. Nov 15&#8217;}</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.currentTime">
+<em class="property">static </em><code class="descname">currentTime</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.currentTime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.currentTime" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.dates">
+<code class="descname">dates</code><span class="sig-paren">(</span><em>typ</em>, <em>light=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.dates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.dates" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>typ</strong> &#8211; type of calibration to look for. See .coeffs.keys() for all types available</li>
+<li><strong>light</strong> (<em>Optional[str]</em>) &#8211; restrict to calibrations, done given light source</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">All calibration dates available for given typ</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.deleteCoeff">
+<code class="descname">deleteCoeff</code><span class="sig-paren">(</span><em>name</em>, <em>date</em>, <em>light=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.deleteCoeff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.deleteCoeff" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.ftype">
+<code class="descname">ftype</code><em class="property"> = '.cal'</em><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.ftype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.getCoeff">
+<code class="descname">getCoeff</code><span class="sig-paren">(</span><em>name</em>, <em>light</em>, <em>date</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.getCoeff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.getCoeff" title="Permalink to this definition">¶</a></dt>
+<dd><p>try to get calibration for right light source, but
+use another if they is none existent</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.getLens">
+<code class="descname">getLens</code><span class="sig-paren">(</span><em>light_spectrum</em>, <em>date</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.getLens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.getLens" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.infos">
+<code class="descname">infos</code><span class="sig-paren">(</span><em>typ</em>, <em>light=None</em>, <em>date=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.infos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.infos" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>typ</strong> &#8211; type of calibration to look for. See .coeffs.keys() for all types available</li>
+<li><strong>date</strong> (<em>Optional[str]</em>) &#8211; date of calibration</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">all infos available for given typ</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.loadFromFile">
+<em class="property">static </em><code class="descname">loadFromFile</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.loadFromFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.loadFromFile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.overview">
+<code class="descname">overview</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.overview"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.overview" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">an overview covering all calibrations
+infos and shapes</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.saveToFile">
+<code class="descname">saveToFile</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.saveToFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.saveToFile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.setCamera">
+<code class="descname">setCamera</code><span class="sig-paren">(</span><em>camera_name</em>, <em>bit_depth=16</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.setCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.setCamera" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>camera_name</strong> (<em>str</em>) &#8211; Name of the camera</li>
+<li><strong>bit_depth</strong> (<em>int</em>) &#8211; depth (bit) of the camera sensor</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.CameraCalibration.CameraCalibration.uncertainty">
+<code class="descname">uncertainty</code><span class="sig-paren">(</span><em>img=None</em>, <em>light_spectrum=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/CameraCalibration.html#CameraCalibration.uncertainty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.CameraCalibration.CameraCalibration.uncertainty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.camera.DarkCurrentMap">
+<span id="imgprocessor-camera-darkcurrentmap-module"></span><h2>imgProcessor.camera.DarkCurrentMap module<a class="headerlink" href="#module-imgProcessor.camera.DarkCurrentMap" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.camera.DarkCurrentMap.DarkCurrentMap">
+<em class="property">class </em><code class="descclassname">imgProcessor.camera.DarkCurrentMap.</code><code class="descname">DarkCurrentMap</code><span class="sig-paren">(</span><em>twoImages</em>, <em>noise_level_function=None</em>, <em>calcVariance=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/DarkCurrentMap.html#DarkCurrentMap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.DarkCurrentMap.DarkCurrentMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="imgProcessor.utils.html#imgProcessor.utils.baseClasses.Iteratives" title="imgProcessor.utils.baseClasses.Iteratives"><code class="xref py py-class docutils literal"><span class="pre">imgProcessor.utils.baseClasses.Iteratives</span></code></a></p>
+<p>Averages given background images
+removing single time effects</p>
+<dl class="method">
+<dt id="imgProcessor.camera.DarkCurrentMap.DarkCurrentMap.addImg">
+<code class="descname">addImg</code><span class="sig-paren">(</span><em>img</em>, <em>raiseIfConvergence=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/DarkCurrentMap.html#DarkCurrentMap.addImg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.DarkCurrentMap.DarkCurrentMap.addImg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.DarkCurrentMap.DarkCurrentMap.map">
+<code class="descname">map</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/DarkCurrentMap.html#DarkCurrentMap.map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.DarkCurrentMap.DarkCurrentMap.map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.DarkCurrentMap.DarkCurrentMap.uncertainty">
+<code class="descname">uncertainty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/DarkCurrentMap.html#DarkCurrentMap.uncertainty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.DarkCurrentMap.DarkCurrentMap.uncertainty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.DarkCurrentMap.DarkCurrentMap.uncertaintyMap">
+<code class="descname">uncertaintyMap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/DarkCurrentMap.html#DarkCurrentMap.uncertaintyMap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.DarkCurrentMap.DarkCurrentMap.uncertaintyMap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.DarkCurrentMap.averageSameExpTimes">
+<code class="descclassname">imgProcessor.camera.DarkCurrentMap.</code><code class="descname">averageSameExpTimes</code><span class="sig-paren">(</span><em>imgs_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/DarkCurrentMap.html#averageSameExpTimes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.DarkCurrentMap.averageSameExpTimes" title="Permalink to this definition">¶</a></dt>
+<dd><p>average background images with same exposure time</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.DarkCurrentMap.getDarkCurrentAverages">
+<code class="descclassname">imgProcessor.camera.DarkCurrentMap.</code><code class="descname">getDarkCurrentAverages</code><span class="sig-paren">(</span><em>exposuretimes</em>, <em>imgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/DarkCurrentMap.html#getDarkCurrentAverages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.DarkCurrentMap.getDarkCurrentAverages" title="Permalink to this definition">¶</a></dt>
+<dd><p>return exposure times, image averages for each exposure time</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.DarkCurrentMap.getDarkCurrentFunction">
+<code class="descclassname">imgProcessor.camera.DarkCurrentMap.</code><code class="descname">getDarkCurrentFunction</code><span class="sig-paren">(</span><em>exposuretimes</em>, <em>imgs</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/DarkCurrentMap.html#getDarkCurrentFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.DarkCurrentMap.getDarkCurrentFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>get dark current function from given images and exposure times</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.DarkCurrentMap.getLinearityFunction">
+<code class="descclassname">imgProcessor.camera.DarkCurrentMap.</code><code class="descname">getLinearityFunction</code><span class="sig-paren">(</span><em>expTimes</em>, <em>imgs</em>, <em>mxIntensity=64000</em>, <em>min_ascent=0.001</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/DarkCurrentMap.html#getLinearityFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.DarkCurrentMap.getLinearityFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns offset, ascent
+of image(expTime) = offset + ascent*expTime</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.DarkCurrentMap.sortForSameExpTime">
+<code class="descclassname">imgProcessor.camera.DarkCurrentMap.</code><code class="descname">sortForSameExpTime</code><span class="sig-paren">(</span><em>expTimes</em>, <em>img_paths</em>, <em>excludeSingleImg=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/DarkCurrentMap.html#sortForSameExpTime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.DarkCurrentMap.sortForSameExpTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>return image paths sorted for same exposure time</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.camera.FlatFieldFromImgFit">
+<span id="imgprocessor-camera-flatfieldfromimgfit-module"></span><h2>imgProcessor.camera.FlatFieldFromImgFit module<a class="headerlink" href="#module-imgProcessor.camera.FlatFieldFromImgFit" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit">
+<em class="property">class </em><code class="descclassname">imgProcessor.camera.FlatFieldFromImgFit.</code><code class="descname">FlatFieldFromImgFit</code><span class="sig-paren">(</span><em>images=None</em>, <em>nstd=3</em>, <em>ksize=None</em>, <em>scale_factor=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/FlatFieldFromImgFit.html#FlatFieldFromImgFit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit.addImg">
+<code class="descname">addImg</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/FlatFieldFromImgFit.html#FlatFieldFromImgFit.addImg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit.addImg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit.flatFieldFromFit">
+<code class="descname">flatFieldFromFit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/FlatFieldFromImgFit.html#FlatFieldFromImgFit.flatFieldFromFit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit.flatFieldFromFit" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate flatField from 2d-polynomal fit filling
+all high gradient areas within averaged fit-image</p>
+<p>returns flatField, average background level, fitted image, valid indices mask</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit.flatFieldFromFunction">
+<code class="descname">flatFieldFromFunction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/FlatFieldFromImgFit.html#FlatFieldFromImgFit.flatFieldFromFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.FlatFieldFromImgFit.FlatFieldFromImgFit.flatFieldFromFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate flatField from fitting vignetting function to averaged fit-image
+returns flatField, average background level, fitted image, valid indices mask</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.FlatFieldFromImgFit.highGrad">
+<code class="descclassname">imgProcessor.camera.FlatFieldFromImgFit.</code><code class="descname">highGrad</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/FlatFieldFromImgFit.html#highGrad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.FlatFieldFromImgFit.highGrad" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.camera.LensDistortion">
+<span id="imgprocessor-camera-lensdistortion-module"></span><h2>imgProcessor.camera.LensDistortion module<a class="headerlink" href="#module-imgProcessor.camera.LensDistortion" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion">
+<em class="property">class </em><code class="descclassname">imgProcessor.camera.LensDistortion.</code><code class="descname">LensDistortion</code><span class="sig-paren">(</span><em>coeffs={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>class for detecting and correcting the lens distortion within images</p>
+<p>based on:
+<a class="reference external" href="http://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html">http://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html</a></p>
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.addImg">
+<code class="descname">addImg</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.addImg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.addImg" title="Permalink to this definition">¶</a></dt>
+<dd><p>add one chessboard image for detection lens distortion</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.addImgStream">
+<code class="descname">addImgStream</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.addImgStream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.addImgStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>add images using a continous stream
+- stop when max number of images is reached</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.addPoints">
+<code class="descname">addPoints</code><span class="sig-paren">(</span><em>points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.addPoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.addPoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>add corner points directly instead of extracting them from
+image
+points = ( (0,1), (...),... ) [x,y]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.calibrate">
+<code class="descname">calibrate</code><span class="sig-paren">(</span><em>board_size</em>, <em>method='Chessboard'</em>, <em>images=[]</em>, <em>max_images=100</em>, <em>sensorSize_mm=None</em>, <em>detect_sensible=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.calibrate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.calibrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>sensorSize_mm - (width, height) [mm] Physical size of the sensor</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.coeffs">
+<code class="descname">coeffs</code><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.coeffs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.correct">
+<code class="descname">correct</code><span class="sig-paren">(</span><em>image</em>, <em>keepSize=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.correct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.correct" title="Permalink to this definition">¶</a></dt>
+<dd><p>remove lens distortion from given image</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.distortImage">
+<code class="descname">distortImage</code><span class="sig-paren">(</span><em>image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.distortImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.distortImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>opposite of &#8216;correct&#8217;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.drawChessboard">
+<code class="descname">drawChessboard</code><span class="sig-paren">(</span><em>img=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.drawChessboard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.drawChessboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>draw a grid fitting to the last added image
+on this one or an extra image
+img == None</p>
+<blockquote>
+<div>==False -&gt; draw chessbord on empty image
+==img</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.ftype">
+<code class="descname">ftype</code><em class="property"> = 'npz'</em><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.ftype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.getCameraParams">
+<code class="descname">getCameraParams</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.getCameraParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.getCameraParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>value positions based on <a class="reference external" href="http://docs.opencv.org/modules/imgproc/doc/geometric_transformations.html#cv.InitUndistortRectifyMap">http://docs.opencv.org/modules/imgproc/doc/geometric_transformations.html#cv.InitUndistortRectifyMap</a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.getCoeffStr">
+<code class="descname">getCoeffStr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.getCoeffStr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.getCoeffStr" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the distortion coeffs in a formated string</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.getDeflection">
+<code class="descname">getDeflection</code><span class="sig-paren">(</span><em>width</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.getDeflection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.getDeflection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.getDistortRectifyMap">
+<code class="descname">getDistortRectifyMap</code><span class="sig-paren">(</span><em>sizex</em>, <em>sizey</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.getDistortRectifyMap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.getDistortRectifyMap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.getUndistortRectifyMap">
+<code class="descname">getUndistortRectifyMap</code><span class="sig-paren">(</span><em>imgWidth</em>, <em>imgHeight</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.getUndistortRectifyMap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.getUndistortRectifyMap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.readFromFile">
+<code class="descname">readFromFile</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.readFromFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.readFromFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>read the distortion coeffs from file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.setCameraParams">
+<code class="descname">setCameraParams</code><span class="sig-paren">(</span><em>fx</em>, <em>fy</em>, <em>cx</em>, <em>cy</em>, <em>k1</em>, <em>k2</em>, <em>k3</em>, <em>p1</em>, <em>p2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.setCameraParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.setCameraParams" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.setImgShape">
+<code class="descname">setImgShape</code><span class="sig-paren">(</span><em>shape</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.setImgShape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.setImgShape" title="Permalink to this definition">¶</a></dt>
+<dd><p>image shape must be known for calculating camera matrix
+if method==Manual and addPoints is used instead of addImg
+this method must be called before .coeffs are obtained</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.standardUncertainties">
+<code class="descname">standardUncertainties</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.standardUncertainties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.standardUncertainties" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a list of standard uncertainties for the x and y component:
+(1x,2x), (1y, 2y), (intensity:None)
+1. px-size-changes(due to deflection)
+2. reprojection error</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.undistortPoints">
+<code class="descname">undistortPoints</code><span class="sig-paren">(</span><em>points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.undistortPoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.undistortPoints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.LensDistortion.LensDistortion.writeToFile">
+<code class="descname">writeToFile</code><span class="sig-paren">(</span><em>filename</em>, <em>saveOpts=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/LensDistortion.html#LensDistortion.writeToFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.LensDistortion.LensDistortion.writeToFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>write the distortion coeffs to file
+saveOpts &#8211;&gt; Whether so save calibration options (and not just results)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.camera.NoiseLevelFunction">
+<span id="imgprocessor-camera-noiselevelfunction-module"></span><h2>imgProcessor.camera.NoiseLevelFunction module<a class="headerlink" href="#module-imgProcessor.camera.NoiseLevelFunction" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.camera.NoiseLevelFunction.boundedFunction">
+<code class="descclassname">imgProcessor.camera.NoiseLevelFunction.</code><code class="descname">boundedFunction</code><span class="sig-paren">(</span><em>x</em>, <em>minY</em>, <em>ax</em>, <em>ay</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/NoiseLevelFunction.html#boundedFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.NoiseLevelFunction.boundedFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>limit [function] to a minimum y value</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.NoiseLevelFunction.calcNLF">
+<code class="descclassname">imgProcessor.camera.NoiseLevelFunction.</code><code class="descname">calcNLF</code><span class="sig-paren">(</span><em>img</em>, <em>img2=None</em>, <em>signal=None</em>, <em>mn_mx_nbins=None</em>, <em>x=None</em>, <em>averageFn='AAD'</em>, <em>signalFromMultipleImages=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/NoiseLevelFunction.html#calcNLF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.NoiseLevelFunction.calcNLF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the noise level function (NLF) as f(intensity)
+using one or two image.
+The approach for this work is published in JPV##########</p>
+<dl class="docutils">
+<dt>img2 - 2nd image taken under same conditions</dt>
+<dd>used to estimate noise via image difference</dd>
+<dt>signalFromMultipleImages - whether the signal is an average of multiple</dt>
+<dd>images and not just got from one median filtered image</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.NoiseLevelFunction.estimateFromImages">
+<code class="descclassname">imgProcessor.camera.NoiseLevelFunction.</code><code class="descname">estimateFromImages</code><span class="sig-paren">(</span><em>imgs1</em>, <em>imgs2=None</em>, <em>mn_mx=None</em>, <em>nbins=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/NoiseLevelFunction.html#estimateFromImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.NoiseLevelFunction.estimateFromImages" title="Permalink to this definition">¶</a></dt>
+<dd><p>estimate the noise level function as stDev over image intensity
+from a set of 2 image groups
+images at the same position have to show
+the identical setup, so
+imgs1[i] - imgs2[i] = noise</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.NoiseLevelFunction.function">
+<code class="descclassname">imgProcessor.camera.NoiseLevelFunction.</code><code class="descname">function</code><span class="sig-paren">(</span><em>x</em>, <em>ax</em>, <em>ay</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/NoiseLevelFunction.html#function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.NoiseLevelFunction.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>general square root function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.NoiseLevelFunction.oneImageNLF">
+<code class="descclassname">imgProcessor.camera.NoiseLevelFunction.</code><code class="descname">oneImageNLF</code><span class="sig-paren">(</span><em>img</em>, <em>img2=None</em>, <em>signal=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/NoiseLevelFunction.html#oneImageNLF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.NoiseLevelFunction.oneImageNLF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the NLF from one or two images of the same kind</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.camera.NoiseLevelFunction.smooth">
+<code class="descclassname">imgProcessor.camera.NoiseLevelFunction.</code><code class="descname">smooth</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/NoiseLevelFunction.html#smooth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.NoiseLevelFunction.smooth" title="Permalink to this definition">¶</a></dt>
+<dd><p>in case the NLF cannot be described by
+a square root function
+express it as a group of smoothed splines</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.camera.PerspectiveCorrection">
+<span id="imgprocessor-camera-perspectivecorrection-module"></span><h2>imgProcessor.camera.PerspectiveCorrection module<a class="headerlink" href="#module-imgProcessor.camera.PerspectiveCorrection" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection">
+<em class="property">class </em><code class="descclassname">imgProcessor.camera.PerspectiveCorrection.</code><code class="descname">PerspectiveCorrection</code><span class="sig-paren">(</span><em>img_shape</em>, <em>obj_height_mm=None</em>, <em>obj_width_mm=None</em>, <em>cameraMatrix=None</em>, <em>distCoeffs=0</em>, <em>do_correctIntensity=False</em>, <em>new_size=None</em>, <em>in_plane=False</em>, <em>cv2_opts={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/PerspectiveCorrection.html#PerspectiveCorrection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.camera_position">
+<code class="descname">camera_position</code><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.camera_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns camera position in world coordinates using self.rvec and self.tvec
+from <a class="reference external" href="http://stackoverflow.com/questions/14515200/python-opencv-solvepnp-yields-wrong-translation-vector">http://stackoverflow.com/questions/14515200/python-opencv-solvepnp-yields-wrong-translation-vector</a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.correct">
+<code class="descname">correct</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/PerspectiveCorrection.html#PerspectiveCorrection.correct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.correct" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>...from perspective distortion:</dt>
+<dd>&#8211;&gt; perspective transformation
+&#8211;&gt; apply tilt factor (view factor) correction</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.correctGrid">
+<code class="descname">correctGrid</code><span class="sig-paren">(</span><em>img</em>, <em>grid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/PerspectiveCorrection.html#PerspectiveCorrection.correctGrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.correctGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>grid -&gt; array of polylines=((p0x,p0y),(p1x,p1y),,,)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.correctPoints">
+<code class="descname">correctPoints</code><span class="sig-paren">(</span><em>pts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/PerspectiveCorrection.html#PerspectiveCorrection.correctPoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.correctPoints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.distort">
+<code class="descname">distort</code><span class="sig-paren">(</span><em>img</em>, <em>rotX=0</em>, <em>rotY=0</em>, <em>quad=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/PerspectiveCorrection.html#PerspectiveCorrection.distort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.distort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply perspective distortion ion self.img
+angles are in DEG and need to be positive to fit into image</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.draw3dCoordAxis">
+<code class="descname">draw3dCoordAxis</code><span class="sig-paren">(</span><em>img=None</em>, <em>thickness=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/PerspectiveCorrection.html#PerspectiveCorrection.draw3dCoordAxis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.draw3dCoordAxis" title="Permalink to this definition">¶</a></dt>
+<dd><p>draw the 3d coordinate axes into given image
+if image == False:</p>
+<blockquote>
+<div>create an empty image</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.drawQuad">
+<code class="descname">drawQuad</code><span class="sig-paren">(</span><em>img=None</em>, <em>quad=None</em>, <em>thickness=30</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/PerspectiveCorrection.html#PerspectiveCorrection.drawQuad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.drawQuad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw the quad into given img</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.homography">
+<code class="descname">homography</code><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.homography" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.obj_points">
+<code class="descname">obj_points</code><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.obj_points" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.pose">
+<code class="descname">pose</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/PerspectiveCorrection.html#PerspectiveCorrection.pose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.pose" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.setReference">
+<code class="descname">setReference</code><span class="sig-paren">(</span><em>ref</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/PerspectiveCorrection.html#PerspectiveCorrection.setReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.setReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>ref  ... either quad, grid, homography or reference image</p>
+<dl class="docutils">
+<dt>quad &#8211;&gt; list of four image points(x,y) marking the edges of the quad</dt>
+<dd>to correct</dd>
+</dl>
+<p>homography &#8211;&gt; h. matrix to correct perspective distortion
+referenceImage &#8211;&gt; image of same object without perspective distortion</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.standardUncertainties">
+<code class="descname">standardUncertainties</code><span class="sig-paren">(</span><em>focal_Length_mm</em>, <em>f_number</em>, <em>focusAtYX=None</em>, <em>sigma_best_focus=0</em>, <em>quad_pos_err=0</em>, <em>shape=None</em>, <em>uncertainties=(()</em>, <em>()</em>, <em>())</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/PerspectiveCorrection.html#PerspectiveCorrection.standardUncertainties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.PerspectiveCorrection.PerspectiveCorrection.standardUncertainties" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>focusAtXY - image position with is in focus</dt>
+<dd>if not set it is assumed that the image middle is in focus</dd>
+<dt>sigma_best_focus - standard deviation of the PSF</dt>
+<dd>within the best focus (default blur)</dd>
+<dt>uncertainties - contibutors for standard uncertainty</dt>
+<dd>these need to be perspective transformed to fit the new
+image shape</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.camera.flatFieldFromCalibration">
+<span id="imgprocessor-camera-flatfieldfromcalibration-module"></span><h2>imgProcessor.camera.flatFieldFromCalibration module<a class="headerlink" href="#module-imgProcessor.camera.flatFieldFromCalibration" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="imgProcessor.camera.flatFieldFromCalibration.flatFieldFromCalibration">
+<code class="descclassname">imgProcessor.camera.flatFieldFromCalibration.</code><code class="descname">flatFieldFromCalibration</code><span class="sig-paren">(</span><em>bgImages</em>, <em>images</em>, <em>calcStd=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/camera/flatFieldFromCalibration.html#flatFieldFromCalibration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.camera.flatFieldFromCalibration.flatFieldFromCalibration" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a flat-field correction map
+through conditional average of multiple images reduced by a background image</p>
+<p>calcStd -&gt; set to True to also return the standard deviation</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.equations.html" class="btn btn-neutral float-right" title="imgProcessor.equations package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imgProcessor.html" class="btn btn-neutral" title="imgProcessor package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

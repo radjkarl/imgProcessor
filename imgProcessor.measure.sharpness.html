@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imgProcessor.measure.sharpness package &mdash; imgProcessor 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="imgProcessor 0.1 documentation" href="index.html"/>
+        <link rel="up" title="imgProcessor.measure package" href="imgProcessor.measure.html"/>
+        <link rel="next" title="imgProcessor.render package" href="imgProcessor.render.html"/>
+        <link rel="prev" title="imgProcessor.measure.SNR package" href="imgProcessor.measure.SNR.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> imgProcessor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="imgProcessor.html">imgProcessor package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="imgProcessor.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.camera.html">imgProcessor.camera package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.equations.html">imgProcessor.equations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.features.html">imgProcessor.features package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.filters.html">imgProcessor.filters package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.interpolate.html">imgProcessor.interpolate package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="imgProcessor.measure.html">imgProcessor.measure package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="imgProcessor.measure.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imgProcessor.measure.html#module-imgProcessor.measure.FitHistogramPeaks">imgProcessor.measure.FitHistogramPeaks module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.render.html">imgProcessor.render package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.transform.html">imgProcessor.transform package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imgProcessor.utils.html">imgProcessor.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.exceptions">imgProcessor.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.imgIO">imgProcessor.imgIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.signal">imgProcessor.signal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.tests">imgProcessor.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imgProcessor.html#module-imgProcessor.transformations">imgProcessor.transformations module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">imgProcessor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.html">imgProcessor package</a> &raquo;</li>
+      
+          <li><a href="imgProcessor.measure.html">imgProcessor.measure package</a> &raquo;</li>
+      
+    <li>imgProcessor.measure.sharpness package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/imgProcessor.measure.sharpness.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-imgProcessor.measure.sharpness">
+<span id="imgprocessor-measure-sharpness-package"></span><h1>imgProcessor.measure.sharpness package<a class="headerlink" href="#module-imgProcessor.measure.sharpness" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-imgProcessor.measure.sharpness.SharpnessfromPoints">
+<span id="imgprocessor-measure-sharpness-sharpnessfrompoints-module"></span><h2>imgProcessor.measure.sharpness.SharpnessfromPoints module<a class="headerlink" href="#module-imgProcessor.measure.sharpness.SharpnessfromPoints" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="imgProcessor.measure.sharpness.SharpnessfromPoints.SharpnessfromPointSources">
+<em class="property">class </em><code class="descclassname">imgProcessor.measure.sharpness.SharpnessfromPoints.</code><code class="descname">SharpnessfromPointSources</code><span class="sig-paren">(</span><em>min_dist=None</em>, <em>max_kernel_size=51</em>, <em>max_points=3000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/sharpness/SharpnessfromPoints.html#SharpnessfromPointSources"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.sharpness.SharpnessfromPoints.SharpnessfromPointSources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">imgProcessor.measure.sharpness._base.SharpnessBase</span></code></p>
+<dl class="method">
+<dt id="imgProcessor.measure.sharpness.SharpnessfromPoints.SharpnessfromPointSources.addImg">
+<code class="descname">addImg</code><span class="sig-paren">(</span><em>img</em>, <em>roi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/sharpness/SharpnessfromPoints.html#SharpnessfromPointSources.addImg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.sharpness.SharpnessfromPoints.SharpnessfromPointSources.addImg" title="Permalink to this definition">¶</a></dt>
+<dd><p>img - background, flat field, ste corrected image
+roi - [(x1,y1),...,(x4,y4)] -  boundaries where points are</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.measure.sharpness.SharpnessfromPoints.SharpnessfromPointSources.drawPoints">
+<code class="descname">drawPoints</code><span class="sig-paren">(</span><em>img=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/sharpness/SharpnessfromPoints.html#SharpnessfromPointSources.drawPoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.sharpness.SharpnessfromPoints.SharpnessfromPointSources.drawPoints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="imgProcessor.measure.sharpness.SharpnessfromPoints.SharpnessfromPointSources.psf">
+<code class="descname">psf</code><span class="sig-paren">(</span><em>correct_size=True</em>, <em>filter_below=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/sharpness/SharpnessfromPoints.html#SharpnessfromPointSources.psf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.sharpness.SharpnessfromPoints.SharpnessfromPointSources.psf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-imgProcessor.measure.sharpness.parameters">
+<span id="imgprocessor-measure-sharpness-parameters-module"></span><h2>imgProcessor.measure.sharpness.parameters module<a class="headerlink" href="#module-imgProcessor.measure.sharpness.parameters" title="Permalink to this headline">¶</a></h2>
+<p>functions taken from <a class="reference external" href="http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry">http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry</a>
+is reference of
+<a class="reference external" href="http://www.sayonics.com/publications/pertuz_PR2013.pdf">http://www.sayonics.com/publications/pertuz_PR2013.pdf</a>
+Pertuz 2012: Analysis of focus measure operators for shape-from-focus</p>
+<p>code transformed from C++.openCV -&gt; python.cv2</p>
+<p>RETURN: focusMeasure - parameter describing sharpness of an image</p>
+<dl class="function">
+<dt id="imgProcessor.measure.sharpness.parameters.modifiedLaplacian">
+<code class="descclassname">imgProcessor.measure.sharpness.parameters.</code><code class="descname">modifiedLaplacian</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/sharpness/parameters.html#modifiedLaplacian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.sharpness.parameters.modifiedLaplacian" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8216;LAPM&#8217; algorithm (Nayar89)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.measure.sharpness.parameters.normalizedGraylevelVariance">
+<code class="descclassname">imgProcessor.measure.sharpness.parameters.</code><code class="descname">normalizedGraylevelVariance</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/sharpness/parameters.html#normalizedGraylevelVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.sharpness.parameters.normalizedGraylevelVariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8216;GLVN&#8217; algorithm (Santos97)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.measure.sharpness.parameters.tenengrad">
+<code class="descclassname">imgProcessor.measure.sharpness.parameters.</code><code class="descname">tenengrad</code><span class="sig-paren">(</span><em>img</em>, <em>ksize=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/sharpness/parameters.html#tenengrad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.sharpness.parameters.tenengrad" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8216;TENG&#8217; algorithm (Krotkov86)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="imgProcessor.measure.sharpness.parameters.varianceOfLaplacian">
+<code class="descclassname">imgProcessor.measure.sharpness.parameters.</code><code class="descname">varianceOfLaplacian</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imgProcessor/measure/sharpness/parameters.html#varianceOfLaplacian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imgProcessor.measure.sharpness.parameters.varianceOfLaplacian" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8216;LAPV&#8217; algorithm (Pech2000)</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imgProcessor.render.html" class="btn btn-neutral float-right" title="imgProcessor.render package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imgProcessor.measure.SNR.html" class="btn btn-neutral" title="imgProcessor.measure.SNR package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Karl Bedrich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

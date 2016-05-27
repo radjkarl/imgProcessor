@@ -1,0 +1,67 @@
+imgProcessor package
+====================
+
+.. automodule:: imgProcessor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    imgProcessor.camera
+    imgProcessor.equations
+    imgProcessor.features
+    imgProcessor.filters
+    imgProcessor.interpolate
+    imgProcessor.measure
+    imgProcessor.render
+    imgProcessor.transform
+    imgProcessor.utils
+
+Submodules
+----------
+
+imgProcessor.exceptions module
+------------------------------
+
+.. automodule:: imgProcessor.exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.imgIO module
+-------------------------
+
+.. automodule:: imgProcessor.imgIO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.signal module
+--------------------------
+
+.. automodule:: imgProcessor.signal
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.tests module
+-------------------------
+
+.. automodule:: imgProcessor.tests
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+imgProcessor.transformations module
+-----------------------------------
+
+.. automodule:: imgProcessor.transformations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
