@@ -1,9 +1,9 @@
 #PYPI
 ######
 #build
-python setup.py sdist #standard egg
-python setup.py bdist_wheel #new_standard wheel
-python setup.py install # sphinx takes only installed pkg 
+#python setup.py sdist #standard egg
+#python setup.py bdist_wheel #new_standard wheel
+#python setup.py install
 
 #upload
 python setup.py sdist upload -r pypi
@@ -26,7 +26,7 @@ cd doc/_build
 
 git clone https://github.com/radjkarl/imgProcessor.git gh-pages
 
-rm -r -f html
+rm -r -Force html
 mv gh-pages html
 cd html
 

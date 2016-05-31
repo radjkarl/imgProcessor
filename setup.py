@@ -25,7 +25,7 @@ def read(*paths):
 
 setup(
 	name			= 'imgProcessor',
-	version 		= '0.1',
+	version 		= '0.2',
 	author			= 'Karl Bedrich',
 	author_email	= 'karl@bedrich.de',
 	url				= 'https://github.com/radjkarl/imgProcessor',
