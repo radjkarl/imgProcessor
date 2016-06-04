@@ -23,6 +23,9 @@ def _calc(arr, out):
         for j in xrange(1, gy):
             val = arr[i,j]
             if val != last_val:
+                if val == 0:
+                    #have edge within arr==True
+                    j -=1
                 out[i,j]=1
                 last_val = val
 

@@ -62,8 +62,7 @@ def averageSameExpTimes(imgs_path):
     return d.map()
 
 
-def getLinearityFunction(expTimes, imgs, mxIntensity=64000, 
-                         min_ascent=0.001,
+def getLinearityFunction(expTimes, imgs, mxIntensity=65535,min_ascent=0.001,
                          #maxExpTime=36000
                          ):
     '''

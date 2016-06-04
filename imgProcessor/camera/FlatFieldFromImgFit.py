@@ -53,7 +53,7 @@ class FlatFieldFromImgFit(object):
             if self.scale_factor is None:
                 #determine so that smaller image size has 50 px
                 self.scale_factor = 100.0/min(img.shape)
-            s = [s*self.scale_factor for s in img.shape]
+            s = [int(s*self.scale_factor) for s in img.shape]
  
             img = resize(img,s)
 

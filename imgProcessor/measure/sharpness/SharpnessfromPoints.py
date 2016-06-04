@@ -9,11 +9,13 @@ from scipy.ndimage.filters import maximum_filter
 from scipy.optimize import curve_fit
 from scipy.ndimage.interpolation import map_coordinates
 
+from imgProcessor.imgIO import imread
 from imgProcessor.equations.gaussian2d import gaussian2d
+
 from fancytools.math.boundingBox import boundingBox
 
 #local
-from _base import SharpnessBase
+from imgProcessor.measure.sharpness._base import SharpnessBase
 
 
 

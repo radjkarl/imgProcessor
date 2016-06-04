@@ -35,7 +35,7 @@ def tenengrad(img, ksize=3):
     ''''TENG' algorithm (Krotkov86)'''
     Gx = cv2.Sobel(img, ddepth=cv2.cv.CV_64F, dx=1, dy=0, ksize=ksize)
     Gy = cv2.Sobel(img, ddepth=cv2.cv.CV_64F, dx=0, dy=1, ksize=ksize)
-    FM = Gx**2 + Gy**2
+    FM = Gx*Gx + Gy*Gy
     return cv2.mean(FM)[0]
 
 

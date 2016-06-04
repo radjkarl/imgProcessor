@@ -100,7 +100,7 @@ class FitHistogramPeaks(object):
                 
                 self.fitParams.append(params)
                 
-            y = self.fitFunction(self.xvals,*params)
+            y = self.fitFunction(self.xvals,*params).astype(yvals.dtype)
             yvals -= y #peaks add up
             yvals[yvals<0]=0 #can't be negative
             

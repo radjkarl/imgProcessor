@@ -184,6 +184,7 @@ class LensDistortion(object):
             ==False -> draw chessbord on empty image
             ==img
         ''' 
+        assert self.findCount > 0, 'cannot draw chessboard if nothing found'
         if img is None:
             img = self.img
         elif type(img) == bool and img == False:
