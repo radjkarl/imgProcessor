@@ -20,7 +20,7 @@ def SNR_IEC(i1,i2,ibg=0, allow_color_images=False):
             
     #SNR calculation as defined in 'IEC TS 60904-13':
     signal = 0.5*(i1+i2)-ibg
-    noise = 0.5**0.5*np.abs(i1-i2)*((2/np.pi)**-0.5)
+    noise = 0.5**0.5 * np.abs(i1-i2) * ((2/np.pi)**-0.5)
     if signal.ndim == 3:#color
         signal = np.average(signal, axis=2, weights=(0.114,0.587,0.299))
         noise = np.average(noise, axis=2, weights=(0.114,0.587,0.299))

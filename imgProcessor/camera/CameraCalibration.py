@@ -7,10 +7,11 @@ from imgProcessor.camera.LensDistortion import LensDistortion
 from imgProcessor.features.SingleTimeEffectDetection import SingleTimeEffectDetection
 from imgProcessor.camera import NoiseLevelFunction
 from imgProcessor.filters.medianThreshold import medianThreshold
+from imgProcessor.signal import signalStd
 
 
 
-DATE_FORMAT = "%d %b %y"
+DATE_FORMAT = "%d %b %y - %H:%M" # e.g.: '30. Nov 15 - 13:20'
 
 
 
@@ -326,7 +327,8 @@ class CameraCalibration(object):
                 threshold=0.2,
                 keep_size=True,
                 date=None,
-                deblur=True):
+                deblur=True,
+                denoise=False):
         '''
         exposure_time [s]
         
@@ -358,7 +360,6 @@ class CameraCalibration(object):
         #1. STE REMOVAL ONLY IF 2 IMAGES ARE GIVEN:
         image1orig = image1
         image1 = np.asfarray(imread(image1))
-        
         self._checkShape(image1)
         
         if image2 is None:
@@ -377,32 +378,66 @@ class CameraCalibration(object):
             
         self.last_light_spectrum = light_spectrum
         self.last_img = image
+        
         #2. BACKGROUND REMOVAL
         print('... remove background')
-        self._correctDarkCurrent(image, exposure_time, bgImages, 
+        try:
+            self._correctDarkCurrent(image, exposure_time, bgImages, 
                                         date['dark current'])
+        except Exception, errm:
+            print('Error: %s' %errm)
 
         #3. VIGNETTING/SENSITIVITY CORRECTION:
         print('... remove vignetting and sensitivity')
-        self._correctVignetting(image, light_spectrum, 
+        try:
+            self._correctVignetting(image, light_spectrum, 
                                        date['flat field'])
+        except Exception, errm:
+            print('Error: %s' %errm)
 
         #4. REPLACE DECECTIVE PX WITH MEDIAN FILTERED FALUE
         print('... remove artefacts')
-        self._correctArtefacts(image, threshold)
+        try:
+            self._correctArtefacts(image, threshold)
+        except Exception, errm:
+            print('Error: %s' %errm)
 
         #5. DEBLUR
         if deblur:
             print('... remove blur')
-            image = self._correctBlur(image, light_spectrum, date['psf'])
+            try:
+                image = self._correctBlur(image, light_spectrum, date['psf'])
+            except Exception, errm:
+                print('Error: %s' %errm)
         #5. LENS CORRECTION:
         print('... correct lens distortion')
-        image = self._correctLens(image, light_spectrum, date['lens'], 
+        try:
+            image = self._correctLens(image, light_spectrum, date['lens'], 
                                  keep_size)
+        except TypeError:
+            'Error: no lens calibration found'
+        except Exception, errm:
+            print('Error: %s' %errm)
+        #6. Denoise
+        if denoise:
+            print('... denoise ... this might take some time')
+            image = self._correctNoise(image)
 
         print('DONE')
         return image
 
+
+    def _correctNoise(self, image):
+        '''
+        denoise using non-local-means
+        with guessing best parameters
+        '''
+        from skimage.restoration import nl_means_denoising # save startup time
+        return nl_means_denoising(image, 
+                                  patch_size=7, 
+                                  patch_distance=11, 
+                                  h=signalStd(image)*0.1)
+        
 
     def _correctDarkCurrent(self, image, exposuretime, bgImages, date):
         '''
@@ -496,7 +531,7 @@ class CameraCalibration(object):
             raise Exception('no coeff %s for date %s' %(name, date))
 
 
-    def getCoeff(self, name, light, date):
+    def getCoeff(self, name, light=None, date=None):
         '''
         try to get calibration for right light source, but
         use another if they is none existent
@@ -508,7 +543,8 @@ class CameraCalibration(object):
         except KeyError:
             try:
                 k,i = d.iteritems().next()
-                print('no calibration found for [%s] - using [%s] instead' %(light, k))
+                if light is not None:
+                    print('no calibration found for [%s] - using [%s] instead' %(light, k))
             except StopIteration:
                 return None
             c = i

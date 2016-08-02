@@ -256,7 +256,7 @@ class PerspectiveTransformation(object):
             else:
                 dd = base_img_warp
             mask = np.logical_and(d!=0, dd!=0) 
-            av = 0.5*(cv2.subtract(base_img_warp[mask],next_img_warp[mask]))
+            av = (0.5*(cv2.subtract(base_img_warp[mask],next_img_warp[mask]))).astype(final_img.dtype)
             if not isColor:
                 av = av[:,0]
             final_img[mask] += av

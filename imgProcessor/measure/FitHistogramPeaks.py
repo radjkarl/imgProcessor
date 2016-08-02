@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import numpy as np
 from fancytools.os.PathStr import PathStr
 from imgProcessor.imgIO import imread
@@ -57,9 +56,9 @@ class FitHistogramPeaks(object):
         yvals = self.yvals.copy()
         xvals = self.xvals
         s0,s1 = self.img.shape
-        minY = max(10,float(s0*s1)/nBins/100)
-        
-        peaks = self._findPeaks(yvals,5, maxNPeaks, minY)
+        minY = max(10,float(s0*s1)/nBins/50)
+        mindist = 5
+        peaks = self._findPeaks(yvals,mindist, maxNPeaks, minY)
         valleys = self._findValleys(yvals, peaks)
         positions = self._sortPositions(peaks,valleys)
 
@@ -79,7 +78,8 @@ class FitHistogramPeaks(object):
                 params, _ = curve_fit(self.fitFunction, xcut, ycut, 
                                       p0=init_guess,
                                       sigma=np.ones(shape=xcut.shape)*1e-8)  
-            except RuntimeError:
+            except (RuntimeError, TypeError):
+                #TypeError: not enough values given (when peaks and valleys to close to each other)
                 if debug:
                     print "couln't fit gaussians -> result will will inaccurate"
                 #stay with initial guess: 
@@ -115,7 +115,7 @@ class FitHistogramPeaks(object):
         #also ensure that every set is at least 3 values wide
                 #FIT FUNCTION TO EACH PEAK:
         positions = zip(valleys[:-1],peaks,valleys[1:])
-        positions = sorted(positions, key=lambda s: s[2]-s[0])
+        positions = sorted(positions, key=lambda s: s[1])#s[2]-s[0])
         positions.reverse()
         return positions
 
@@ -142,14 +142,23 @@ class FitHistogramPeaks(object):
         l = len(vals)
         peaks = argrelextrema(vals, np.greater, mode='wrap')[0]
         valid = np.ones(len(peaks), dtype=bool)
-        for i,p in enumerate(peaks):
-            r0 = max(0,p-mindist)
-            r1 = min(l,p+mindist)
-            if (vals[p] < minVal or
-                vals[r0:r1].max() > vals[p] ):
-                valid[i]=False 
-        peaks = peaks[valid]
-
+        if len(peaks)>1:
+            #try 4 times to filter peaks:
+            for _ in xrange(4):
+                for i,p in enumerate(peaks):
+                    r0 = max(0,p-mindist)
+                    r1 = min(l,p+mindist)
+                    if (vals[p] < minVal or
+                        vals[r0:r1].max() > vals[p] ):
+                        valid[i]=False 
+                if valid.sum()>1: #need at least 2 peaks
+                    #only filter if peaks remain:
+                    peaks = peaks[valid]
+                    break
+                else:
+                    #reduce demand
+                    mindist -= 1
+                    minVal -= 1
         #add first peak at i=0 if existent
         if peaks[0] != 0 and vals[0]>vals[1] and vals[0]>minVal:
             peaks = np.insert(peaks,0,0)
@@ -163,137 +172,15 @@ class FitHistogramPeaks(object):
             xvals = self.xvals
         return [self.fitFunction(xvals,a, b, c) for (a,b,c) in self.fitParams]
         
-        
-        
-def plotFitResult(fit, show_legend=True, show_plots=True, save_to_file=False, foldername='', filename='', filetype='png'):
-    from matplotlib import pyplot
-
-    xvals = fit.xvals
-    yvals = fit.yvals
-    
-    fit  = fit.fitValues(xvals)
-
-    fig, ax = pyplot.subplots(1)
-
-    ax.plot(xvals, yvals, label='histogram', linewidth=3)
-
-    for n,f in enumerate(fit):
-        ax.plot(xvals, f, label='peak %i' %(n+1), linewidth=6)
-
-    l2 = ax.legend(loc='upper center', bbox_to_anchor=(0.7, 1.05),
-      ncol=3, fancybox=True, shadow=True)
-    l2.set_visible(show_legend)
-    
-    pyplot.xlabel('pixel value')
-    pyplot.ylabel('number of pixels')
-    
-    if save_to_file:
-        p = PathStr(foldername).join(filename).setFiletype(filetype)
-        pyplot.savefig(p)
-        with open(PathStr(foldername).join('%s_params.csv' %filename), 'w') as f:
-            f.write('#x, #y, #fit\n')
-            for n, (x,y,ys) in enumerate(zip(xvals,yvals)):
-                fstr = ', '.join(str(f[n]) for f in fit)
-                f.write('%s, %s, %s\n' %(x,y,fstr))
-        
-    if show_plots:
-        pyplot.show()
-
-
-#REMOVE? or into scripts
-def plotSet(imgDir, posExTime, outDir, show_legend, show_plots, save_to_file, ftype):
-    '''
-    creates plots showing both found GAUSSIAN peaks, the histogram, a smoothed histogram 
-    from all images within [imgDir] 
-    
-    posExTime - position range of the exposure time in the image name e.g.: img_30s.jpg -> (4,5)
-    outDir - dirname to save the output images
-    show_legend - True/False
-    show_plots - display the result on screen
-    save_to_file - save the result to file
-    ftype - file type of the output images
-    '''
-    from matplotlib import pyplot
-
-    xvals = []
-    hist = []
-    peaks = []
-    exTimes = []
-    max_border = 0
-
-    if not imgDir.exists():
-        raise Exception("image dir doesn't exist")
-
-    for n,f in enumerate(imgDir):
-        print f
-        try:
-        #if imgDir.join(f).isfile():
-            img = imgDir.join(f)
-            s = FitHistogramPeaks(img)
-            xvals.append(s.xvals)
-            hist.append(s.yvals)
-#             smoothedHist.append(s.yvals2)
-            peaks.append(s.fitValues())
-            
-            if s.border() > max_border:
-                max_border = s.plotBorder()
-                
-            exTimes.append(float(f[posExTime[0]:posExTime[1]+1]))
-        except:
-            pass
-    nx = 2
-    ny = int(len(hist)/nx) + len(hist) % nx
-
-    fig, ax = pyplot.subplots(ny,nx)
-    
-    #flatten 2d-ax list:
-    if nx > 1:
-        ax = [list(i) for i in zip(*ax)] #transpose 2d-list
-        axx = []
-        for xa in ax:
-            for ya in xa:
-                axx.append(ya)
-        ax = axx
-    
-    for x,h,p,e, a in zip(xvals, hist,peaks, exTimes, ax):
-
-        a.plot(x, h, label='histogram', thickness=3)
-#         l1 = a.plot(x, s, label='smoothed')
-        for n,pi in enumerate(p):
-            l2 = a.plot(x, pi, label='peak %s' %n, thickness=6)
-        a.set_xlim(xmin=0, xmax=max_border)
-        a.set_title('%s s' %e)
-        
-#         pyplot.setp([l1,l2], linewidth=2)#, linestyle='--', color='r')       # set both to dashed
-
- 
-    l1 = ax[0].legend()#loc='upper center', bbox_to_anchor=(0.7, 1.05),
-    l1.draw_frame(False)
-
-
-    pyplot.xlabel('pixel value')
-    pyplot.ylabel('number of pixels')
-    
-    fig = pyplot.gcf()
-    fig.set_size_inches(7*nx, 3*ny)
-    
-    if save_to_file:
-        p = PathStr(outDir).join('result').setFiletype(ftype)
-        pyplot.savefig(p, bbox_inches='tight')
-        
-    if show_plots:
-        pyplot.show()
-
-
 
 
 if __name__ == '__main__':
     import sys
     import imgProcessor
+    from imgProcessor.scripts._FitHistogramPeaks import plotFitResult, plotSet
     import pylab as plt
     imgs =  PathStr(imgProcessor.__file__).dirname().join(
                 'media', 'electroluminescence').all()
-
     for i in imgs:
         f = FitHistogramPeaks(i)
         print f.fitParams

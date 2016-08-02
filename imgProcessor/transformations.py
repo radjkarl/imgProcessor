@@ -41,10 +41,10 @@ def toUIntArray(img, dtype=None, cutNegative=True, cutHigh=True,
         img = np.asfarray(img)
         img -= mn
         #img[img<0]=0
-        print np.nanmin(img), np.nanmax(img), mn, mx, range, b
+        #print np.nanmin(img), np.nanmax(img), mn, mx, range, b
 
         img *= float(b)/(mx-mn)
-        print np.nanmin(img), np.nanmax(img), mn, mx, range, b
+        #print np.nanmin(img), np.nanmax(img), mn, mx, range, b
         img = np.clip(img, 0,b)
 
     else:
@@ -61,7 +61,7 @@ def toUIntArray(img, dtype=None, cutNegative=True, cutHigh=True,
             #img[img > b] = b
         else:
             #scale values
-            mx = np.max(img)
+            mx = np.nanmax(img)
             img = np.asfarray(img) * (float(b)/mx)
             
     img = img.astype(dtype)

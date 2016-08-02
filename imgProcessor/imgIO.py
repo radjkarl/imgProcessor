@@ -6,12 +6,14 @@ import numpy as np
 
 import imgProcessor as ip
 from imgProcessor.transformations import transpose, toNoUintArray, toUIntArray
-
+# from imgProcessor import reader
 
 COLOR2CV = {'gray':cv2.IMREAD_GRAYSCALE,
             'all':cv2.IMREAD_COLOR,
             None:cv2.IMREAD_ANYCOLOR
             }
+
+# READERS = {'elbin':reader.elbin}
 
 
 def _changeArrayDType(img, dtype, **kwargs):
@@ -32,6 +34,11 @@ def imread(img, color=None, dtype=None, ignore_order=False):
         img = img()
     elif isinstance(img, basestring):
         from_file = True
+#         try:        
+#             ftype = img[img.find('.'):]
+#             img = READERS[ftype](img)[0]
+#         except KeyError:
+        #open with openCV
         #grey - 8 bit
         if dtype == None or np.dtype(dtype) != np.uint8:
             c |= cv2.IMREAD_ANYDEPTH

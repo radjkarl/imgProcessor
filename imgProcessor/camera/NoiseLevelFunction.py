@@ -85,10 +85,9 @@ def _evaluate(x, y, weights):
         fitParams = np.insert(fitParams,0,minY)
         fn = lambda x, minY=minY: boundedFunction(x,*fitParams)
     except RuntimeError:
-        print("couldn't fit noise function with filtered indices")
+        print("couldn't fit noise function with filtered indices, use polynomial fit instead")
         fitParams = None 
-        weights = weights[i]
-        fn = smooth(xx,y, weights)
+        fn = smooth(xx,y, weights[i])
     return  fitParams, fn, i  
 
 
@@ -133,11 +132,19 @@ def smooth(x,y,weights):
     '''
     in case the NLF cannot be described by 
     a square root function
-    express it as a group of smoothed splines
+    commit bounded polynomial interpolation
     '''
-    return UnivariateSpline(x, y, w=weights)
-    
-    
+    #Spline hard to smooth properly, therefore solfed with
+    #bounded polynomal interpolation
+    #ext=3: no extrapolation, but boundary value
+#     return UnivariateSpline(x, y, w=weights, 
+#                             s=len(y)*weights.max()*100, ext=3)
+
+#     return np.poly1d(np.polyfit(x,y,w=weights,deg=2))
+    p = np.polyfit(x,y,w=weights,deg=2)
+    return lambda xint: np.poly1d(p)(np.clip(xint,x[0],x[-1]))
+
+
 def oneImageNLF(img, img2=None, signal=None): 
     '''
     Estimate the NLF from one or two images of the same kind
@@ -201,16 +208,19 @@ def calcNLF(img, img2=None, signal=None, mn_mx_nbins=None, x=None,
             diff = img - signal
         else:
             #difference between the filtered and original image:     
-            diff = (img - signal)*F_NOISE_WITH_MEDIAN
+            diff = (img - signal) * F_NOISE_WITH_MEDIAN
+
     else:
         img2 = np.asfarray(img2)
+        diff = (img-img2)
         #2**0.5 because noise is subtracted by noise
         #and variance of sum = sum of variance:
         #var(immg1-img2)~2*var(img)
         #std(2*var) = 2**0.5*var**0.5
-        diff = (img-img2)/2**0.5
+        diff /= 2**0.5
         if signal is None:
             signal = median_filter(0.5*(img+img2), MEDIAN_KERNEL_SIZE)
+    
     if mn_mx_nbins is not None:
         mn, mx, nbins = mn_mx_nbins
         min_len = 0

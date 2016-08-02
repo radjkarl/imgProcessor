@@ -19,9 +19,9 @@ if __name__ == '__main__':
     
     
          
-    a= np.arange(1e7, dtype=np.float64)
+    a= np.arange(int(1e7), dtype=np.float64)
     b=.010
-    c=np.empty(1e7,dtype=np.float64)
+    c=np.empty(int(1e7),dtype=np.float64)
     
     
     from time import  time

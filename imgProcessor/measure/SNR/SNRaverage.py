@@ -5,7 +5,7 @@ from imgProcessor.signal import getSignalMinimum, hasBackground
 
 
 
-def SNRaverage(snr, method='X75', excludeBackground=True, 
+def SNRaverage(snr, method='average', excludeBackground=True, 
                checkBackground=True,
                backgroundLevel=None):
     '''

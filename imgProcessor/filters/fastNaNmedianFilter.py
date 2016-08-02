@@ -50,6 +50,7 @@ def _calc(arr, out, ksize,every):
             if ymx > gy:
                 ymx = gy
             out[ii,jj]=np.nanmedian(arr[xmn:xmx:every, ymn:ymx:every])
+#             arr[np.logical_not(np.isnan(arr))].median()
             jj += 1
         ii += 1
     return ii,jj

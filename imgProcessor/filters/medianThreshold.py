@@ -12,8 +12,7 @@ def medianThreshold(img, threshold=0.1, size=3, condition='>', copy=True):
     '''
     indices = None
     if threshold > 0:
-        blur = median_filter(img, size=size)
-      
+        blur = np.asfarray(median_filter(img, size=size))
         with np.errstate(divide='ignore',invalid='ignore', over='ignore'):
             
             if condition == '>':

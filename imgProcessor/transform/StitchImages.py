@@ -91,8 +91,8 @@ class StitchImages(object):
             return (0,overlap, rotation)
 
         s = self.base_img_rgb.shape
-        ho  = overlap*0.5
-        
+        ho  = int(round(overlap*0.5))
+        overlap = int(round(overlap))
         #create two image cuts to compare:
         imgcut = self.base_img_rgb[s[0]-overlapDeviation-overlap:,:]
         template = img_rgb[:overlap,ho:s[1]-ho]

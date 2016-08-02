@@ -94,7 +94,11 @@ def  signalMinimum(img, fitParams=None, n_std=3):
         c = m1**2 /(2*std1**2) - m2**2 / (2*std2**2) - np.log((std2*s1)/(std1*s2))
         return np.roots([a,b,c])
     i = solve(bg, signal)
-    return i[np.logical_and(i>bg[1], i<signal[1])][0]
+    try:
+        return i[np.logical_and(i>bg[1], i<signal[1])][0]
+    except IndexError:
+        #this error shouldn't occur... well
+        return min(smn,bmx)
 
 
 def getSignalMinimum(fitParams, n_std=3):
@@ -133,6 +137,12 @@ def getSignalParameters(fitParams, n_std=3):
     if mn < fitParams[0][1]:
         mn = fitParams[0][1] #set to bg
     return mn, signal[1], mx
+
+
+def signalStd(img):
+    fitParams = FitHistogramPeaks(img).fitParams
+    signal= getSignalPeak(fitParams)
+    return signal[2]
 
 
 def signalRange(img, fitParams=None, nSigma=3):

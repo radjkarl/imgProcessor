@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
 
-from scipy.signal import convolve2d
+# from scipy.signal import convolve2d
+from scipy.ndimage.filters import convolve
+# from imgProcessor.filters.nanConvolve import nanConvolve 
 
 
 def _mkConvKernel(ksize, orientations, image):
@@ -45,8 +47,13 @@ def hog(image, orientations=6, ksize=(5,5)):
 
     k = _mkConvKernel(ksize, orientations, image)
     out = np.empty(shape=(s0,s1,orientations))
+    image[np.isnan(image)]=0
+#     if np.isnan(np.sum(image)):
+#         image = 
+    
     for i in xrange(orientations):
-        out[:,:,i] = convolve2d(image, k[i], mode='same' )          
+        out[:,:,i] = convolve(image, k[i]#, mode='same' 
+                              )          
     return out
 
 

@@ -2,7 +2,7 @@ import numpy as np
 
 from collections import OrderedDict
 
-from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
+# from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
 from fancytools.math.linRegressUsingMasked2dArrays import linRegressUsingMasked2dArrays
 
 from imgProcessor.imgIO import imread
@@ -10,7 +10,7 @@ from imgProcessor.features.SingleTimeEffectDetection import SingleTimeEffectDete
 from imgProcessor.utils.baseClasses import Iteratives
 
 
-
+#TODO: rename to STE free average??
 class DarkCurrentMap(Iteratives):
     '''
     Averages given background images
@@ -23,27 +23,31 @@ class DarkCurrentMap(Iteratives):
         
         assert len(twoImages) > 1, 'need at least 2 images'
 
-        self.det = SingleTimeEffectDetection(twoImages, noise_level_function, nStd=3)
-        self._map = MaskedMovingAverage(shape=twoImages[0].shape, calcVariance=calcVariance)
-        self._map.update(self.det.noSTE)
+        self.det = SingleTimeEffectDetection(twoImages, noise_level_function, 
+                                             nStd=3, calcVariance=calcVariance)
+#         self._map = MaskedMovingAverage(shape=twoImages[0].shape, calcVariance=calcVariance)
+#         self._map.update(self.det.noSTE)
 
 
     def addImg(self, img, raiseIfConvergence=False):
-        self._map.update( img, self.det.addImage(img).mask_clean )
+#         self._map.update( img, self.det.addImage(img).mask_clean )
+        self.det.addImage(img)
         if raiseIfConvergence:
-            return self.checkConvergence(self.fine.var**0.5)
+            return self.checkConvergence(self.det.mma.var**0.5)
 
 
     def map(self):
-        return self._map.avg
+        return self.det.mma.avg
+#         return self._map.avg
     
     
     def uncertaintyMap(self):
-        return self._map.var**0.5
+        return self.det.mma.var**0.5
+#         return self._map.var**0.5
 
 
     def uncertainty(self):
-        return np.mean(self._map.var)**0.5
+        return np.mean(self.det.mma.var)**0.5
 
 
 

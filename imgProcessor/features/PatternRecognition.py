@@ -1,14 +1,20 @@
 import cv2
 import numpy as np
+from skimage.transform import resize
 
 from imgProcessor.signal import signalRange
 
 
 
 class PatternRecognition(object):
-    def __init__(self, image, fineKernelSize=3):
+    def __init__(self, image, fineKernelSize=3, maxImageSize=1000):
+        '''
+        maxImageSize -> limit image size to speed up process, set to False to deactivate
+        '''
         self.fineKernelSize = fineKernelSize
         self.signal_ranges = []
+        self.maxImageSize = maxImageSize
+        self._fH = 1 #homography factor, if image was resized
         
         self.base8bit = self._prepareImage(image)
 
@@ -17,12 +23,27 @@ class PatternRecognition(object):
             #Parameters for nearest-neighbour matching
         flann_params = dict(algorithm=1, trees=2)
         self.matcher = cv2.FlannBasedMatcher(flann_params, {})
-        
         self.base_features, self.base_descs = self.detector.detectAndCompute(self.base8bit, None)
 
 
-    def _prepareImage(self, image):
+    def _prepareImage(self, image):    
+        #resize is image too big:
+        m = self.maxImageSize
+        if m:
+            m = float(m)
+            s0,s1 = image.shape[:2]
+            if max((s0,s1))>m:
+                if s0 > s1:
+                    self._fH = m/s0
+                    s1 *= self._fH
+                    s0 = m
+                else:
+                    self._fH = m/s1
+                    s0 *= m/s1
+                    s1 = m
+            image = resize(image, (int(round(s0)),int(round(s1))))
         img8bit = self._scaleTo8bit(image)
+
         return cv2.GaussianBlur(img8bit, (self.fineKernelSize,self.fineKernelSize), 0)
 
 
@@ -206,14 +227,21 @@ class PatternRecognition(object):
             kp1.append(self.base_features[match.trainIdx])
             kp2.append(features[match.queryIdx])
 
-        p1 = np.array([k.pt for k in kp1])
-        p2 = np.array([k.pt for k in kp2])
+        p1 = np.array([k.pt for k in kp1])#/self._fH #scale with _fH, if image was resized
+        p2 = np.array([k.pt for k in kp2])#/self._fH
 
         H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
         print '%d / %d  inliers/matched' % (np.sum(status), len(status))
 
         inliers = np.sum(status)
         inlierRatio = float(inliers) / float(len(status))
+
+        #scale with _fH, if image was resized
+        #see http://answers.opencv.org/question/26173/the-relationship-between-homography-matrix-and-scaling-images/
+        s = np.eye(3,3)
+        s[0,0] = 1/self._fH
+        s[1,1] = 1/self._fH
+        H = s.dot(H).dot(np.linalg.inv(s))
 
         return (H, inliers, inlierRatio, averagePointDistance, 
             img, features, 

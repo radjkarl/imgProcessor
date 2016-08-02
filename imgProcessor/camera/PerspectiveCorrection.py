@@ -239,29 +239,33 @@ class PerspectiveCorrection(object):
         if self.opts['do_correctIntensity']:
             self.img = self.img / self._getTiltFactor(self.img)
 
-        snew = self._newBorders
-        warped = np.empty(snew[::-1], dtype=self.img.dtype)
         s0,s1 = grid.shape[:2]
-        nx,ny = s0-1,s1-1
-        sy,sx = snew[0]/nx,snew[1]/ny
+        n0,n1 = s0-1,s1-1
+        
+        snew = self._newBorders
+        out = np.empty(snew[::-1], dtype=self.img.dtype)        
+
+        sx,sy = snew[0]/n0,snew[1]/n1
         
         objP = np.array([[0, 0 ],
                          [sx,0 ],
                          [sx,sy],
                          [0, sy] ],dtype=np.float32)
         
-        for ix in xrange(nx):
-            for iy in xrange(ny):
+        # warp every cell in grid:
+        for ix in xrange(n0):
+            for iy in xrange(n1):
                 quad = grid[ix:ix+2,iy:iy+2].reshape(4,2)[np.array([0,2,3,1])]
                 hcell = cv2.getPerspectiveTransform(
                                 quad.astype(np.float32), objP)
 
                 cv2.warpPerspective(self.img, hcell, (sx,sy),
-                                    warped[iy*sy : (iy+1)*sy,
+                                    out[iy*sy : (iy+1)*sy,
                                            ix*sx : (ix+1)*sx],
                                     flags=cv2.INTER_LANCZOS4,
                                     **self.opts['cv2_opts'])
-        return warped    
+
+        return out    
 
 
     def correct(self, img):
