@@ -19,10 +19,10 @@ class SingleTimeEffectDetection(object):
     .noSTE      --> STE free average image
     '''
     def __init__(self, images, noise_level_function=None, nStd=4, 
-                 save_ste_indices=False, calcVariance=False):
+                 save_ste_indices=False, calcVariance=False, dtype=float):
         self.save_ste_indices = save_ste_indices
         
-        i1 = imread(images[0], 'gray')
+        i1 = imread(images[0], 'gray', dtype=dtype)
         i2 = imread(images[1], 'gray')
 
         self.mask_STE = None        

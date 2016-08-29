@@ -318,9 +318,7 @@ class CameraCalibration(object):
             pickle.dump(c, outfile, protocol=pickle.HIGHEST_PROTOCOL)
 
     
-    def correct(self,  
-                image1,
-                image2=None,
+    def correct(self, images,
                 bgImages=None,
                 exposure_time=None,
                 light_spectrum=None,
@@ -349,7 +347,6 @@ class CameraCalibration(object):
         if light_spectrum is None:
             light_spectrum = self.coeffs['light spectra'][0]
             
-        assert exposure_time is not None or bgImages is not None,'either exposureTime or bgImages has to be given'
 
         #0.NOISE
         n = self.coeffs['noise']
@@ -357,30 +354,44 @@ class CameraCalibration(object):
             n = _getFromDate(n, date['noise'])[2]
             self.noise_level_function = lambda x: NoiseLevelFunction.boundedFunction(x, *n)
 
-        #1. STE REMOVAL ONLY IF 2 IMAGES ARE GIVEN:
-        image1orig = image1
-        image1 = np.asfarray(imread(image1))
-        self._checkShape(image1)
-        
-        if image2 is None:
-            image = image1
-            if id(image1orig) == id(image):
-                image = image.copy()
-        else:
-            image2 = np.asfarray(imread(image2))
-            self._checkShape(image2)
-            print('... remove single-time-effects')
-            ste = SingleTimeEffectDetection((image1,image2), nStd=4, 
+        #do we have multiple images?
+        if ( type(images) in (list, tuple) or 
+            (isinstance(images, np.ndarray) and images.ndim==3) ):
+            if len(images) > 1:
+                print('... remove single-time-effects from images ')
+            #1. STE REMOVAL ONLY IF >=2 IMAGES ARE GIVEN:
+                ste = SingleTimeEffectDetection(images, nStd=4, 
                             noise_level_function=self.noise_level_function)
-            image = ste.noSTE
-            if self.noise_level_function is None: 
-                self.noise_level_function = ste.noise_level_function
+                image = ste.noSTE
+                
+                if self.noise_level_function is None: 
+                    self.noise_level_function = ste.noise_level_function
+            else:
+                image = np.asfarray(imread(images[0], dtype=np.float))
+        else:
+            image = np.asfarray(imread(images, dtype=np.float))
+
+        self._checkShape(image)
+        
+#         if image2 is None:
+#             image = image1
+#             if id(image1orig) == id(image):
+#                 image = image.copy()
+#         else:
+#             image2 = np.asfarray(imread(image2))
+#             self._checkShape(image2)
+#             print('... remove single-time-effects')
+#             ste = SingleTimeEffectDetection((image1,image2), nStd=4, 
+#                             noise_level_function=self.noise_level_function)
+#             image = ste.noSTE
+#             
+#             if self.noise_level_function is None: 
+#                 self.noise_level_function = ste.noise_level_function
             
         self.last_light_spectrum = light_spectrum
         self.last_img = image
-        
+
         #2. BACKGROUND REMOVAL
-        print('... remove background')
         try:
             self._correctDarkCurrent(image, exposure_time, bgImages, 
                                         date['dark current'])
@@ -388,7 +399,6 @@ class CameraCalibration(object):
             print('Error: %s' %errm)
 
         #3. VIGNETTING/SENSITIVITY CORRECTION:
-        print('... remove vignetting and sensitivity')
         try:
             self._correctVignetting(image, light_spectrum, 
                                        date['flat field'])
@@ -398,7 +408,7 @@ class CameraCalibration(object):
         #4. REPLACE DECECTIVE PX WITH MEDIAN FILTERED FALUE
         print('... remove artefacts')
         try:
-            self._correctArtefacts(image, threshold)
+            image = self._correctArtefacts(image, threshold)
         except Exception, errm:
             print('Error: %s' %errm)
 
@@ -410,7 +420,6 @@ class CameraCalibration(object):
             except Exception, errm:
                 print('Error: %s' %errm)
         #5. LENS CORRECTION:
-        print('... correct lens distortion')
         try:
             image = self._correctLens(image, light_spectrum, date['lens'], 
                                  keep_size)
@@ -438,35 +447,57 @@ class CameraCalibration(object):
                                   patch_distance=11, 
                                   h=signalStd(image)*0.1)
         
+        
+
+    
 
     def _correctDarkCurrent(self, image, exposuretime, bgImages, date):
         '''
         open OR calculate a background image: f(t)=m*t+n
         '''
-        if bgImages is not None:
-            if ( type(bgImages) in (list, tuple) or 
-                (isinstance(bgImages, np.ndarray) and bgImages.ndim==3) ):
-                #if multiple images are given: do STE removal:
-                bg = SingleTimeEffectDetection(
-                    (imread(bgImages[0]),imread(bgImages[1])), nStd=4).noSTE
+        #either exposureTime or bgImages has to be given
+        if exposuretime is not None or bgImages is not None:
+            print('... remove background')
+
+            if bgImages is not None:
+                
+                if ( type(bgImages) in (list, tuple) or 
+                     (isinstance(bgImages, np.ndarray) and bgImages.ndim==3) ):
+                    if len(bgImages)>1:
+                        #if multiple images are given: do STE removal:
+                        nlf = self.noise_level_function
+                        bg = SingleTimeEffectDetection(bgImages, nStd=4, 
+                            noise_level_function=nlf).noSTE
+                    else:
+                        bg = imread(bgImages[0])
+                else:
+                    bg = imread(bgImages)
+                    
             else:
-                bg = imread(bgImages)
-        else:
-            d = self.coeffs['dark current']
-            d = _getFromDate(d, date)
-            #calculate bg image:
-            offs,ascent = d[2]
-            bg = offs + ascent*exposuretime
-            mx = self.coeffs['max value']
-            with np.errstate(invalid='ignore'):
-                bg[bg>mx] = mx    
-        image-=bg
+                bg = self.calcDarkCurrent(exposuretime, date)
+            image-=bg
+
+
+    def calcDarkCurrent(self, exposuretime, date=None):
+        d = self.coeffs['dark current']
+        d = _getFromDate(d, date)
+        #calculate bg image:
+        offs,ascent = d[2]
+        bg = offs + ascent*exposuretime
+        mx = self.coeffs['max value']
+        with np.errstate(invalid='ignore'):
+            bg[bg>mx] = mx   
+        return bg 
 
 
     def _correctVignetting(self, image, light_spectrum, date):
-        d = self.getCoeff('flat field', light_spectrum, date)[2]
-        i = d!=0
-        image[i]/=d[i]
+        d = self.getCoeff('flat field', light_spectrum, date)
+        if d is not None:
+            print('... remove vignetting and sensitivity')
+            d = d[2]
+            i = d!=0
+            image[i]/=d[i]
+
 #         with np.errstate(divide='ignore'):
 #             out = image / d
 #         #set 
@@ -504,17 +535,23 @@ class CameraCalibration(object):
         Apply a thresholded median replacing high gradients 
         and values beyond the boundaries
         '''
+        image = np.nan_to_num(image)
         medianThreshold(image, threshold, copy=False)
+        return image
 
 
     def getLens(self, light_spectrum, date):
-        d = self.getCoeff('lens', light_spectrum, date)[2]
-        return LensDistortion(d)        
+        d = self.getCoeff('lens', light_spectrum, date)
+        if d:
+            return LensDistortion(d[2])        
 
 
     def _correctLens(self, image, light_spectrum, date, keep_size):
         lens = self.getLens(light_spectrum, date)
-        return lens.correct(image, keepSize=keep_size) 
+        if lens:
+            print('... correct lens distortion')
+            return lens.correct(image, keepSize=keep_size) 
+        return image
   
 
     def deleteCoeff(self, name, date, light=None):

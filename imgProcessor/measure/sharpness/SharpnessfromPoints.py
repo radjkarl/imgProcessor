@@ -10,7 +10,7 @@ from scipy.optimize import curve_fit
 from scipy.ndimage.interpolation import map_coordinates
 
 from imgProcessor.imgIO import imread
-from imgProcessor.equations.gaussian2d import gaussian2d
+# from imgProcessor.equations.gaussian2d import gaussian2d
 
 from fancytools.math.boundingBox import boundingBox
 
@@ -60,9 +60,10 @@ def _findPoints(img, thresh, min_dist, points):
             
 class SharpnessfromPointSources(SharpnessBase):
     def __init__(self, min_dist=None, max_kernel_size=51, 
-                 max_points=3000):
-        self.n_points = 0
+                 max_points=3000, calc_std=False):
+#         self.n_points = 0
         self.max_points = max_points
+        self.calc_std = calc_std
         #ensure odd number:
         self.kernel_size = k = max_kernel_size//2*2+1
         
@@ -118,7 +119,7 @@ class SharpnessfromPointSources(SharpnessBase):
             print 'removed %s points (too close to border or other points)' %ll
             self.points = self.points[i]
                  
-        self.n_points += len(self.points)
+#         self.n_points += len(self.points)
 
         #for finding best peak position:
         def fn((x,y),cx,cy):#par
@@ -132,8 +133,12 @@ class SharpnessfromPointSources(SharpnessBase):
         xx = xx.astype(float)
         yy = yy.astype(float)
 
-        for p in self.points:
-            sub = self.img[p[1]-hk:p[1]+hk+1,p[0]-hk:p[0]+hk+1].astype(float)
+
+        self.subs = []
+
+        for i, p in enumerate(self.points):
+            sub = self.img[p[1]-hk:p[1]+hk+1,
+                           p[0]-hk:p[0]+hk+1].astype(float)
 
             #SHIFT SUB ARRAY to align peak maximum exactly in middle:
                 #only eval a 5x5 array in middle of sub:
@@ -151,39 +156,79 @@ class SharpnessfromPointSources(SharpnessBase):
             sub-=bg
             sub /= sub.max()
             self._psf+=sub
+            
+            if self.calc_std:
+                self.subs.append(sub)
+    
+    
+    def std(self, i=None, filter_below=1.0):
+        if i is None:
+            i = len(self.points)
+        p = self.psf(filter_below)
+        s0, s1 = self._shape
+        
+        subs = np.array([s[s0,s1] for s in self.subs])
+#         subs/=subs.sum(axis=(1,2))
+        for s in subs:
+            self._filter(s, filter_below)
+            s/=s.sum()
+#         print p
+#         print subs[0]
+#         return subs
+        sp = ((subs-p)**2)
+        trend = [np.nan]
+        for n in xrange(2,len(subs)+1):
+            trend.append( ((1./(n-1)) * ( sp[:n].sum(axis=0)  
+                                          )**0.5).sum() )
+        stdmap = (1./(i-1)) * ( sp.sum(axis=0)  )**0.5
+        stdmap = stdmap.sum(axis=0)
+        p = p.sum(axis=0)
+        return np.array(trend), (p-stdmap, p, p+stdmap)
+
+    @staticmethod
+    def _filter(arr, val):
+        a = (arr[0,:],arr[1,:],arr[:,0],arr[:,-1])
+        m = np.mean([aa.mean() for aa in a] )
+        s = np.mean([aa.std() for aa in a] )
+        t = m+val*s
+        arr -= t
+        arr[arr<0]=0
 
 
     def psf(self, correct_size=True, filter_below=0.00):
         p = self._psf.copy()
         #filter background oscillations
         if filter_below:
-            mn = p.argsort()[4:].mean()
-            mn +=filter_below*p.max()-mn
-            ibg = p<mn
-            p[ibg] = mn
-        else:
-            ibg = p < p.min()
-            
+            self._filter(p, filter_below)
+#             mn = p.argsort()[4:].mean()
+#             mn +=filter_below*p.max()-mn
+#             ibg = p<mn
+#             p[ibg] = mn
+#         else:
+#             ibg = p < p.min()
+        print 
         #decrease kernel size if possible
         if correct_size:
-            b = boundingBox(~ibg)
+            b = boundingBox(p==0)
             s = p.shape
             ix = min(b[0].start, s[0]-b[0].stop)
             iy = min(b[1].start, s[1]-b[1].stop)
-            p = p[ix:s[0]-ix,iy:s[1]-iy]
+            s0,s1 = self._shape = ( slice(ix,s[0]-ix),
+                                    slice(iy,s[1]-iy) )
+            p = p[s0,s1]
         
         #scale
-        p-=p.min()
+#         p-=p.min()
         p/=p.sum()
         self._corrPsf = p
         return p
 
 
-    @staticmethod
-    def _fn(v,sx,sy,rho):
-        r = gaussian2d((v[0],v[1]), sx, sy, 0, 0, rho)
-        r/=r.sum()
-        return r
+#     @staticmethod
+#     def _fn(v,sx,sy,rho):
+#         r = gaussian2d((v[0],v[1]), sx, sy, 0, 0, rho)
+#         r/=r.sum()
+#         return r
 
 
     def drawPoints(self, img=None):

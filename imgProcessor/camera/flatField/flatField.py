@@ -39,7 +39,8 @@ def flatField(closeDist_img=None, inPlane_img=None,
         bg = gaussian_filter(median_filter(ff1,3),9)
         ff1-=bg
 
-        ff2, mask = VIGNETTING_MODELS[vignetting_model](inPlane_img, inPlane_bg, inPlane_scale_factor)
+        ff2, mask = VIGNETTING_MODELS[vignetting_model](inPlane_img, 
+                                    inPlane_bg, inPlane_scale_factor)
 #         import pylab as plt
 #         plt.imshow(mask)
 #         plt.show()

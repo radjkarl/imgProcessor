@@ -21,22 +21,23 @@ class QuadDetection(object):
     e.g. a PV cell/module in an EL image
     '''
     
-    def __init__(self, img=None, vertices=None, refinePositions=True):
+    def __init__(self, img=None#, vertices=None#, refinePositions=True
+                 ):
         '''
         @param img -> input image
         @paramn vertices -> routh estimate of corner positions
         @refinePositions -> whether to refine (found) corner positions
         '''
         self.img = imread(img, 'gray')
-        self.vertices = vertices
+#         self.vertices = vertices
         
         self._pc = None
         
-        if self.vertices is None:
-            lines = self._findQuadLines()
-            if refinePositions:
-                lines = self._refineLines(lines)
-            self.vertices = self._verticesFromLines(lines)
+#         if self.vertices is None:
+        lines = self._findQuadLines()
+#             if refinePositions:
+#                 lines = self._refineLines(lines)
+        self.vertices = self._verticesFromLines(lines)
       
 
     def correct(self, img=None,**kwargs): 
@@ -85,14 +86,50 @@ class QuadDetection(object):
                 img = img[:,cut]
         sx = s[int(~axis)]
         x = np.arange(sx)
+        
+#         ind = np.argmax(img, axis=axis)
+#         arr = np.zeros(img.shape)
+#         try:
+#             arr[x, ind]=-1
+#         except IndexError:
+#             arr[ind,x]=-1
+#             
+#         import pylab as plt
+#         plt.imshow(arr)
+#         plt.show()
+        
+        
         #return first non=zero value along given axis
         y = np.argmax(img, axis=axis)
         valid = y!=0
         if valid.sum() > 0.2*sx:
             y = y[valid]
             x = x[valid]
+        
+        
+#         valid = np.abs(np.diff(y))<10
+#         print valid, valid.sum()
+#         valid = np.insert(valid,0,1)
+#         y = y[valid]
+#         x = x[valid]
+#         
+#         from sklearn.linear_model import TheilSenRegressor
+#         ts = TheilSenRegressor()
+#         X = x[:, np.newaxis]
+#         ts.fit(X,y)
+#         p = ts.predict
+#         x0,x1 = x[0], x[-1]
+#         y0,y1 = p(np.array((x0,x1)).reshape(2,1))
+        
+        
+        
         #filter outliers:
         p = polyFitIgnoringOutliers(x,y,deg=1, niter=5, nstd=1)
+
+#         import pylab as plt
+#         plt.plot(x,y)
+#         plt.plot((x0,x1),(y0,y1))
+#         plt.show()
 
         #extract edge points:
         x0,x1 = x[0],x[-1]
@@ -123,16 +160,23 @@ class QuadDetection(object):
             #take first ...whatever
         #_, thresh = cv2.threshold(self._to8bitImg(self.img), 0, 255, cv2.cv.CV_THRESH_OTSU)
         thresh = img > signalMinimum(img)
+#         print signalMinimum(img),88888888
         #remove small features:
         thresh = minimum_filter(thresh,5)
         thresh = maximum_filter(thresh,5)
+        
+#         import pylab as plt
+#         plt.imshow(thresh)
+#         plt.show()
 
         s0,s1 = img.shape
         #edge lines:
         ltop = self._findEdgeLine(   thresh, axis=0, stop=s0/2 )
-        lbottom = self._findEdgeLine(thresh, axis=0, start=s0/2, direction=-1)
+        lbottom = self._findEdgeLine(thresh, axis=0, start=s0/2, 
+                                     direction=-1)
         lleft = self._findEdgeLine(  thresh, axis=1, stop=s1/2 )
-        lright = self._findEdgeLine( thresh, axis=1, start=s1/2, direction=-1)
+        lright = self._findEdgeLine( thresh, axis=1, start=s1/2, 
+                                     direction=-1)
         return ltop, lbottom, lleft, lright
         
         
@@ -155,25 +199,51 @@ class QuadDetection(object):
         return ltop, lbottom, lleft, lright
         
 
-    def _refineLines(self, lines):#, plot=False, sub_height=20):
-        '''
-        fit border lines through fitting to highest gradient
-        '''
-        lines = list(lines)
-        #sign is negative, when going from low to high intensity
-        signs = (1,-1,1,-1)
-
-        sub_height = min(91,max(7,self.img.shape[0]/200))
-         
-        for m, (l,sign) in enumerate(zip(lines, signs)):
-
-                sub = alignImageAlongLine(self.img, l, sub_height)
-                dsub = sign*cv2.Sobel(sub,cv2.CV_64F,0,1,ksize=5)
-
-                d0, d1 = minimumLineInArray(dsub, relative=True)
-                new_l = ln.translate2P(l,d0, d1)
-                lines[m]=new_l
-        return lines
+#     def _refineLines(self, lines, plot=True):#, plot=False, sub_height=20):
+#         '''
+#         fit border lines through fitting to highest gradient
+#         '''
+#         lines = list(lines)
+#         #sign is negative, when going from low to high intensity
+#         signs = (-1,1,-1,1)
+# 
+#         sub_height = min(91,max(7,self.img.shape[0]/200))
+#          
+#         for m, (l,sign) in enumerate(zip(lines, signs)):
+# 
+#                 sub = alignImageAlongLine(self.img, l, sub_height)
+#                 dsub = sign*cv2.Sobel(sub,cv2.CV_64F,0,1,ksize=5)
+# 
+#                 d0, d1 = minimumLineInArray(dsub, relative=True)
+#                 new_l = ln.translate2P(l,-d0, -d1)
+#                 lines[m]=new_l
+# 
+# 
+#                 if plot:
+#                     import pylab as plt
+#                     print d0,d1, l
+#                     plt.figure(4)
+#                     plt.imshow(self.img, interpolation='none')
+#                     plt.plot((l[0],l[2]), (l[1],l[3]))
+#                     plt.plot((new_l[0],new_l[2]), (new_l[1],new_l[3]), 'o-')
+#                   
+# #                     print d0,d1,l,new_l, ll[m]
+#                     plt.figure(1)
+#                     plt.imshow(sub, interpolation='none')
+#                     plt.axes().set_aspect('auto')
+#  
+#  
+#                     sub2 = alignImageAlongLine(self.img, new_l, sub_height)
+#                     plt.figure(3)
+#                     plt.imshow(sub2, interpolation='none')
+# #                     plt.colorbar()
+#                     plt.axes().set_aspect('auto')
+# 
+#                     plt.show()
+# 
+# 
+# 
+#         return lines
                     
 
     def drawVertices(self, img=None, color=None, thickness=4):

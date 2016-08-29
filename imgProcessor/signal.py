@@ -150,7 +150,10 @@ def signalRange(img, fitParams=None, nSigma=3):
         if fitParams is None:
             fitParams = FitHistogramPeaks(img).fitParams
         signPeak = getSignalPeak(fitParams)
-        return (signPeak[1] - nSigma*signPeak[2],signPeak[1] + nSigma*signPeak[2])
+        return (signalMinimum(img, fitParams, nSigma),
+                signPeak[1] + nSigma*signPeak[2])
+#         return (signPeak[1] - nSigma*signPeak[2],signPeak[1] + nSigma*signPeak[2])
+
     except Exception as e:
         print e
         #in case peaks were not found:

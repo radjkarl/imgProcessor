@@ -13,7 +13,7 @@ from imgProcessor.equations.vignetting import vignetting, guessVignettingParam
 def _highGrad(arr):
     #mask high gradient areas in given array 
     s = min(arr.shape)
-    return maximum_filter(np.abs(laplace(arr, mode='reflect')) > 0.02,
+    return maximum_filter(np.abs(laplace(arr, mode='reflect')) > 0.01,#0.02
                           min(max(s/5,3),15) )
 
 
@@ -24,7 +24,7 @@ def function(img, mask):
     return arr
 
 
-def polynomial(img, mask, inplace=False):
+def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):
     
     '''
     calculate flatField from 2d-polynomal fit filling
@@ -38,9 +38,25 @@ def polynomial(img, mask, inplace=False):
         out = img.copy()
 #     mask = ~mask
     lastm = 0
-    for _ in xrange(10):
-        out = polyfit2dGrid(out, mask, 2)
+    for _ in xrange(max_iter):
+        out2 = polyfit2dGrid(out, mask, 2, copy=True)
+        print 'residuum: ', np.abs(out2-out).mean()
+        if np.abs(out2-out).mean() < max_dev:
+            out = out2
+            break
+        out = out2
         mask =  _highGrad(out) 
+        
+#         import pylab as plt
+#         plt.imshow(mask)
+#         plt.figure(2)
+#         plt.imshow(out)
+#         plt.figure(3)
+#         out3 = out2.copy()
+#         out3[mask]=0
+#         plt.imshow(out3)
+#         plt.show()
+        
         m = mask.sum()
         if m == lastm:
             break

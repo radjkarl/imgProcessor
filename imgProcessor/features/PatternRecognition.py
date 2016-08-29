@@ -14,37 +14,50 @@ class PatternRecognition(object):
         self.fineKernelSize = fineKernelSize
         self.signal_ranges = []
         self.maxImageSize = maxImageSize
-        self._fH = 1 #homography factor, if image was resized
+        self._fH = None #homography factor, if image was resized
         
         self.base8bit = self._prepareImage(image)
-
+#         self._fH_init = self._fH
         #PATTERN DETECTOR: Use the SIFT
         self.detector = cv2.SIFT()
             #Parameters for nearest-neighbour matching
         flann_params = dict(algorithm=1, trees=2)
         self.matcher = cv2.FlannBasedMatcher(flann_params, {})
-        self.base_features, self.base_descs = self.detector.detectAndCompute(self.base8bit, None)
+        
+        f,d = self.detector.detectAndCompute(self.base8bit, None)
+        self.base_features, self.base_descs = f,d
 
 
-    def _prepareImage(self, image):    
+    def _prepareImage(self, image):  
         #resize is image too big:
         m = self.maxImageSize
         if m:
-            m = float(m)
             s0,s1 = image.shape[:2]
-            if max((s0,s1))>m:
-                if s0 > s1:
-                    self._fH = m/s0
-                    s1 *= self._fH
-                    s0 = m
+            if self._fH is None:
+                m = float(m)
+                
+                if max((s0,s1))>m:
+                    if s0 > s1:
+                        self._fH = m/s0
+                        s1 *= self._fH
+                        s0 = m
+                    else:
+                        self._fH = m/s1
+                        s0 *= m/s1
+                        s1 = m
                 else:
-                    self._fH = m/s1
-                    s0 *= m/s1
-                    s1 = m
-            image = resize(image, (int(round(s0)),int(round(s1))))
+                    self._fH = 1
+            else:
+                s0*=self._fH
+                s1*=self._fH
+                        
+            image = resize(image, (int(round(s0)),int(round(s1))), 
+                           preserve_range=True)
+            
         img8bit = self._scaleTo8bit(image)
 
-        return cv2.GaussianBlur(img8bit, (self.fineKernelSize,self.fineKernelSize), 0)
+        return cv2.GaussianBlur(img8bit, (self.fineKernelSize,
+                                          self.fineKernelSize), 0)
 
 
     def _scaleTo8bit(self, img):
@@ -52,11 +65,11 @@ class PatternRecognition(object):
         The pattern comparator need images to be 8 bit
         -> find the range of the signal and scale the image
         '''
-        if img.dtype == np.uint8:
-            return img
         r = signalRange(img, nSigma=3)
         self.signal_ranges.append(r)
 
+        if img.dtype == np.uint8:
+            return img
         img = 255 * ((np.asfarray(img) - r[0]) / (r[1] - r[0]) )
         img[img < 0] = 0
         img[img > 255] = 255
@@ -74,7 +87,7 @@ class PatternRecognition(object):
 
     def invertHomography(self, H):
         #normalize
-        H /= H[2,2]
+#         H /= H[2,2]
         #invert homography
         return np.linalg.inv(H)
 
@@ -207,7 +220,8 @@ class PatternRecognition(object):
         img = self._prepareImage(img)    
 
         features, descs = self.detector.detectAndCompute(img, None)
-        matches = self.matcher.knnMatch(descs, trainDescriptors=self.base_descs, k=2)
+        matches = self.matcher.knnMatch(descs, 
+                                        trainDescriptors=self.base_descs, k=2)
         print "\t Match Count: ", len(matches)
         matches_subset = self._filterMatches(matches)
         if not len(matches_subset):
@@ -242,7 +256,7 @@ class PatternRecognition(object):
         s[0,0] = 1/self._fH
         s[1,1] = 1/self._fH
         H = s.dot(H).dot(np.linalg.inv(s))
-
+        
         return (H, inliers, inlierRatio, averagePointDistance, 
             img, features, 
             descs, matches_subset)

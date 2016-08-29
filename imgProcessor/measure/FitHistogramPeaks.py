@@ -3,6 +3,7 @@ import numpy as np
 from fancytools.os.PathStr import PathStr
 from imgProcessor.imgIO import imread
 from imgProcessor.equations.gaussian import gaussian
+from fancytools.math.findXAt import findXAt
 
 
 
@@ -58,19 +59,25 @@ class FitHistogramPeaks(object):
         s0,s1 = self.img.shape
         minY = max(10,float(s0*s1)/nBins/50)
         mindist = 5
+        
         peaks = self._findPeaks(yvals,mindist, maxNPeaks, minY)
         valleys = self._findValleys(yvals, peaks)
         positions = self._sortPositions(peaks,valleys)
-
+        
         #FIT FUNCTION TO EACH PEAK:
         for il,i,ir in positions:
             #peak position/value:
             xp = xvals[i]
             yp = yvals[i]
             
-            sigma = 0.5*abs(xvals[ir]-xvals[il])
             xcut = xvals[il:ir]
             ycut = yvals[il:ir]
+
+            #approximate standard deviation from FHWM:
+            ymean = 0.5* (yp + ycut[-1]) 
+            sigma = abs(xp - findXAt(xcut,ycut,ymean) )
+#             sigma = 0.5*abs(xvals[ir]-xvals[il])
+
             init_guess = (yp,xp,sigma)
             #FIT
             try:
@@ -106,7 +113,7 @@ class FitHistogramPeaks(object):
             
         #sort for increasing x positions
         self.fitParams = sorted(self.fitParams, key=lambda p: p[1])
-
+        
 
     @staticmethod
     def _sortPositions(peaks, valleys):
@@ -122,6 +129,7 @@ class FitHistogramPeaks(object):
 
     @staticmethod
     def _findValleys(vals,peaks):
+        assert len(peaks)>1, 'need at least 2 peaks to find valleys'
         #find minimum between peaks
         l = []
         for p0,p1 in zip(peaks[:-1],peaks[1:]): 

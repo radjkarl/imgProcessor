@@ -3,8 +3,10 @@ import numpy as np
 
 import cv2
 
-from scipy.ndimage.filters import maximum_filter, minimum_filter, median_filter
-from scipy.ndimage import gaussian_filter
+from scipy.ndimage.filters import maximum_filter, minimum_filter#, median_filter
+#from scipy.ndimage import gaussian_filter
+
+from skimage.transform import resize
 
 from fancytools.math.boundingBox import boundingBox
 from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
@@ -12,6 +14,11 @@ from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
 from imgProcessor.imgIO import imread
 from imgProcessor.utils.decompHomography import decompHomography
 from imgProcessor.features.PatternRecognition import PatternRecognition
+from imgProcessor.filters.coarseMaximum import coarseMaximum
+
+import pylab as plt
+from scipy.ndimage.filters import median_filter
+from imgProcessor.filters.fastNaNmedianFilter import fastNaNmedianFilter
 
 
 ###START VEREINFACHEN
@@ -42,7 +49,7 @@ class ObjectVignettingSeparation(PatternRecognition):
     >>>     o.addImg(img)
     >>> flatField, object = o.separate()
     """
-    def __init__(self, img, bg=None, maxDev=1e-4, maxIter=100):
+    def __init__(self, img, bg=None, maxDev=1e-4, maxIter=10):
         """
         Args:
             img (path or array): Reference image
@@ -56,18 +63,26 @@ class ObjectVignettingSeparation(PatternRecognition):
         self.maxIter = maxIter
 
         img = imread(img, 'gray')
+
         self.bg = bg
         if bg is not None:
-            self.bg = imread(bg, 'gray')
+            self.bg = imread(bg, 'gray', dtype=img.dtype)
             img = cv2.subtract(img, self.bg)
 
         #CREATE TEMPLATE FOR PATTERN COMPARISON:
         pos = self._findObject(img)
         self.obj_shape = img[pos].shape
 
+#         plt.imshow(img)
+#         print pos
+#         plt.show()
+
         PatternRecognition.__init__(self, img[pos])
         
-        self.flatField = np.zeros(shape=img.shape, dtype=np.float64)
+#         self.flatField = np.zeros(shape=img.shape, dtype=np.float64)
+        self._ff_mma = MaskedMovingAverage(shape=img.shape, 
+                                           dtype=np.float64)
+        
         self.object = None
         
         self.Hs = []    # Homography matrices of all fitted images
@@ -76,8 +91,18 @@ class ObjectVignettingSeparation(PatternRecognition):
         
         self._refined = False
 
+    #TODO: remove that property?
+    @property
+    def flatField(self):
+        return self._ff_mma.avg
+    @flatField.setter    
+    def flatField(self, arr):
+        self._ff_mma.avg = arr
+        
 
-    def addImg(self, img, maxShear=0.015, maxRot=100, minMatches=12):
+
+    def addImg(self, img, maxShear=0.015, maxRot=100, minMatches=12,
+               borderWidth=100):
         """
         Args:
             img (path or array): image containing the same object as in the reference image
@@ -87,14 +112,20 @@ class ObjectVignettingSeparation(PatternRecognition):
             maxRot (float): Same for rotation
             minMatches (int): Minimum of mating points found in both, this and the reference image
         """
-        fit, img, H, H_inv, nmatched = self._fitImg(img)
+        try:
+            fit, img, H, H_inv, nmatched = self._fitImg(img)
+        except Exception,e:
+            print e
+            return
         
         #CHECK WHETHER FIT IS GOOD ENOUGH:
         (translation, rotation, scale, shear) = decompHomography(H)
         print('Homography ...\n\ttranslation: %s\n\trotation: %s\n\tscale: %s\n\tshear: %s' 
               %(translation, rotation, scale, shear) )
-        if nmatched > minMatches and abs(shear) < maxShear and abs(rotation) < maxRot:
-            print 'img added'
+        if (nmatched > minMatches 
+                and abs(shear) < maxShear 
+                and abs(rotation) < maxRot ):
+            print '==> img added'
             #HOMOGRAPHY:
             self.Hs.append(H)
             #INVERSE HOMOGRSAPHY
@@ -106,10 +137,19 @@ class ObjectVignettingSeparation(PatternRecognition):
 #             smooth = gaussian_filter(img, sigma=5)
             i = img > self.signal_ranges[-1][0]
             #remove borders (that might have erroneous light):
-            i = minimum_filter(i, 100)
-            img[~i] = 0
-            ii = self.flatField < img
-            self.flatField[ii] = img[ii]
+            i = minimum_filter(i, borderWidth)
+            self._ff_mma.update(img, i)
+            
+#             
+#             img[~i] = 0
+#             ii = self.flatField < img
+#             self.flatField[ii] = img[ii]
+#             import pylab as plt
+#             plt.imshow(self.flatField)
+#             plt.figure(2)
+#             plt.imshow(i)
+#             print self.signal_ranges
+#             plt.show()
             #image added
             return True
         return False
@@ -118,7 +158,7 @@ class ObjectVignettingSeparation(PatternRecognition):
     def separate(self):
         self._createInitialflatField()
         for step in self:
-            print 'iteration step %s' %step
+            print 'iteration step %s/%s' %(step, self.maxIter)
 
 #         import pylab as plt
 #         plt.figure(1)
@@ -141,7 +181,8 @@ class ObjectVignettingSeparation(PatternRecognition):
         from skimage.morphology import disk
 
         
-        ff = mean(median(self.flatField,disk(5), mask=~mask),disk(13),  mask=~mask)
+        ff = mean(median(self.flatField,disk(5), mask=~mask),
+                  disk(13),  mask=~mask)
 #         mask = np.isfinite(ff)
 #         import pylab as plt
 #         plt.figure(1)
@@ -156,18 +197,28 @@ class ObjectVignettingSeparation(PatternRecognition):
 
     def __iter__(self):
         #use iteration to refine the flatField array
-        self._last_dev = None
-        self.n = 0
-
-        self._fit_masks = []
+        
         remove_border_size = 20
         feature_size = 50
         
+        #keep track of deviation between two iteration steps 
+        #for break criterion:
+        self._last_dev = None 
+        self.n = 1 #iteration number
+        
         #CREATE IMAGE FIT MASK:
+        self._fit_masks = []
         for i, f in enumerate(self.fits):
                 #INDEX FOREGROUND:
             mask = f < self.signal_ranges[i][0]        
             mask = maximum_filter(mask,feature_size)
+#             plt.imshow(self.flatField)
+# #             plt.figure(2)
+# #             plt.imshow(f)
+# #             from imgProcessor.signal import signalRange
+# #  
+# #             print self.signal_ranges[i], signalRange(f)
+#             plt.show()
                 #IGNORE BORDER
             if remove_border_size:
                 mask[:remove_border_size,:]=1
@@ -184,7 +235,8 @@ class ObjectVignettingSeparation(PatternRecognition):
         #INDIVITUAL IMAGES SHOWING THIS OBJECT FROM DIFFERENT POSITIONS:
         obj = MaskedMovingAverage(shape=self.obj_shape)
         for f,h in zip(self.fits, self.Hinvs):
-            warpedflatField  = cv2.warpPerspective(self.flatField, h, (f.shape[1],f.shape[0]) )
+            warpedflatField  = cv2.warpPerspective(self.flatField, 
+                                        h, (f.shape[1],f.shape[0]) )
             obj.update(f/warpedflatField, warpedflatField!=0)
         self.object = obj.avg
         
@@ -201,36 +253,91 @@ class ObjectVignettingSeparation(PatternRecognition):
             div = np.nan_to_num(div)
             s.update(div, div!=0)
         
+
+#         plt.imshow(self.flatField)
+#         plt.figure(2)
+#         plt.imshow(s.avg)
+#         plt.figure(3)
+#         plt.imshow(f)
+# 
+# #         print self.signal_ranges
+#         plt.show()
+
+
         new_flatField = s.avg
+        
+#         every = int(100/3.5)
+#         new_flatField = fastNaNmedianFilter(new_flatField, 100, every)
 
         #STOP ITERATION?
             #RMSE excluding NaNs:
-        dev = np.nanmean((new_flatField[::10,::10]-self.flatField[::10,::10])**2)**0.5
+        dev = np.nanmean((new_flatField[::10,::10]
+                          -self.flatField[::10,::10])**2)**0.5
         print 'residuum: %s' %dev
         if self.n > self.maxIter or (self._last_dev and (
-                    (self.n> 4 and dev > self._last_dev) or dev < self.maxDev) ):
+                    (self.n> 4 and dev > self._last_dev) 
+                    or dev < self.maxDev) ):
 #             self.flatField_mask = np.logical_or(s.n==0,s.avg<0)
 #             self.flatField_mask = np.logical_or(s.n==0,)
-
-
             raise StopIteration
         
+        #remove erroneous values:
         self.flatField = np.clip(new_flatField,0,1)
+
+
+
+
         self.n += 1
         self._last_dev = dev
-
         return self.n
 
 
-    def _createInitialflatField(self, gausian_filter_size=None):
-        if gausian_filter_size is None:
-            gausian_filter_size = min(self.flatField.shape)/5
+    def _createInitialflatField(self, downscale_size=9
+                                #gausian_filter_size=None
+                                ):
+
+
+#         if gausian_filter_size is None:
+#             gausian_filter_size = min(self.flatField.shape)/5
+
+        
+
         #initial array
-        s = self.flatField = gaussian_filter(
-                        maximum_filter(self.flatField, size=gausian_filter_size),
-                        sigma=gausian_filter_size)
+        s0,s1 = self.flatField.shape
+#         sa = downscale_size
+#         sb = int(round(sa * float(min(s0,s1))/max(s0,s1)))
+#         if s0>s1:
+#             ss0,ss1 = sa,sb
+#         else:
+#             ss0,ss1 = sb,sa
+        
+#         coarse = coarseMaximum(median_filter(self.flatField,3), (ss0,ss1))
+#         
+#         s = self.flatField = resize( coarse,#resize(self.flatField, (ss0,ss1)),
+#                                     (s0,s1), order=3 )
+
+        f = int(float(max(s0,s1))/downscale_size)
+        every = int(f/3.5)
+
+        s =  self.flatField = fastNaNmedianFilter(self.flatField, f, every)
+
+#         plt.imshow(self.flatField)
+#         plt.colorbar()
+#         plt.show()
+
+#         s = self.flatField = gaussian_filter(
+#                                 maximum_filter(self.flatField, 
+#                                     size=gausian_filter_size),
+#                                     sigma=gausian_filter_size)
         #make relative
+#         s = self.flatField
         s /= s.max()
+
+#         import pylab as plt
+#         plt.imshow(self.flatField)
+#         plt.colorbar()
+#         plt.show()
+
         return s
 
 
@@ -246,8 +353,14 @@ class ObjectVignettingSeparation(PatternRecognition):
         H_inv = self.invertHomography(H)
 
         s = self.obj_shape
-        fit = cv2.warpPerspective( img, H_inv, (s[1],s[0]) )
-        
+#         print self._fH,55555555555555
+        fit = cv2.warpPerspective( img, H_inv, (s[1],s[0])
+                                   
+#                                    (int( s[1]/self._fH),
+#                                                 int( s[0]/self._fH) ) 
+                                  )
+#         plt.imshow(fit)
+#         plt.show()
         return fit, img, H, H_inv, n_matches
 
 
@@ -255,8 +368,11 @@ class ObjectVignettingSeparation(PatternRecognition):
         '''
         Create a bounding box around the object within an image
         '''
+        
+        from imgProcessor.signal import signalMinimum
+
         #img is scaled already
-        i = img > img.max()/2.5
+        i = img > signalMinimum(img)#img.max()/2.5
         #filter noise, single-time-effects etc. from mask:
         i = minimum_filter(i, 4)
         return boundingBox(i)

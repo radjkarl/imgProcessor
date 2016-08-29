@@ -17,7 +17,7 @@ COLOR2CV = {'gray':cv2.IMREAD_GRAYSCALE,
 
 
 def _changeArrayDType(img, dtype, **kwargs):
-    if dtype == 'noUint':
+    if repr(dtype) == 'noUint':
         return toNoUintArray(img)
     if issubclass(np.dtype(dtype).type, np.integer):
         return toUIntArray(img, dtype, **kwargs)
