@@ -1,10 +1,11 @@
 '''
 various image input/output routines
 '''
-import cv2
 import numpy as np
+import cv2
+from six import string_types
+from imgProcessor import ARRAYS_ORDER_IS_XY
 
-import imgProcessor as ip
 from imgProcessor.transformations import transpose, toNoUintArray, toUIntArray
 # from imgProcessor import reader
 
@@ -32,7 +33,7 @@ def imread(img, color=None, dtype=None, ignore_order=False):
     from_file = False
     if callable(img):
         img = img()
-    elif isinstance(img, basestring):
+    elif isinstance(img, string_types):
         from_file = True
 #         try:        
 #             ftype = img[img.find('.'):]
@@ -44,7 +45,7 @@ def imread(img, color=None, dtype=None, ignore_order=False):
             c |= cv2.IMREAD_ANYDEPTH
         img2 = cv2.imread(img, c)
         if img2 is None:
-            raise IOError('image %s is not existing' %img)
+            raise IOError("image '%s' is not existing" %img)
         img = img2
         
     elif color=='gray' and img.ndim == 3:#multi channel img like rgb
@@ -53,7 +54,7 @@ def imread(img, color=None, dtype=None, ignore_order=False):
     if dtype is not None:
         if isinstance(img, np.ndarray):
             img = _changeArrayDType(img, dtype, cutHigh=False)    
-    if from_file and ip.ARRAYS_ORDER_IS_XY:
+    if from_file and ARRAYS_ORDER_IS_XY:
     #if not from_file and not ignore_order and ip.ARRAYS_ORDER_IS_XY: 
         img = cv2.transpose(img)   
     return img
@@ -64,7 +65,7 @@ def imwrite(name, arr, **kwargs):
 
 
 def out(img):
-    if ip.ARRAYS_ORDER_IS_XY:
+    if ARRAYS_ORDER_IS_XY:
         return transpose(img)
     return img
 
@@ -74,7 +75,7 @@ def out3d(sf):
     for surface plots
     sf = 3darray[i,j,x,y,z]
     '''
-    if ip.ARRAYS_ORDER_IS_XY:
+    if ARRAYS_ORDER_IS_XY:
         #transpose values
         sf[:,:,:2] = sf[:,:,1::-1]
         #transpose shape

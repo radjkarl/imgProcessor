@@ -1,3 +1,4 @@
+from __future__ import division
 import math
 
 
@@ -15,8 +16,8 @@ def decompHomography(H):
     f = H[1,2]
     
     p = math.sqrt(a*a + b*b)
-    r = (a*e - b*d)/(p)
-    q = (a*d+b*e)/(a*e - b*d)
+    r = (a*e - b*d) / p
+    q = (a*d+b*e) / (a*e - b*d)
     
     translation = (c,f)
     scale = (p,r)

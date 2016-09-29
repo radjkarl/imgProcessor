@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 
 from scipy.ndimage.filters import gaussian_filter, maximum_filter, \
@@ -9,7 +12,7 @@ from fancytools.fit.fit2dArrayToFn import fit2dArrayToFn
 
 from imgProcessor.imgIO import imread
 from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
-from imgProcessor.signal import getSignalPeak
+from imgProcessor.imgSignal import getSignalPeak
 from imgProcessor.equations.vignetting import vignetting
 from imgProcessor.interpolate.polyfit2d import polyfit2dGrid
 from imgProcessor.utils.getBackground import getBackground
@@ -50,7 +53,7 @@ class FlatFieldFromImgFit(object):
         
         if images is not None:
             for n,i in enumerate(images):
-                print '%s/%s' %(n+1,len(images))
+                print('%s/%s' %(n+1,len(images)))
                 self.addImg(i)
 
  
@@ -109,10 +112,10 @@ class FlatFieldFromImgFit(object):
         
         s0,s1 = fitimg.shape
                 #f-value, alpha, fx, cx,     cy
-        guess = (s1*0.7,  0,     1 , s0/2.0, s1/2.0)
+        guess = (s1*0.7,  0,     1 , s0/2,   s1/2)
         
         #set assume normal plane - no tilt and rotation:
-        fn = lambda (x,y),f,alpha, fx,cx,cy:  vignetting((x*fx,y),  f, alpha, 
+        fn = lambda xy,f,alpha, fx,cx,cy:  vignetting((xy[0]*fx,xy[1]),  f, alpha, 
                 cx=cx,cy=cy)
     
 #         mask = fitimg>0.5
@@ -142,7 +145,7 @@ class FlatFieldFromImgFit(object):
         out = fitimg.copy()
         lastm = 0
 
-        for _ in xrange(10):
+        for _ in range(10):
             out = polyfit2dGrid(out, mask, 2)
             mask =  highGrad(out) 
             m = mask.sum()
@@ -153,7 +156,7 @@ class FlatFieldFromImgFit(object):
         out = np.clip(out,0.1,1) 
 
         out = resize(out,self._orig_shape, mode='reflect')
-        return  out, self.bglevel / self._n, fitimg, mask
+        return  out, self.bglevel/self._n, fitimg, mask
 
 
 
@@ -163,7 +166,7 @@ if __name__ == '__main__':
     
     s0,s1 = 200,300
             #f-value, alpha,  rot, tilt,cx,     cy
-    params = (s1*0.7,  0,     0,   0 ,  s0/2.0, s1/2.0)
+    params = (s1*0.7,  0,     0,   0 ,  s0/2, s1/2)
     vig = np.fromfunction(lambda x,y: vignetting((x,y),*params),  (s0,s1))
 
 
@@ -174,7 +177,7 @@ if __name__ == '__main__':
     ff = FlatFieldFromImgFit()
     
     #lets say we have 10 images of an object at slightly different positions
-    for c in xrange(10):
+    for c in range(10):
         img = np.zeros((s0,s1))
         dev0 = int(np.random.rand()*d0)
         dev1 = int(np.random.rand()*d1)
@@ -182,7 +185,7 @@ if __name__ == '__main__':
         img += np.random.rand(s0,s1)
         img *=vig
         ff.addImg(img)
-        print '%i/%i' %(c,10)
+        print('%i/%i' %(c,10))
         
     vig_fit = ff.flatFieldFromFit()[0]
     vig_fn,bg,img_fit,mask = ff.flatFieldFromFunction()

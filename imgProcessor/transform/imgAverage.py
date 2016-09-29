@@ -1,3 +1,5 @@
+from __future__ import division
+
 from imgProcessor.imgIO import imread
 
 
@@ -19,7 +21,7 @@ def imgAverage(images, copy=True):
     c = 2
     for i in images[1:]:
         i = imread(i, dtype='noUint')
-        out += (i-out) / c
+        out += (i-out)/ c
         c += 1
     
     return out

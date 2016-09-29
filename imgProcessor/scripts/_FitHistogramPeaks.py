@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 import pylab as plt
 from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
 from fancytools.os.PathStr import PathStr
@@ -63,7 +66,7 @@ def plotSet(imgDir, posExTime, outDir, show_legend, show_plots, save_to_file, ft
         raise Exception("image dir doesn't exist")
 
     for n,f in enumerate(imgDir):
-        print f
+        print(f)
         try:
         #if imgDir.join(f).isfile():
             img = imgDir.join(f)
@@ -80,7 +83,7 @@ def plotSet(imgDir, posExTime, outDir, show_legend, show_plots, save_to_file, ft
         except:
             pass
     nx = 2
-    ny = int(len(hist)/nx) + len(hist) % nx
+    ny = int(len(hist)//nx) + len(hist) % nx
 
     fig, ax = plt.subplots(ny,nx)
     

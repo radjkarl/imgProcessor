@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 from scipy.ndimage.filters import median_filter
 
@@ -9,11 +11,11 @@ from imgProcessor.utils.cdf import cdf
 #factor root-mean-square to average-absolute-deviation (AAD)
 #see https://en.wikipedia.org/wiki/Average_absolute_deviation
 #citing GEARY1935:
-F_RMS2AAD = (2/np.pi)**-0.5 
+F_RMS2AAD = (2 / np.pi)**-0.5 
 #factor scaling resulting noise is extracted by the difference
 #of an image by its median filtered version
 #see BEDRICH 2016 JPV (not jet published):
-F_NOISE_WITH_MEDIAN = (1+(1.0/3**2))
+F_NOISE_WITH_MEDIAN = (1+(1 / 3**2))
 
 
 def SNR(img1, img2=None, bg=None,
@@ -70,7 +72,7 @@ def SNR(img1, img2=None, bg=None,
     if bg is None: 
         bg = getBackgroundLevel(img1)
         signal -= bg
-    snr = signal/noise
+    snr = signal / noise
 
     #limit to 1, saying at these points signal=noise:
     snr[snr<1]=1

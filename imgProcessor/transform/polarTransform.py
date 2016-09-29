@@ -1,3 +1,5 @@
+from __future__ import division
+
 #origin [now heavily modified]
 #http://stackoverflow.com/questions/9924135/fast-cartesian-to-polar-to-cartesian-in-python
 #https://imagej.nih.gov/ij/plugins/download/Polar_Transformer.java
@@ -24,7 +26,7 @@ def linearToPolarMaps(shape, center=None, final_radius=None,
                       initial_radius=None, phase_width=None):
     s0,s1 = shape
     if center is None:
-        center = (s0-1)/2.,(s1-1)/2.
+        center = (s0-1)/2, (s1-1)/2
     if final_radius is None:
         final_radius = ( (0.5*s0)**2
                         +(0.5*s1)**2)**0.5
@@ -72,7 +74,7 @@ def polarToLinearMaps(orig_shape, out_shape=None, center=None):
     ss0,ss1 = out_shape
     
     if center is None:
-        center= ss1/2, ss0/2
+        center = ss1//2, ss0//2
     
     yy,xx = np.mgrid[0:ss0:1., 0:ss1:1.]
     r, phi = _cart2polar(xx,yy, center)

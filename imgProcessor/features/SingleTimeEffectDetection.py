@@ -1,3 +1,5 @@
+from __future__ import division
+
 from scipy.ndimage.measurements import label
 
 import numpy as np
@@ -88,7 +90,7 @@ class SingleTimeEffectDetection(object):
         return STE area - relative to image area
         '''
         s = self.noSTE.shape
-        return float(np.sum(self.mask_STE)) / (s[0]*s[1])
+        return np.sum(self.mask_STE) / (s[0]*s[1])
 
 
     def intensityDistributionSTE(self, bins=10, range=None):

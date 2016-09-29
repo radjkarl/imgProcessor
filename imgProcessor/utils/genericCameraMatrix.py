@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 
 
@@ -11,8 +13,8 @@ def genericCameraMatrix(shape, angularField=60):
     '''
     #http://nghiaho.com/?page_id=576
     #assume that the optical centre is in the middle:
-    cy = int(shape[0] / 2.0)
-    cx = int(shape[1] /2.0)
+    cy = int(shape[0] / 2)
+    cx = int(shape[1] / 2)
     
     #assume that the FOV is 60 DEG (webcam)
     fx = fy = cx/np.tan(angularField/2 * np.pi / 180) #camera focal length

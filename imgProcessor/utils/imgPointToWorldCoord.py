@@ -1,9 +1,11 @@
+from __future__ import division
+
 import cv2
 from numpy.linalg import inv
 import numpy as np
 
 
-def imgPointToWorldCoord((ix, iy), rvec, tvec, cameraMatrix, zconst=0):
+def imgPointToWorldCoord(xxx_todo_changeme, rvec, tvec, cameraMatrix, zconst=0):
     '''
     @returns 3d object coords 
 
@@ -14,7 +16,7 @@ def imgPointToWorldCoord((ix, iy), rvec, tvec, cameraMatrix, zconst=0):
     and
     http://stackoverflow.com/questions/12299870/computing-x-y-coordinate-3d-from-image-point
     '''
-
+    (ix, iy) = xxx_todo_changeme
     uvPoint = np.array([ix.ravel(),iy.ravel(),np.ones(shape=ix.size)]).reshape(3,ix.size)
 
     R = cv2.Rodrigues(rvec)[0]
@@ -24,7 +26,7 @@ def imgPointToWorldCoord((ix, iy), rvec, tvec, cameraMatrix, zconst=0):
 
     t = iR.dot(iC).dot(uvPoint)
     t2 = iR.dot(tvec)
-    s = (zconst + t2[2]) / t[2]
+    s = (zconst + t2[2])/ t[2]
     
     objP = (iR.dot (s* iC.dot(uvPoint) - tvec))
     return objP

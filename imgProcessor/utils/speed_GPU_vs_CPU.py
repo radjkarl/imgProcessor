@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import range
 if __name__ == '__main__':
     #find out whether its faster 
     #to rather execute a function on the local GPU 
@@ -26,14 +28,14 @@ if __name__ == '__main__':
     
     from time import  time
     t0 = time()
-    for _ in xrange(10):
+    for _ in range(10):
         GPUfn(a,b,c)
     
     t1 = time()
-    for _ in xrange(10):
+    for _ in range(10):
         CPUfn(a,b,c)
     t2 = time()
     
     
-    print ('GPU', t1-t0)
-    print ('CPU', t2-t1)
+    print(('GPU', t1-t0))
+    print(('CPU', t2-t1))

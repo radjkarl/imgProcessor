@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 from numba import jit
 
@@ -33,10 +35,10 @@ def estimateBackgroundLevel(img, image_is_artefact_free=False,
 def _spatialStd(img, arr, s):
     g0 = img.shape[0]
     g1 = img.shape[1]
-    hs = s/2
+    hs = s//2
     #for every pixel:
-    for i in xrange(s,g0-s):
-        for j in xrange(s,g1-s):
+    for i in range(s,g0-s):
+        for j in range(s,g1-s):
             arr[i-s,j-s] = img[i-hs:i+hs, j-hs:j+hs].std()
 
 

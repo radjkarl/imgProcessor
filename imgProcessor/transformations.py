@@ -1,6 +1,8 @@
 '''
 various image transformation functions
 '''
+from __future__ import division
+
 import numpy as np
 
 
@@ -43,7 +45,7 @@ def toUIntArray(img, dtype=None, cutNegative=True, cutHigh=True,
         #img[img<0]=0
         #print np.nanmin(img), np.nanmax(img), mn, mx, range, b
 
-        img *= float(b)/(mx-mn)
+        img *= b / (mx-mn)
         #print np.nanmin(img), np.nanmax(img), mn, mx, range, b
         img = np.clip(img, 0,b)
 
@@ -62,7 +64,7 @@ def toUIntArray(img, dtype=None, cutNegative=True, cutHigh=True,
         else:
             #scale values
             mx = np.nanmax(img)
-            img = np.asfarray(img) * (float(b)/mx)
+            img = np.asfarray(img) * (float(b) / mx)
             
     img = img.astype(dtype)
     

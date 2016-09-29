@@ -1,9 +1,11 @@
+from __future__ import division
+from __future__ import print_function
+
 from imgProcessor.imgIO import imread
 
 import numpy as np
 from scipy.ndimage.filters import median_filter
 from scipy.optimize import curve_fit
-from scipy.interpolate import UnivariateSpline
 
 
 
@@ -29,7 +31,7 @@ def estimateFromImages(imgs1, imgs2=None, mn_mx=None, nbins=100):
         mx = -1e6
         #get min and max image value checking all first images:         
         for n, i1 in enumerate(imgs1):
-            print '%s/%s' %(n+1, len(imgs1))
+            print('%s/%s' %(n+1, len(imgs1)))
             i1 = imread(i1)
             mmn, mmx = _getMinMax(i1)
             mn = min(mn, mmn)
@@ -185,7 +187,7 @@ def calcNLF(img, img2=None, signal=None, mn_mx_nbins=None, x=None,
     #CONSTANTS:
     #factor Root mead square to average-absolute-difference:
     F_RMS2AAD = (2/np.pi)**-0.5 
-    F_NOISE_WITH_MEDIAN = 1+(1.0/3**2)
+    F_NOISE_WITH_MEDIAN = 1+(1/3**2)
     N_BINS = 100
     MEDIAN_KERNEL_SIZE = 3
 
@@ -235,7 +237,7 @@ def calcNLF(img, img2=None, signal=None, mn_mx_nbins=None, x=None,
         if mx - mn < nbins:
             nbins = int(mx - mn)
     #bin width:
-    step = (mx-mn)/float(nbins)
+    step = (mx-mn)/nbins
     
     #empty arrays:
     y = np.empty(shape=nbins)
@@ -248,7 +250,7 @@ def calcNLF(img, img2=None, signal=None, mn_mx_nbins=None, x=None,
 
     #cur step:
     m = mn
-    for n in xrange(nbins):
+    for n in range(nbins):
         #get indices of all pixel with in a bin:
         ind = np.logical_and(signal>=m, signal<=m+step)
         m += step

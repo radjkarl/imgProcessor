@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 from numpy.linalg import norm
 
@@ -9,12 +12,10 @@ from scipy.ndimage.filters import maximum_filter
 from scipy.optimize import curve_fit
 from scipy.ndimage.interpolation import map_coordinates
 
-from imgProcessor.imgIO import imread
-# from imgProcessor.equations.gaussian2d import gaussian2d
-
 from fancytools.math.boundingBox import boundingBox
 
 #local
+from imgProcessor.imgIO import imread
 from imgProcessor.measure.sharpness._base import SharpnessBase
 
 
@@ -26,8 +27,8 @@ def _findPoints(img, thresh, min_dist, points):
     px = 0
     n = 0
     l = len(points)
-    for i in xrange(gx):
-        for j in xrange(gy):
+    for i in range(gx):
+        for j in range(gy):
             px = img[i,j]
 
             if px > thresh:
@@ -52,8 +53,8 @@ def _findPoints(img, thresh, min_dist, points):
                     ymx = gy
                 #set surrounding area to zero
                 #to ignore it
-                for ii in xrange(xmx-xmn):
-                    for jj in xrange(ymx-ymn):
+                for ii in range(xmx-xmn):
+                    for jj in range(ymx-ymn):
                         img[xmn+ii,ymn+jj] = 0
 
     
@@ -114,16 +115,17 @@ class SharpnessfromPointSources(SharpnessBase):
                         i[n]=False
         isum = i.sum()
         ll = len(i)-isum
-        print 'found %s points' %isum
+        print('found %s points' %isum)
         if ll:
-            print 'removed %s points (too close to border or other points)' %ll
+            print('removed %s points (too close to border or other points)' %ll)
             self.points = self.points[i]
                  
 #         self.n_points += len(self.points)
 
         #for finding best peak position:
-        def fn((x,y),cx,cy):#par
-            return 1-(((x-cx)**2 + (y-cy)**2)*(1.0/8)).flatten() 
+        def fn(xxx_todo_changeme,cx,cy):#par
+            (x,y) = xxx_todo_changeme
+            return 1-(((x-cx)**2 + (y-cy)**2)*(1/8)).flatten() 
         
         x,y = np.mgrid[-2:3,-2:3]
         x = x.flatten()
@@ -177,10 +179,10 @@ class SharpnessfromPointSources(SharpnessBase):
 #         return subs
         sp = ((subs-p)**2)
         trend = [np.nan]
-        for n in xrange(2,len(subs)+1):
-            trend.append( ((1./(n-1)) * ( sp[:n].sum(axis=0)  
+        for n in range(2,len(subs)+1):
+            trend.append( ((1/(n-1)) * ( sp[:n].sum(axis=0)  
                                           )**0.5).sum() )
-        stdmap = (1./(i-1)) * ( sp.sum(axis=0)  )**0.5
+        stdmap = (1/(i-1)) * ( sp.sum(axis=0)  )**0.5
         stdmap = stdmap.sum(axis=0)
         p = p.sum(axis=0)
         return np.array(trend), (p-stdmap, p, p+stdmap)
@@ -206,7 +208,7 @@ class SharpnessfromPointSources(SharpnessBase):
 #             p[ibg] = mn
 #         else:
 #             ibg = p < p.min()
-        print 
+        print() 
         #decrease kernel size if possible
         if correct_size:
             b = boundingBox(p==0)

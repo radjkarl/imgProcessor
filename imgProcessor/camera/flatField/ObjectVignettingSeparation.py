@@ -1,3 +1,5 @@
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 
@@ -6,7 +8,6 @@ import cv2
 from scipy.ndimage.filters import maximum_filter, minimum_filter#, median_filter
 #from scipy.ndimage import gaussian_filter
 
-from skimage.transform import resize
 
 from fancytools.math.boundingBox import boundingBox
 from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
@@ -14,10 +15,8 @@ from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
 from imgProcessor.imgIO import imread
 from imgProcessor.utils.decompHomography import decompHomography
 from imgProcessor.features.PatternRecognition import PatternRecognition
-from imgProcessor.filters.coarseMaximum import coarseMaximum
 
-import pylab as plt
-from scipy.ndimage.filters import median_filter
+
 from imgProcessor.filters.fastNaNmedianFilter import fastNaNmedianFilter
 
 
@@ -114,8 +113,8 @@ class ObjectVignettingSeparation(PatternRecognition):
         """
         try:
             fit, img, H, H_inv, nmatched = self._fitImg(img)
-        except Exception,e:
-            print e
+        except Exception as e:
+            print(e)
             return
         
         #CHECK WHETHER FIT IS GOOD ENOUGH:
@@ -125,7 +124,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         if (nmatched > minMatches 
                 and abs(shear) < maxShear 
                 and abs(rotation) < maxRot ):
-            print '==> img added'
+            print('==> img added')
             #HOMOGRAPHY:
             self.Hs.append(H)
             #INVERSE HOMOGRSAPHY
@@ -158,7 +157,7 @@ class ObjectVignettingSeparation(PatternRecognition):
     def separate(self):
         self._createInitialflatField()
         for step in self:
-            print 'iteration step %s/%s' %(step, self.maxIter)
+            print('iteration step %s/%s' %(step, self.maxIter))
 
 #         import pylab as plt
 #         plt.figure(1)
@@ -230,7 +229,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         return self
 
 
-    def next(self):
+    def __next__(self):
         #THE IMAGED OBJECT WILL BE AVERAGED FROM ALL
         #INDIVITUAL IMAGES SHOWING THIS OBJECT FROM DIFFERENT POSITIONS:
         obj = MaskedMovingAverage(shape=self.obj_shape)
@@ -273,7 +272,7 @@ class ObjectVignettingSeparation(PatternRecognition):
             #RMSE excluding NaNs:
         dev = np.nanmean((new_flatField[::10,::10]
                           -self.flatField[::10,::10])**2)**0.5
-        print 'residuum: %s' %dev
+        print('residuum: %s' %dev)
         if self.n > self.maxIter or (self._last_dev and (
                     (self.n> 4 and dev > self._last_dev) 
                     or dev < self.maxDev) ):
@@ -316,7 +315,7 @@ class ObjectVignettingSeparation(PatternRecognition):
 #         s = self.flatField = resize( coarse,#resize(self.flatField, (ss0,ss1)),
 #                                     (s0,s1), order=3 )
 
-        f = int(float(max(s0,s1))/downscale_size)
+        f = int(max(s0,s1)/downscale_size)
         every = int(f/3.5)
 
         s =  self.flatField = fastNaNmedianFilter(self.flatField, f, every)
@@ -369,7 +368,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         Create a bounding box around the object within an image
         '''
         
-        from imgProcessor.signal import signalMinimum
+        from imgProcessor.imgSignal import signalMinimum
 
         #img is scaled already
         i = img > signalMinimum(img)#img.max()/2.5

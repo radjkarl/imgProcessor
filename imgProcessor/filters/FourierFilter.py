@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
+
 import numpy as np
 
 from imgProcessor.imgIO import imread
@@ -32,7 +34,7 @@ class FourierFilter(object):
         tx = int(cols*threshold)
         ty = int(rows*threshold)
         #middle:
-        crow,ccol = rows/2 , cols/2
+        crow,ccol = rows//2 , cols//2
         # square in the middle to zero
         self.fshift[crow-tx:crow+tx, ccol-ty:ccol+ty] = 0
 

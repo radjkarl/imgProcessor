@@ -1,3 +1,5 @@
+from __future__ import division
+
 from scipy.ndimage import median_filter
 import numpy as np
 

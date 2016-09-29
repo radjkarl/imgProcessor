@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 import cv2
 
@@ -8,7 +10,7 @@ def rotate(image, angle, interpolation=cv2.INTER_CUBIC,
     angle [deg]
     '''
     s0,s1 = image.shape
-    image_center = (s0-1)/2.,(s1-1)/2.
+    image_center = (s0-1)/2., (s1-1)/2.
     rot_mat = cv2.getRotationMatrix2D(image_center,angle,1.0)
     result = cv2.warpAffine(image, rot_mat, image.shape,
                             flags=interpolation, borderMode=borderMode, 

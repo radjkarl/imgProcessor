@@ -1,3 +1,4 @@
+from builtins import range
 import numpy as np
 from numba import jit
 
@@ -42,14 +43,14 @@ def _calc(img, out, thresh, min_increase, max_length):
     lmx = thresh #value of localized maximum
     pmx = 0 #position of loc. mx
 
-    for i in xrange(g0):
-        for j in xrange(g1):
+    for i in range(g0):
+        for j in range(g1):
             px = img[i,j]
             if not found_peak and px > thresh:
                 if not max_length:
                     found_peak = True
                 else:#go back and check increase
-                    for jj in xrange(j-1,max(-1,j-1-max_length),-1):
+                    for jj in range(j-1,max(-1,j-1-max_length),-1):
                         if px - img[i,jj] > min_increase:
                             found_peak = True
                             break

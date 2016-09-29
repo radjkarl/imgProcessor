@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 from fancytools.os.PathStr import PathStr
 from imgProcessor.imgIO import imread
@@ -19,7 +22,6 @@ class FitHistogramPeaks(object):
                  maxNPeaks=4,
                  debug=False):
         '''
-        
         :param binEveryNPxVals: how many intensities should be represented by one histogram bin
         :param fitFunction: function to fit the histogram (currently only gaussian)
         :param maxNPeaks: limit number of found peaks (biggest to smallest)
@@ -40,13 +42,13 @@ class FitHistogramPeaks(object):
         self.yvals, bin_edges = np.histogram(self.img, bins=200)
         self.yvals = self.yvals.astype(np.float32)
         #move histogram range to representative area: 
-        cdf = np.cumsum(self.yvals)/self.yvals.sum()
+        cdf = np.cumsum(self.yvals) / self.yvals.sum()
         i0 = np.argmax(cdf>0.02)
         i1 = np.argmax(cdf>0.98)
         mnImg = bin_edges[i0]
         mxImg = bin_edges[i1]
         #one bin for every  N pixelvalues
-        nBins = np.clip(int( ( mxImg - mnImg)  / binEveryNPxVals ),25,50)
+        nBins = np.clip(int( ( mxImg - mnImg) / binEveryNPxVals ),25,50)
         self.yvals, bin_edges = np.histogram(self.img, bins=nBins, 
                                                  range=(mnImg, mxImg))
         #bin edges give start and end of an area-> move that to the middle:
@@ -63,7 +65,7 @@ class FitHistogramPeaks(object):
         peaks = self._findPeaks(yvals,mindist, maxNPeaks, minY)
         valleys = self._findValleys(yvals, peaks)
         positions = self._sortPositions(peaks,valleys)
-        
+
         #FIT FUNCTION TO EACH PEAK:
         for il,i,ir in positions:
             #peak position/value:
@@ -74,9 +76,9 @@ class FitHistogramPeaks(object):
             ycut = yvals[il:ir]
 
             #approximate standard deviation from FHWM:
-            ymean = 0.5* (yp + ycut[-1]) 
-            sigma = abs(xp - findXAt(xcut,ycut,ymean) )
-#             sigma = 0.5*abs(xvals[ir]-xvals[il])
+            #ymean = 0.5* (yp + ycut[-1]) 
+            #sigma = abs(xp - findXAt(xcut,ycut,ymean) )
+            sigma = 0.5*abs(xvals[ir]-xvals[il])
 
             init_guess = (yp,xp,sigma)
             #FIT
@@ -88,7 +90,7 @@ class FitHistogramPeaks(object):
             except (RuntimeError, TypeError):
                 #TypeError: not enough values given (when peaks and valleys to close to each other)
                 if debug:
-                    print "couln't fit gaussians -> result will will inaccurate"
+                    print("couln't fit gaussians -> result will will inaccurate")
                 #stay with initial guess: 
                 params = init_guess
 #             except TypeError, err:
@@ -121,9 +123,11 @@ class FitHistogramPeaks(object):
         #starting with widest peak
         #also ensure that every set is at least 3 values wide
                 #FIT FUNCTION TO EACH PEAK:
-        positions = zip(valleys[:-1],peaks,valleys[1:])
+        positions = list(zip(valleys[:-1],peaks,valleys[1:]))
         positions = sorted(positions, key=lambda s: s[1])#s[2]-s[0])
         positions.reverse()
+        #filter invalid:
+        positions = [p for p in positions if p[-1]-p[0]>2]
         return positions
 
 
@@ -152,7 +156,7 @@ class FitHistogramPeaks(object):
         valid = np.ones(len(peaks), dtype=bool)
         if len(peaks)>1:
             #try 4 times to filter peaks:
-            for _ in xrange(4):
+            for _ in range(4):
                 for i,p in enumerate(peaks):
                     r0 = max(0,p-mindist)
                     r1 = min(l,p+mindist)
@@ -185,13 +189,13 @@ class FitHistogramPeaks(object):
 if __name__ == '__main__':
     import sys
     import imgProcessor
-    from imgProcessor.scripts._FitHistogramPeaks import plotFitResult, plotSet
+    from imgProcessor.scripts._FitHistogramPeaks import plotFitResult
     import pylab as plt
     imgs =  PathStr(imgProcessor.__file__).dirname().join(
                 'media', 'electroluminescence').all()
     for i in imgs:
         f = FitHistogramPeaks(i)
-        print f.fitParams
+        print(f.fitParams)
         
         if 'no_window' not in sys.argv: 
             plt.figure(1)

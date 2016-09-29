@@ -8,6 +8,8 @@ code transformed from C++.openCV -> python.cv2
 
 RETURN: focusMeasure - parameter describing sharpness of an image
 '''
+from __future__ import division
+
 import cv2
 import numpy as np
 
@@ -80,7 +82,7 @@ if __name__ == '__main__':
 
 
     def oneFileComparison(filename):
-        gaussianFilterVals = range(1,30,2)
+        gaussianFilterVals = list(range(1,30,2))
         gaussianFilterVals.insert(0,0)
         img = _openImage(filename)
         fn = lambda x, img=img: img if x==0 else cv2.blur(img, (x, x) )
@@ -89,7 +91,7 @@ if __name__ == '__main__':
                 
     def oneFolderComparison(folder):
         d = [os.path.join(folder,x) for x in os.listdir(folder)]
-        xVals = range(len(d))
+        xVals = list(range(len(d)))
         _procedure(_openImage, d, xVals, 'focus variation', folder)
 
 

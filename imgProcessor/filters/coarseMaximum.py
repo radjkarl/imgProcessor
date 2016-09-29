@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 from numba import jit
 from fancytools.math.linspace2 import linspace2
@@ -25,13 +27,13 @@ def coarseMaximum(arr, shape):
 
 @jit(nopython=True)
 def _calc(arr, out, pos0, pos1, k0,k1, ss0,ss1):
-    for i in xrange(ss0):
-        for j in xrange(ss1):
+    for i in range(ss0):
+        for j in range(ss1):
             p0 = pos0[i]
             p1 = pos1[j]
             val = arr[p0,p1]
-            for ii in xrange(-k0,k0):
-                for jj in xrange(-k1,k1):
+            for ii in range(-k0,k0):
+                for jj in range(-k1,k1):
                     val2 = arr[p0+ii,p1+jj]
                     if val2 > val:
                         val = val2
@@ -45,8 +47,8 @@ if __name__ == '__main__':
     import sys
     s = 300,400
     s2 = 32,42
-    a = np.fromfunction(lambda x,y:   np.sin(x/(0.1*s[0]))
-                                    + np.cos(y/(0.01*s[1])), s)
+    a = np.fromfunction(lambda x,y:   np.sin(x / (0.1*s[0]))
+                                    + np.cos(y /(0.01*s[1])), s)
     
     
     

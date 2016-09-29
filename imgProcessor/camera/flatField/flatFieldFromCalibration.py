@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 from scipy.ndimage.filters import median_filter
 
@@ -32,7 +34,7 @@ def flatFieldFromCalibration(images, bgImages=None, calcStd=False, nlf=None):
             img = imread(img)
             s0,s1 = img.shape[:2]
             # rough approx. of image brightness:
-            return -img[::s0/10,::s1/10].min()
+            return -img[::s0//10,::s1//10].min()
         
         images = sorted(images, key=lambda i: fn(i))
 

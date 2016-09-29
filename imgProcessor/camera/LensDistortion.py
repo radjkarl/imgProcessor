@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 import cv2
 from collections import OrderedDict
@@ -160,7 +163,7 @@ class LensDistortion(object):
 
 
     def _findSymmetricCircles(self, flags=cv2.CALIB_CB_SYMMETRIC_GRID):
-        (didFindCorners, corners) = cv2.findCirclesGridDefault(
+        (didFindCorners, corners) = cv2.findCirclesGrid(
                 self.img, self.opts['size'], 
                 flags=flags|cv2.CALIB_CB_CLUSTERING)
         return didFindCorners, corners
@@ -171,7 +174,7 @@ class LensDistortion(object):
         get the distortion coeffs in a formated string 
         '''
         txt = ''
-        for key, val in self.coeffs.iteritems():
+        for key, val in self.coeffs.items():
             txt += '%s = %s\n' %(key, val)
         return txt
 
@@ -219,7 +222,7 @@ class LensDistortion(object):
                             self.opts['imgPoints'], 
                             self.img.shape[::-1], None, None)
                 print('reprojectionError=%s' %reprojectionError)
-            except Exception, err:
+            except Exception as err:
                 raise NothingFound(err)
             
             self._coeffs = OrderedDict([
@@ -411,7 +414,7 @@ if __name__ == '__main__':
     l = LensDistortion()
     l.calibrate(board_size=(4,11), method='Asymmetric circles', 
                 images=imgs, sensorSize_mm=(18,13.5) )
-    print l.getCoeffStr()
+    print(l.getCoeffStr())
     
     img = l.drawChessboard()
     

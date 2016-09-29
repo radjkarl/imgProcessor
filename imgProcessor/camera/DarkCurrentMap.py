@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import numpy as np
 
 from collections import OrderedDict
@@ -101,13 +103,13 @@ def sortForSameExpTime(expTimes, img_paths, excludeSingleImg=True):
         if e not in d:
             d[e] = []
         d[e].append(i)
-    for key in d.keys():
+    for key in list(d.keys()):
         if len(d[key]) == 1:
-            print 'have only one image of exposure time %s' %key
-            print 'excluding that one'
+            print('have only one image of exposure time %s' %key)
+            print('excluding that one')
             d.pop(key)
     d = OrderedDict(sorted(d.items()))
-    return d.keys(), d.values()
+    return list(d.keys()), list(d.values())
 
 
 def getDarkCurrentAverages(exposuretimes, imgs):
@@ -136,8 +138,8 @@ if __name__ == '__main__':
     import sys
     
     #generate some random images for the following exposure times:
-    exposuretimes = range(10,100,20)*3
-    print 'exposure times:, ', exposuretimes
+    exposuretimes = list(range(10,100,20))*3
+    print('exposure times:, ', exposuretimes)
     offs = np.random.randint(0,100,(30,100))
     ascent = np.random.randint(0,10,(30,100))
     noise = lambda: np.random.randint(0,10,(30,100))

@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 
 def cdf(arr, pos=None):
@@ -8,7 +10,7 @@ def cdf(arr, pos=None):
     
     r = (arr.min(), arr.max())
     hist, bin_edges = np.histogram(arr, bins=2*int(r[1]-r[0]), range=r)
-    hist = np.asfarray(hist) / hist.sum()
+    hist = np.asfarray(hist)/ hist.sum()
     cdf = np.cumsum(hist)
     if pos is None:
         return cdf

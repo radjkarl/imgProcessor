@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 from numba import jit
 
@@ -14,13 +16,13 @@ def interpolate2dUnstructuredIDW(x,y,v,grid,power=2):
     n = len(v)
     gx = grid.shape[0]
     gy = grid.shape[1]
-    for i in xrange(gx):
-        for j in xrange(gy):
+    for i in range(gx):
+        for j in range(gy):
             overPx = False #if pixel position == point position
             sumWi = 0.0
             value = 0.0
             
-            for k in xrange(n):
+            for k in range(n):
                 xx = x[k]
                 yy = y[k]
                 vv = v[k]
@@ -29,11 +31,11 @@ def interpolate2dUnstructuredIDW(x,y,v,grid,power=2):
                     overPx = True
                     break
                 #weight from inverse distance:             
-                wi = 1.0 / ((xx-i)**2+(yy-j)**2)**(0.5*power )
+                wi = 1 / ((xx-i)**2+(yy-j)**2)**(0.5*power )
                 sumWi += wi
                 value += wi * vv
             if not overPx:
-                grid[i,j] = value/sumWi
+                grid[i,j] = value / sumWi
     return grid
 
 

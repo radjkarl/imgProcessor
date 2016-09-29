@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import object
 import numpy as np
 
 from scipy.ndimage.filters import gaussian_filter, maximum_filter, \
@@ -8,7 +11,7 @@ from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
 
 from imgProcessor.imgIO import imread
 from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
-from imgProcessor.signal import getSignalPeak
+from imgProcessor.imgSignal import getSignalPeak
 
 from imgProcessor.utils.getBackground import getBackground
 
@@ -39,7 +42,7 @@ class FlatFieldFromImgFit(object):
         
         if images is not None:
             for n,i in enumerate(images):
-                print '%s/%s' %(n+1,len(images))
+                print('%s/%s' %(n+1,len(images)))
                 self.addImg(i)
 
 
@@ -47,7 +50,7 @@ class FlatFieldFromImgFit(object):
         
         if self.scale_factor is None:
             #determine so that smaller image size has 50 px
-            self.scale_factor = 100.0/min(img.shape)
+            self.scale_factor = 100/min(img.shape)
 #         if self.scale_factor !=1:
 #             self._small_shape = [int(s*self.scale_factor) for s in img.shape]
 #         self._orig_shape = img.shape

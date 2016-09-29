@@ -1,3 +1,4 @@
+from builtins import range
 import numpy as np
 from scipy.spatial import ConvexHull
 
@@ -28,7 +29,7 @@ def sortCorners(corners):
             if c not in corners2:
                 break
         perimeter = []
-        for n in xrange(0,4):
+        for n in range(0,4):
             corners3 = np.insert(corners2, n, c, axis=0)
             perimeter.append(np.linalg.norm(np.diff(corners3,axis=0), axis=1).sum())
         n = np.argmin(perimeter)
@@ -40,8 +41,8 @@ def sortCorners(corners):
     ascent = np.arctan2(d[:,1],d[:,0])
     bl = np.abs(BL_ANGLE+ascent).argmin()
     #build a index list starting with bl:
-    i = range(bl,4)
-    i.extend(range(0,bl))
+    i = list(range(bl,4))
+    i.extend(list(range(0,bl)))
     return corners2[i]
 
 

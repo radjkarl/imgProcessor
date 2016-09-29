@@ -1,3 +1,5 @@
+from builtins import zip
+from builtins import range
 #code origin: http://stackoverflow.com/a/7997925
 #grid method added + debug
 import itertools
@@ -11,7 +13,7 @@ def polyfit2d(x, y, z, order=3):
     '''
     ncols = (order + 1)**2
     G = np.zeros((x.size, ncols))
-    ij = itertools.product(range(order+1), range(order+1))
+    ij = itertools.product(list(range(order+1)), list(range(order+1)))
     for k, (i,j) in enumerate(ij):
         G[:,k] = x**i * y**j
     m = np.linalg.lstsq(G, z)[0]
@@ -20,7 +22,7 @@ def polyfit2d(x, y, z, order=3):
 
 def polyval2d(x, y, m, dtype=None):
     order = int(np.sqrt(len(m))) - 1
-    ij = itertools.product(range(order+1), range(order+1))
+    ij = itertools.product(list(range(order+1)), list(range(order+1)))
     z = np.zeros_like(x, dtype=dtype)
     for a, (i,j) in zip(m, ij):
         z += a * x**i * y**j

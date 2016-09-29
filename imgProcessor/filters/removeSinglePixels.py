@@ -1,3 +1,4 @@
+from builtins import range
 from numba import jit
 
 
@@ -11,14 +12,14 @@ def removeSinglePixels(img):
     gx = img.shape[0]
     gy = img.shape[1]
 
-    for i in xrange(gx):
-        for j in xrange(gy):
+    for i in range(gx):
+        for j in range(gy):
             
             if img[i,j]:
                 
                 found_neighbour = False
-                for ii in xrange(max(0,i-1),min(gx,i+2)):
-                    for jj in xrange(max(0,j-1),min(gy,j+2)):
+                for ii in range(max(0,i-1),min(gx,i+2)):
+                    for jj in range(max(0,j-1),min(gy,j+2)):
  
                         if ii == i and jj == j:
                             continue

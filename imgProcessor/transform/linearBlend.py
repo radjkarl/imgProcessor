@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 
 
@@ -57,20 +59,22 @@ def linearBlend(img1, img2, overlap, backgroundColor=None):
 if __name__ == '__main__':
     import sys
     from fancytools.os.PathStr import PathStr
-    from imgIO import imread
+    from imgProcessor.imgIO import imread
     import cv2
-    d = PathStr('').join('media','electroluminescence')
+    import imgProcessor
+    
+    d = PathStr(imgProcessor.__file__).dirname().join('media','electroluminescence')
     i1 = d.join('EL_module_a_dist.PNG')
     i2 = d.join('EL_module_b_dist.PNG')
     
-    img1 = imread(i1)/2
+    img1 = imread(i1)//2
     img2 = imread(i2)
 
-    cv2.namedWindow("stitched", cv2.cv.CV_WINDOW_NORMAL)
+    cv2.namedWindow("stitched")
     s0 = img1.shape[0]
     for i in range(-s0,s0):
         img = linearBlend(img1, img2, i)
-        
+
         if 'no_window' not in sys.argv:
             cv2.imshow('stitched', img)
             cv2.waitKey(delay=20)

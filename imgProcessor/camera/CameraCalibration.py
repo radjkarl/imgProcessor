@@ -1,3 +1,6 @@
+from __future__ import print_function
+from six import string_types
+
 import numpy as np
 import pickle
 import time
@@ -7,7 +10,7 @@ from imgProcessor.camera.LensDistortion import LensDistortion
 from imgProcessor.features.SingleTimeEffectDetection import SingleTimeEffectDetection
 from imgProcessor.camera import NoiseLevelFunction
 from imgProcessor.filters.medianThreshold import medianThreshold
-from imgProcessor.signal import signalStd
+from imgProcessor.imgSignal import signalStd
 
 
 
@@ -131,14 +134,14 @@ class CameraCalibration(object):
             out += '\n\t\t info: %s; slope:%s, intercept:%s' %(info, slope.shape, intercept.shape)
 
         out += '\nflat field:'
-        for light, vals in c['flat field'].iteritems():
+        for light, vals in c['flat field'].items():
             out += '\n\t light: %s' %light
             for (date, info, arr, error) in vals:
                 out += '\n\t\t date: %s' %self._toDateStr(date)
                 out += '\n\t\t\t info: %s; array:%s' %(info, arr.shape)
 
         out += '\nlens:'
-        for light, vals in c['lens'].iteritems():
+        for light, vals in c['lens'].items():
             out += '\n\t light: %s' %light
             for (date, info, coeffs) in vals:
                 out += '\n\t\t date: %s' %self._toDateStr(date)
@@ -150,7 +153,7 @@ class CameraCalibration(object):
             out += '\n\t\t info: %s; coeffs:%s' %(info, nlf_coeff)
 
         out += '\nPoint spread function:'
-        for light, vals in c['psf'].iteritems():
+        for light, vals in c['psf'].items():
             out += '\n\t light: %s' %light
             for (date, info, psf) in vals:
                 out += '\n\t\t date: %s' %self._toDateStr(date)
@@ -337,7 +340,7 @@ class CameraCalibration(object):
                  'noise':'01. Nov 15'}
         '''
         
-        if isinstance(date, basestring) or date is None:
+        if isinstance(date, string_types) or date is None:
             date = {'dark current':date,
                  'flat field':date,
                  'lens':date,
@@ -395,21 +398,21 @@ class CameraCalibration(object):
         try:
             self._correctDarkCurrent(image, exposure_time, bgImages, 
                                         date['dark current'])
-        except Exception, errm:
+        except Exception as errm:
             print('Error: %s' %errm)
 
         #3. VIGNETTING/SENSITIVITY CORRECTION:
         try:
             self._correctVignetting(image, light_spectrum, 
                                        date['flat field'])
-        except Exception, errm:
+        except Exception as errm:
             print('Error: %s' %errm)
 
         #4. REPLACE DECECTIVE PX WITH MEDIAN FILTERED FALUE
         print('... remove artefacts')
         try:
             image = self._correctArtefacts(image, threshold)
-        except Exception, errm:
+        except Exception as errm:
             print('Error: %s' %errm)
 
         #5. DEBLUR
@@ -417,7 +420,7 @@ class CameraCalibration(object):
             print('... remove blur')
             try:
                 image = self._correctBlur(image, light_spectrum, date['psf'])
-            except Exception, errm:
+            except Exception as errm:
                 print('Error: %s' %errm)
         #5. LENS CORRECTION:
         try:
@@ -425,7 +428,7 @@ class CameraCalibration(object):
                                  keep_size)
         except TypeError:
             'Error: no lens calibration found'
-        except Exception, errm:
+        except Exception as errm:
             print('Error: %s' %errm)
         #6. Denoise
         if denoise:
@@ -513,7 +516,7 @@ class CameraCalibration(object):
 
         d = self.getCoeff('psf', light_spectrum, date)
         if not d:
-            print 'skip deconvolution // no PSF set'
+            print('skip deconvolution // no PSF set')
             return image
         psf = d[2]
         mx = image.max()
@@ -521,7 +524,7 @@ class CameraCalibration(object):
         
         balance = self.getCoeff('balance', light_spectrum, date)
         if balance is None:
-            print 'no balance value for wiener deconvolution found // use unsupervised_wiener instead // this will take some time'
+            print('no balance value for wiener deconvolution found // use unsupervised_wiener instead // this will take some time')
             deconvolved, _ = unsupervised_wiener(image, psf)
         else:
             deconvolved = wiener(image, psf, balance[2])
@@ -579,7 +582,7 @@ class CameraCalibration(object):
             c= d[light]
         except KeyError:
             try:
-                k,i = d.iteritems().next()
+                k,i = next(iter(d.items()))
                 if light is not None:
                     print('no calibration found for [%s] - using [%s] instead' %(light, k))
             except StopIteration:

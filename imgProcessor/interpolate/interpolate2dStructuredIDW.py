@@ -1,3 +1,5 @@
+from __future__ import division
+
 from numba import jit
 import numpy as np
 
@@ -12,11 +14,11 @@ def interpolate2dStructuredIDW(grid, mask, kernel=15, power=2, fx=1, fy=1):
 
     '''
     weights = np.empty(shape=((2*kernel,2*kernel)))
-    for xi in xrange(-kernel,kernel):
-        for yi in xrange(-kernel,kernel):
+    for xi in range(-kernel,kernel):
+        for yi in range(-kernel,kernel):
             dist = ((fx*xi)**2+(fy*yi)**2)
             if dist:
-                weights[xi+kernel,yi+kernel] = 1.0 / dist**(0.5*power)
+                weights[xi+kernel,yi+kernel] = 1 / dist**(0.5*power)
 
     return _calc(grid, mask, kernel, weights)
     
@@ -27,8 +29,8 @@ def _calc(grid, mask, kernel, weights):
     gy = grid.shape[1]
     
     #FOR EVERY PIXEL
-    for i in xrange(gx):
-        for j in xrange(gy):
+    for i in range(gx):
+        for j in range(gy):
             
             if mask[i,j]:
                 
@@ -50,15 +52,15 @@ def _calc(grid, mask, kernel, weights):
                 value = 0.0 
                 c = 0
                 #FOR EVERY NEIGHBOUR IN KERNEL              
-                for xi in xrange(xmn,xmx):
-                    for yi in xrange(ymn,ymx):
+                for xi in range(xmn,xmx):
+                    for yi in range(ymn,ymx):
                         if  (xi != i or yi != j) and not mask[xi,yi]:
                             wi = weights[xi-i+kernel,yi-j+kernel]
                             sumWi += wi
                             value += wi * grid[xi,yi] 
                         c += 1 
                 if sumWi:
-                    grid[i,j] = value/sumWi               
+                    grid[i,j] = value / sumWi               
 
     return grid
 

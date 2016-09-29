@@ -1,7 +1,9 @@
+from __future__ import division
+
 import numpy as np
 
 from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
-from imgProcessor.signal import getSignalMinimum, hasBackground
+from imgProcessor.imgSignal import getSignalMinimum, hasBackground
 
 
 

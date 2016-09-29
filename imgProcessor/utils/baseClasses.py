@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import numpy as np
 
 from imgProcessor.exceptions import EnoughImages
@@ -16,7 +18,7 @@ class Iteratives(object):
     def checkConverence(self, arr):
         
         dev = np.mean(arr)
-        print 'residuum: %s' %dev
+        print('residuum: %s' %dev)
 
         #STOP ITERATION?
         if self._n > self._max_iter or (self._last_dev and (

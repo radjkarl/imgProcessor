@@ -1,3 +1,6 @@
+from __future__ import print_function
+from builtins import zip
+from builtins import range
 import numpy as np
 
 
@@ -20,7 +23,7 @@ def elbin(filename):
         #image shape and number:
         height,width,frames = np.frombuffer(f.read(4*3), dtype=np.uint32)
         arrs = np.empty((frames, width, height), dtype=np.uint16)
-        for i in xrange(frames):
+        for i in range(frames):
             #read header between all frames:
             current, voltage = np.frombuffer(f.read(8*2), dtype=np.float64) 
             i_time = np.frombuffer(f.read(4), dtype=np.uint32)[0] 
@@ -47,7 +50,7 @@ if __name__ == '__main__':
         imgs, labels = elbin(p)
         
         for n,(img, label) in enumerate(zip(imgs, labels)):
-            print labels
+            print(labels)
             plt.figure(n)
             plt.imshow(imgs[n])
     

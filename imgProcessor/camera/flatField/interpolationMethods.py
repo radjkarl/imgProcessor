@@ -1,8 +1,10 @@
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 
 from scipy.ndimage.filters import maximum_filter, laplace
 
-from skimage.transform import resize
 
 from fancytools.fit.fit2dArrayToFn import fit2dArrayToFn
 
@@ -14,7 +16,7 @@ def _highGrad(arr):
     #mask high gradient areas in given array 
     s = min(arr.shape)
     return maximum_filter(np.abs(laplace(arr, mode='reflect')) > 0.01,#0.02
-                          min(max(s/5,3),15) )
+                          min(max(s//5,3),15) )
 
 
 def function(img, mask):
@@ -38,9 +40,9 @@ def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):
         out = img.copy()
 #     mask = ~mask
     lastm = 0
-    for _ in xrange(max_iter):
+    for _ in range(max_iter):
         out2 = polyfit2dGrid(out, mask, 2, copy=True)
-        print 'residuum: ', np.abs(out2-out).mean()
+        print('residuum: ', np.abs(out2-out).mean())
         if np.abs(out2-out).mean() < max_dev:
             out = out2
             break

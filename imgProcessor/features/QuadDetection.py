@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 
 import cv2
@@ -9,9 +11,7 @@ from fancytools.fit.polyFitIgnoringOutliers import polyFitIgnoringOutliers
 
 from imgProcessor.camera.PerspectiveCorrection import PerspectiveCorrection
 from imgProcessor.transformations import toUIntArray
-from imgProcessor.transform.alignImageAlongLine import alignImageAlongLine
-from imgProcessor.signal import signalRange, signalMinimum
-from imgProcessor.features.minimumLineInArray import minimumLineInArray
+from imgProcessor.imgSignal import signalRange, signalMinimum
 from imgProcessor.imgIO import imread
 
 
@@ -171,17 +171,18 @@ class QuadDetection(object):
 
         s0,s1 = img.shape
         #edge lines:
-        ltop = self._findEdgeLine(   thresh, axis=0, stop=s0/2 )
-        lbottom = self._findEdgeLine(thresh, axis=0, start=s0/2, 
+        ltop = self._findEdgeLine(   thresh, axis=0, stop=s0//2 )
+        lbottom = self._findEdgeLine(thresh, axis=0, start=s0//2, 
                                      direction=-1)
-        lleft = self._findEdgeLine(  thresh, axis=1, stop=s1/2 )
-        lright = self._findEdgeLine( thresh, axis=1, start=s1/2, 
+        lleft = self._findEdgeLine(  thresh, axis=1, stop=s1//2 )
+        lright = self._findEdgeLine( thresh, axis=1, start=s1//2, 
                                      direction=-1)
         return ltop, lbottom, lleft, lright
         
         
     @staticmethod
-    def _verticesFromLines((ltop, lbottom, lleft, lright)):
+    def _verticesFromLines(l):
+        ltop, lbottom, lleft, lright = l
         #grid vertices vie lines intersection:
         return np.array((ln.intersection(ltop, lleft),  
                          ln.intersection(ltop, lright),
@@ -252,7 +253,7 @@ class QuadDetection(object):
         if color is None:
             color = img.max()-1
         for l in self._linesFromvertices(self.vertices.astype(int)):
-            cv2.line(img, tuple(l[:2]), tuple(l[2:]), color, thickness=thickness)  
+            cv2.line(img, tuple(l[:2]), tuple(l[2:]), int(color), thickness=thickness)  
         return img
 
 

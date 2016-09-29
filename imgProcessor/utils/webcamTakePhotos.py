@@ -2,6 +2,7 @@
 a simple script to see and save photos in a given folder
 ... in case you can't find your webcam app
 '''
+from __future__ import print_function
 if __name__ == '__main__':
     import sys
     import cv2

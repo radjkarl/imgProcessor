@@ -1,8 +1,11 @@
+
 import numpy as np
 from numba import jit
 from scipy.ndimage.filters import maximum_filter
 from skimage.morphology import skeletonize
 from skimage.morphology import remove_small_objects
+
+
 
 
 NEIGHBOURS = np.array([[1,0],[0,1],[-1,0],[0,-1], #direct
@@ -87,7 +90,7 @@ def _getValidInd(c, ind):
     #first point:
     ind[0]=True
     #for all following points:
-    for j in xrange(2,gx-1):
+    for j in range(2,gx-1):
         if c[j,0] == 0 and c[j,1] == 0:
             #last point
             ind[j-1]=True
@@ -117,8 +120,8 @@ def _populateContoursArray(img, contours, minimum_cluster_size):
     c0 = contours.shape[0]
     c1 = contours.shape[1]
 
-    for i in xrange(gx):
-        for j in xrange(gy):
+    for i in range(gx):
+        for j in range(gy):
             
             #found initial point:
             if img[i,j]:
@@ -131,7 +134,7 @@ def _populateContoursArray(img, contours, minimum_cluster_size):
                 pos += 1
                 
                 #goto both directions
-                for _ in xrange(2):
+                for _ in range(2):
                     i = i_init
                     j = j_init
                     
@@ -139,7 +142,7 @@ def _populateContoursArray(img, contours, minimum_cluster_size):
                         #try to find all neighbouring points     
                         found = False
 
-                        for neigh in xrange(8):
+                        for neigh in range(8):
                             ii,jj = NEIGHBOURS[neigh]
                             i2 = i+ii
                             j2 = j+jj 

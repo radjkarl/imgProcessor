@@ -1,8 +1,11 @@
+from __future__ import division
+from __future__ import print_function
+
 import cv2
 import numpy as np
 from skimage.transform import resize
 
-from imgProcessor.signal import signalRange
+from imgProcessor.imgSignal import signalRange
 
 
 
@@ -19,7 +22,7 @@ class PatternRecognition(object):
         self.base8bit = self._prepareImage(image)
 #         self._fH_init = self._fH
         #PATTERN DETECTOR: Use the SIFT
-        self.detector = cv2.SIFT()
+        self.detector = cv2.xfeatures2d.SIFT_create()#cv2.SIFT()
             #Parameters for nearest-neighbour matching
         flann_params = dict(algorithm=1, trees=2)
         self.matcher = cv2.FlannBasedMatcher(flann_params, {})
@@ -38,12 +41,12 @@ class PatternRecognition(object):
                 
                 if max((s0,s1))>m:
                     if s0 > s1:
-                        self._fH = m/s0
+                        self._fH = m//s0
                         s1 *= self._fH
                         s0 = m
                     else:
-                        self._fH = m/s1
-                        s0 *= m/s1
+                        self._fH = m//s1
+                        s0 *=  m//s1
                         s1 = m
                 else:
                     self._fH = 1
@@ -70,7 +73,7 @@ class PatternRecognition(object):
 
         if img.dtype == np.uint8:
             return img
-        img = 255 * ((np.asfarray(img) - r[0]) / (r[1] - r[0]) )
+        img = 255 * ( (np.asfarray(img) - r[0]) / (r[1] - r[0]) ) 
         img[img < 0] = 0
         img[img > 255] = 255
         img = img.astype(np.uint8)
@@ -139,7 +142,7 @@ class PatternRecognition(object):
         for mat in matches:
     
             # Get the matching keypoints for each of the images
-            print mat, dir(mat)
+            print(mat, dir(mat))
             
             img1_idx = mat.queryIdx
             img2_idx = mat.trainIdx
@@ -162,7 +165,10 @@ class PatternRecognition(object):
             cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (255, 0, 0), 1)
     
         # Show the image
-        cv2.namedWindow('Matched Features', cv2.cv.CV_WINDOW_NORMAL)
+        cv2.namedWindow('Matched Features', 
+                         cv2.WINDOW_NORMAL
+                        #old: cv2.cv.CV_WINDOW_NORMAL
+                        )
 
         cv2.imshow('Matched Features', out)
         cv2.waitKey(0)
@@ -177,7 +183,7 @@ class PatternRecognition(object):
         img = self._prepareImage(img)   
 
         # Initiate SIFT detector
-        sift = cv2.SIFT()
+        sift = cv2.xfeatures2d.SIFT_create() #old: cv2.SIFT()
         
         # find the keypoints and descriptors with SIFT
         kp1, des1 = sift.detectAndCompute(self.base8bit,None)
@@ -202,10 +208,10 @@ class PatternRecognition(object):
         dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
         H, status = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)  
-        print '%d / %d  inliers/matched' % (np.sum(status), len(status))
+        print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
 
         inliers = np.sum(status)
-        inlierRatio = float(inliers) / float(len(status))
+        inlierRatio = inliers / len(status)
         
         return (H, inliers, inlierRatio)
 
@@ -215,24 +221,24 @@ class PatternRecognition(object):
         Find homography of the image through pattern 
         comparison with the base image
         '''
-        print "\t Finding points..."
+        print("\t Finding points...")
         # Find points in the next frame   
         img = self._prepareImage(img)    
 
         features, descs = self.detector.detectAndCompute(img, None)
         matches = self.matcher.knnMatch(descs, 
                                         trainDescriptors=self.base_descs, k=2)
-        print "\t Match Count: ", len(matches)
+        print("\t Match Count: ", len(matches))
         matches_subset = self._filterMatches(matches)
         if not len(matches_subset):
             raise Exception('no matches found')
-        print "\t Filtered Match Count: ", len(matches_subset)
+        print("\t Filtered Match Count: ", len(matches_subset))
         
         distance = sum([m.distance for m in matches_subset])
-        print "\t Distance from Key Image: ", distance
+        print("\t Distance from Key Image: ", distance)
 
-        averagePointDistance = distance/float(len(matches_subset))
-        print "\t Average Distance: ", averagePointDistance
+        averagePointDistance = distance / (len(matches_subset))
+        print("\t Average Distance: ", averagePointDistance)
 
         kp1 = []
         kp2 = []
@@ -245,11 +251,10 @@ class PatternRecognition(object):
         p2 = np.array([k.pt for k in kp2])#/self._fH
 
         H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
-        print '%d / %d  inliers/matched' % (np.sum(status), len(status))
+        print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
 
         inliers = np.sum(status)
-        inlierRatio = float(inliers) / float(len(status))
-
+        inlierRatio = inliers / len(status) 
         #scale with _fH, if image was resized
         #see http://answers.opencv.org/question/26173/the-relationship-between-homography-matrix-and-scaling-images/
         s = np.eye(3,3)
@@ -268,11 +273,11 @@ class PatternRecognition(object):
         Find homography of the image through pattern 
         comparison with the base image
         '''
-        print "\t Finding points..."
+        print("\t Finding points...")
         # Find points in the next frame   
         img = self._prepareImage(img)     
         # Initiate SIFT detector
-        sift = cv2.SIFT()
+        sift = cv2.xfeatures2d.SIFT_create() #old: cv2.SIFT()
         # find the keypoints and descriptors with SIFT
         kp1, des1 = sift.detectAndCompute(self.base8bit,None)
         kp2, des2 = sift.detectAndCompute(img,None)
@@ -290,9 +295,14 @@ class PatternRecognition(object):
         dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
     
         H, status = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-        print '%d / %d  inliers/matched' % (np.sum(status), len(status))
+        print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
 
         inliers = np.sum(status)
-        inlierRatio = float(inliers) / float(len(status))
+        inlierRatio = inliers / len(status)
         return (H, inliers, inlierRatio)
-        
+
+
+
+if __name__ == '__main__':
+    pass
+    #TODO

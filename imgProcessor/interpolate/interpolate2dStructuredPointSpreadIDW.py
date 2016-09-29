@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 from numba import jit, boolean
 
@@ -35,8 +37,8 @@ def _createBorder(mask, border):
     last_val = mask[0,0]
     val = last_val
     any_border = False
-    for i in xrange(gx):
-        for j in xrange(gy):
+    for i in range(gx):
+        for j in range(gy):
             val = mask[i,j]
             if val != last_val:
                 if val:
@@ -46,8 +48,8 @@ def _createBorder(mask, border):
                 any_border = True 
             last_val = val
     last_val = mask[0,0]
-    for j in xrange(gy):
-        for i in xrange(gx):
+    for j in range(gy):
+        for i in range(gx):
             val = mask[i,j]
             if val != last_val:
                 if val:
@@ -70,8 +72,8 @@ def _calc(grid, mask, border, kernel, power, maxIter):
 
     n = 0
     while n< maxIter and any_border:
-        for i in xrange(gx):
-            for j in xrange(gy):
+        for i in range(gx):
+            for j in range(gy):
                 if border[i,j]:
                               
                     xmn = i-kernel
@@ -91,15 +93,15 @@ def _calc(grid, mask, border, kernel, power, maxIter):
                     sumWi = 0.0
                     value = 0.0 
                                           
-                    for xi in xrange(xmn,xmx):
-                        for yi in xrange(ymn,ymx):
+                    for xi in range(xmn,xmx):
+                        for yi in range(ymn,ymx):
                             if  not (xi == i and yi == j) and not mask[xi,yi]:
-                                wi = 1.0 / ((xi-i)**2+(yi-j)**2)**(0.5*power )
+                                wi = 1 / ((xi-i)**2+(yi-j)**2)**(0.5*power )
                                 sumWi += wi
                                 value += wi * grid[xi,yi]  
                     if sumWi:
                         #print value
-                        grid[i,j] = value/sumWi               
+                        grid[i,j] = value / sumWi              
       
                         border[i,j] = False
                         mask[i,j] = False

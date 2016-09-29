@@ -1,3 +1,4 @@
+from six import string_types
 import numpy as np
 import cv2
 from skimage import exposure
@@ -20,7 +21,7 @@ def equalizeImage(img, save_path=None, name_additive='_eqHist'):
     @return None elsewise 
     '''
 
-    if isinstance(img, basestring):
+    if isinstance(img, string_types):
         img = PathStr(img)
         if not img.exists():
             raise Exception("image path doesn't exist")

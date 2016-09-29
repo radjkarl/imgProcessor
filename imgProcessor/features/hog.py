@@ -1,5 +1,9 @@
+from __future__ import division
+from builtins import range
 import cv2
 import numpy as np
+
+
 
 # from scipy.signal import convolve2d
 from scipy.ndimage.filters import convolve
@@ -11,18 +15,18 @@ def _mkConvKernel(ksize, orientations, image):
     dangle = np.pi/orientations
     angle = 0
     k0,k1 = ksize
-    mx,my = k0/2+1,k1/2+1
+    mx,my = (k0//2)+1,(k1//2)+1
 #     length = 0.5*(k0+k1)
 
     kernel = np.empty( (orientations,k0,k1) )
-    for i in xrange(orientations):
+    for i in range(orientations):
         #make line kernel
         x = int(round(4*np.cos(angle)*k0))
         y = int(round(4*np.sin(angle)*k1))
         k = np.zeros((2*k0,2*k1), dtype=np.uint8)
         cv2.line(k, (-x+k0,-y+k1), (x+k0,y+k1), 
                  255, 
-                 thickness=1, lineType=cv2.CV_AA)
+                 thickness=1, lineType=cv2.LINE_AA)
         #resize and scale 0-1:
         ki = k[mx:mx+k0,my:my+k1].astype(float)/255
         kernel[i] = ki / ki.sum()
@@ -51,7 +55,7 @@ def hog(image, orientations=6, ksize=(5,5)):
 #     if np.isnan(np.sum(image)):
 #         image = 
     
-    for i in xrange(orientations):
+    for i in range(orientations):
         out[:,:,i] = convolve(image, k[i]#, mode='same' 
                               )          
     return out

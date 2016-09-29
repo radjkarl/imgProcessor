@@ -1,3 +1,4 @@
+from builtins import range
 import numpy as np
 from numba import jit
 
@@ -18,9 +19,9 @@ def _calc(arr, out):
     gx = arr.shape[0]
     gy = arr.shape[1]
 
-    for i in xrange(gx):
+    for i in range(gx):
         last_val = arr[i,0]
-        for j in xrange(1, gy):
+        for j in range(1, gy):
             val = arr[i,j]
             if val != last_val:
                 if val == 0:

@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 import os
 import cv2
 import math
@@ -68,19 +71,19 @@ class PerspectiveTransformation(object):
             dir_list = os.listdir(image_dir)
             if img_filter:
                 # remove all files that doen't end with .[image_filter]
-                dir_list = filter(lambda x: x.find(img_filter) > -1, dir_list)
+                dir_list = [x for x in dir_list if x.find(img_filter) > -1]
             try: #remove Thumbs.db, is existent (windows only)
                 dir_list.remove('Thumbs.db')
             except ValueError:
                 pass
         except:
             raise IOError("Unable to open directory: %s" % image_dir)
-        dir_list = map(lambda x: os.path.join(image_dir, x), dir_list)
-        dir_list = filter(lambda x: x != image_dir, dir_list)
+        dir_list = [os.path.join(image_dir, x) for x in dir_list]
+        dir_list = [x for x in dir_list if x != image_dir]
         return self._stitchDirRecursive(self.base_img_rgb, dir_list, 0)        
         
 
-    def filterMatches(self, matches, ratio = 0.75):
+    def filterMatches(self, matches, ratio=0.75):
         filtered_matches = []
         for m in matches:
             if len(m) == 2 and m[0].distance < m[1].distance * ratio:
@@ -117,7 +120,8 @@ class PerspectiveTransformation(object):
     
             hp = np.matrix(homography, np.float32) * np.matrix(pt, np.float32).T
             hp_arr = np.array(hp, np.float32)
-            normal_pt = np.array([hp_arr[0]/hp_arr[2], hp_arr[1]/hp_arr[2]], np.float32)
+            normal_pt = np.array([hp_arr[0]/hp_arr[2], 
+                                  hp_arr[1]/hp_arr[2]], np.float32)
 
             if ( max_x == None or normal_pt[0,0] > max_x ):
                 max_x = normal_pt[0,0]
@@ -140,7 +144,7 @@ class PerspectiveTransformation(object):
         # Find key points in base image for motion estimation
         self.detector.detectAndCompute(self.base_img, None)
         
-        print "Iterating through next images..."
+        print("Iterating through next images...")
     
         closestImage = None
     
@@ -149,7 +153,7 @@ class PerspectiveTransformation(object):
         # Find the best next image from the remaining images
         for next_img_path in dir_list:
     
-            print "Reading %s..." % next_img_path
+            print("Reading %s..." % next_img_path)
     
             next_img_rgb = cv2.imread(next_img_path)
 
@@ -170,10 +174,10 @@ class PerspectiveTransformation(object):
                 closestImage['desc'] = next_descs
                 closestImage['match'] = matches_subset
     
-        print "Closest Image: ", closestImage['path']
-        print "Closest Image Ratio: ", closestImage['inliers']
+        print("Closest Image: ", closestImage['path'])
+        print("Closest Image Ratio: ", closestImage['inliers'])
 
-        dir_list = filter(lambda x: x != closestImage['path'], dir_list)
+        dir_list = [x for x in dir_list if x != closestImage['path']]
 
         self.base_img_rgb = self._stitchImg(closestImage)
         self.base_img = cv2.GaussianBlur(cv2.cvtColor(self.base_img_rgb,cv2.COLOR_BGR2GRAY), (5,5), 0)
@@ -181,7 +185,7 @@ class PerspectiveTransformation(object):
         return self._stitchDirRecursive(dir_list, round+1)
 
 
-    def _stitchImg(self,H_inv, inliers, img, overlap=0):
+    def _stitchImg(self, H_inv, inliers, img, overlap=0):
         # TODO: use img_orig with can be float array
         # to return stitched results as floatarray of the same kind
 
@@ -210,8 +214,8 @@ class PerspectiveTransformation(object):
                 max_y += -min_y
                 
 #             print "Homography: \n", H
-            print "Inverse Homography: \n", H_inv
-            print "Min Points: ", (min_x, min_y)
+            print("Inverse Homography: \n", H_inv)
+            print("Min Points: ", (min_x, min_y))
     
             mod_inv_h = move_h * H_inv
 
@@ -219,14 +223,14 @@ class PerspectiveTransformation(object):
             img_w = int(math.ceil(max_x))
             img_h = int(math.ceil(max_y))
     
-            print "New Dimensions: ", (img_w, img_h)
+            print("New Dimensions: ", (img_w, img_h))
     
             # Warp the new image given the homography from the old image
             base_img_warp = cv2.warpPerspective(self.img_orig, move_h, (img_w, img_h))
-            print "Warped base image"
+            print("Warped base image")
     
             next_img_warp = cv2.warpPerspective(img, mod_inv_h, (img_w, img_h))
-            print "Warped next image"
+            print("Warped next image")
     
             # Put the base image on an enlarged palette
             if isColor:
@@ -234,9 +238,9 @@ class PerspectiveTransformation(object):
             else:
                 enlarged_base_img = np.zeros((img_h, img_w), np.uint8)
     
-            print "Enlarged Image Shape: ", enlarged_base_img.shape
-            print "Base Image Shape: ", self.img_orig.shape
-            print "Base Image Warp Shape: ", base_img_warp.shape
+            print("Enlarged Image Shape: ", enlarged_base_img.shape)
+            print("Base Image Shape: ", self.img_orig.shape)
+            print("Base Image Warp Shape: ", base_img_warp.shape)
     
 
             # Create a mask from the warped image for constructing masked composite
@@ -272,8 +276,9 @@ class PerspectiveTransformation(object):
             if isColor:
                 thresh = np.sum(thresh, axis=0)
             
-            contours, _ = cv2.findContours(thresh.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-            print "Found %d contours..." % (len(contours))
+            contours,_,_ = cv2.findContours(thresh.astype(np.uint8), 
+                                           cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            print("Found %d contours..." % (len(contours)))
     
             max_area = 0
             best_rect = (0,0,0,0)
@@ -292,8 +297,8 @@ class PerspectiveTransformation(object):
                     best_rect = (x,y,w,h)
     
             if ( max_area > 0 ):
-                print "Maximum Contour: ", max_area
-                print "Best Rectangle: ", best_rect
+                print("Maximum Contour: ", max_area)
+                print("Best Rectangle: ", best_rect)
     
                 final_img_crop = final_img[best_rect[1]:best_rect[1]+best_rect[3],
                         best_rect[0]:best_rect[0]+best_rect[2]]
@@ -324,10 +329,10 @@ if __name__ == '__main__':
         fn.result = p.addImg(i2, overlap=overlap) 
     
     #lets find out which method is faster:
-    print( 'time needed without given overlap [s]: ', 
-           timeit.timeit(fn, number=1) )
-    print( 'time needed with given overlap [s]: ', 
-           timeit.timeit(lambda: fn(overlap=150), number=1) )
+    print(( 'time needed without given overlap [s]: ', 
+           timeit.timeit(fn, number=1) ))
+    print(( 'time needed with given overlap [s]: ', 
+           timeit.timeit(lambda: fn(overlap=150), number=1) ))
 
     if 'no_window' not in sys.argv:
         cv2.namedWindow("warped")

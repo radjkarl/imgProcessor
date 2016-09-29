@@ -1,3 +1,5 @@
+from __future__ import division
+
 import cv2
 import numpy as np
 from numba import jit
@@ -51,7 +53,7 @@ def closestConnectedDistance(target, walls=None,
     dt = np.uint16
     if max(target.shape) < 200:
         dt = np.uint8
-    out = np.zeros( (s[0]/c,s[1]/c), dtype=dt)
+    out = np.zeros( (s[0]//c, s[1]//c), dtype=dt)
     #temporary arrays:
     growth = np.zeros_like(target, dtype=dt)
     res = np.empty(shape=3,dtype=dt)
@@ -81,8 +83,8 @@ def _calc(growth, dists, walls, target, steps, new_steps, res,
     s0,s1 = walls.shape
 
     #for every pixel:
-    for ii,i in enumerate(xrange(0,s0,concentrate_every_n_pixel)):
-        for jj,j in enumerate(xrange(0,s1,concentrate_every_n_pixel)): 
+    for ii,i in enumerate(range(0,s0,concentrate_every_n_pixel)):
+        for jj,j in enumerate(range(0,s1,concentrate_every_n_pixel)): 
             if walls[i,j]:
                 continue
             #get the number of steps needed:
@@ -129,7 +131,7 @@ def _grow(growth, walls, target, i,j, steps, new_steps, res):
     growth[i,j]=1
 
     while True:
-        for n in xrange(step_len):
+        for n in range(step_len):
             i,j = steps[n]
             for ii,jj in  DIRECT_NEIGHBOURS:
                     pi = i+ii
@@ -179,7 +181,7 @@ if __name__ == '__main__':
     walls[35, 20:35]=1
 
     #draw diag:
-    for i in xrange(10,20):
+    for i in range(10,20):
         walls[i,i]=1
     
     target = np.zeros(size, dtype=bool)

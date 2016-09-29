@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 from scipy.interpolate import UnivariateSpline
 from scipy.optimize.minpack import curve_fit
@@ -36,7 +38,7 @@ class SharpnessBase(object):
         r = 4 #range +-r*std
         
         #size of 1 px:
-        px_size = 1./px_per_mm
+        px_size = 1 / px_per_mm
         
         #standard deviation of the point-spread-function (PSF) as normal distributed:
         std = self.std*px_size #transform standard deviation from [px] to [mm]
@@ -178,6 +180,6 @@ class SharpnessBase(object):
 
         self._fitParam = param 
         stdx,stdy =  param[:2]
-        self._std = (stdx+stdy)/2
+        self._std = (stdx+stdy) / 2
         
         return self._std

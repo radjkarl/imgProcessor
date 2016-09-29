@@ -1,3 +1,4 @@
+from __future__ import division
 
 import cv2
 import numpy as np
@@ -36,7 +37,7 @@ def alignImageAlongLine(img, line, height=15, length=None,
         norm*=-1
 
     p2 = (p0+p1)*0.5 + norm*hh*0.5
-    middleY = hh/2.
+    middleY = hh/2
     pp0 = [0,middleY]
     pp1 = [ll, middleY]
     pp2 = [ll*0.5, hh]
@@ -79,7 +80,7 @@ if __name__ == '__main__':
         
         plt.figure('original')
         plt.imshow(img)
-        plt.plot((line[0],line[2]),(line[1],line[03]))
+        plt.plot((line[0],line[2]),(line[1],line[0o3]))
          
         plt.figure('sub image')
         plt.imshow(sub)
@@ -101,7 +102,7 @@ if __name__ == '__main__':
         dd = np.pi/n
         c = 10
         dc = (255.-c)/n
-        for i in xrange(n):
+        for i in range(n):
             d += dd
             p0 = int(-lenline*np.cos(d) + m[0]), int(-lenline*np.sin(d) + m[1])
             p1 = int(lenline*np.cos(d) + m[0]), int(lenline*np.sin(d) + m[1])
