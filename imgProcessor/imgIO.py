@@ -51,7 +51,8 @@ def imread(img, color=None, dtype=None, ignore_order=False):
         img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     # transform array to uint8 array due to openCV restriction
     if dtype is not None:
-        img = _changeArrayDType(img, dtype, cutHigh=False)
+        if isinstance(img, np.ndarray):
+            img = _changeArrayDType(img, dtype, cutHigh=False)    
     if from_file and ip.ARRAYS_ORDER_IS_XY:
     #if not from_file and not ignore_order and ip.ARRAYS_ORDER_IS_XY: 
         img = cv2.transpose(img)   

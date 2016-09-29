@@ -26,14 +26,16 @@ def alignImageAlongLine(img, line, height=15, length=None,
         length = int(round(ln.length(line)) )
     hh = (height-1)
     ll = (length-1)
+    
     #end points of the line:
     p0 = np.array(line[0:2], dtype=float)
     p1 = np.array(line[2:], dtype=float)
-    
     #p2 is above middle of p0,p1:
     norm = np.array(ln.normal(line))
+    if not ln.isHoriz(line):
+        norm*=-1
+
     p2 = (p0+p1)*0.5 + norm*hh*0.5
-    
     middleY = hh/2.
     pp0 = [0,middleY]
     pp1 = [ll, middleY]
@@ -41,8 +43,6 @@ def alignImageAlongLine(img, line, height=15, length=None,
 
     pts1 = np.array([p0,p1,p2], dtype=np.float32)
     pts2 = np.array([pp0,pp1,pp2], dtype=np.float32)
-#     print pts1
-#     print pts2
 
     if zoom != 1:
         length = int(round(length*zoom))
