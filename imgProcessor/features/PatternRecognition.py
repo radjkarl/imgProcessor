@@ -20,13 +20,15 @@ class PatternRecognition(object):
         self._fH = None #homography factor, if image was resized
         
         self.base8bit = self._prepareImage(image)
-#         self._fH_init = self._fH
-        #PATTERN DETECTOR: Use the SIFT
-        self.detector = cv2.xfeatures2d.SIFT_create()#cv2.SIFT()
+
             #Parameters for nearest-neighbour matching
         flann_params = dict(algorithm=1, trees=2)
         self.matcher = cv2.FlannBasedMatcher(flann_params, {})
-        
+
+        #PATTERN DETECTOR:
+        self.detector = cv2.BRISK_create()
+            #removed because of license issues:
+            #cv2.xfeatures2d.SIFT_create()
         f,d = self.detector.detectAndCompute(self.base8bit, None)
         self.base_features, self.base_descs = f,d
 
@@ -94,88 +96,88 @@ class PatternRecognition(object):
         #invert homography
         return np.linalg.inv(H)
 
-
-    #only for opencv2.4 because that method is built into 3.0  - remove later    
-    def _drawMatches(self, img1, kp1, img2, kp2, matches):
-        """
-        ##TAKEN FROM http://stackoverflow.com/questions/20259025/module-object-has-no-attribute-drawmatches-opencv-python
-        #DOESNT WORK FOR knn matcher
-        
-        My own implementation of cv2.drawMatches as OpenCV 2.4.9
-        does not have this function available but it's supported in
-        OpenCV 3.0.0
-    
-        This function takes in two images with their associated 
-        keypoints, as well as a list of DMatch data structure (matches) 
-        that contains which keypoints matched in which images.
-    
-        An image will be produced where a montage is shown with
-        the first image followed by the second image beside it.
-    
-        Keypoints are delineated with circles, while lines are connected
-        between matching keypoints.
-    
-        img1,img2 - Grayscale images
-        kp1,kp2 - Detected list of keypoints through any of the OpenCV keypoint 
-                  detection algorithms
-        matches - A list of matches of corresponding keypoints through any
-                  OpenCV keypoint matching algorithm
-        """
-    
-        # Create a new output image that concatenates the two images together
-        # (a.k.a) a montage
-        rows1 = img1.shape[0]
-        cols1 = img1.shape[1]
-        rows2 = img2.shape[0]
-        cols2 = img2.shape[1]
-    
-        out = np.zeros((max([rows1,rows2]),cols1+cols2,3), dtype='uint8')
-    
-        # Place the first image to the left
-        out[:rows1,:cols1] = np.dstack([img1, img1, img1])
-    
-        # Place the next image to the right of it
-        out[:rows2,cols1:] = np.dstack([img2, img2, img2])
-    
-        # For each pair of points we have between both images
-        # draw circles, then connect a line between them
-        for mat in matches:
-    
-            # Get the matching keypoints for each of the images
-            print(mat, dir(mat))
-            
-            img1_idx = mat.queryIdx
-            img2_idx = mat.trainIdx
-    
-            # x - columns
-            # y - rows
-            (x1,y1) = kp1[img1_idx].pt
-            (x2,y2) = kp2[img2_idx].pt
-    
-            # Draw a small circle at both co-ordinates
-            # radius 4
-            # colour blue
-            # thickness = 1
-            cv2.circle(out, (int(x1),int(y1)), 4, (255, 0, 0), 1)   
-            cv2.circle(out, (int(x2)+cols1,int(y2)), 4, (255, 0, 0), 1)
-    
-            # Draw a line in between the two points
-            # thickness = 1
-            # colour blue
-            cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (255, 0, 0), 1)
-    
-        # Show the image
-        cv2.namedWindow('Matched Features', 
-                         cv2.WINDOW_NORMAL
-                        #old: cv2.cv.CV_WINDOW_NORMAL
-                        )
-
-        cv2.imshow('Matched Features', out)
-        cv2.waitKey(0)
-        cv2.destroyWindow('Matched Features')
-    
-        # Also return the image if you'd like a copy
-        return out
+# 
+#     #only for opencv2.4 because that method is built into 3.0  - remove later    
+#     def _drawMatches(self, img1, kp1, img2, kp2, matches):
+#         """
+#         ##TAKEN FROM http://stackoverflow.com/questions/20259025/module-object-has-no-attribute-drawmatches-opencv-python
+#         #DOESNT WORK FOR knn matcher
+#         
+#         My own implementation of cv2.drawMatches as OpenCV 2.4.9
+#         does not have this function available but it's supported in
+#         OpenCV 3.0.0
+#     
+#         This function takes in two images with their associated 
+#         keypoints, as well as a list of DMatch data structure (matches) 
+#         that contains which keypoints matched in which images.
+#     
+#         An image will be produced where a montage is shown with
+#         the first image followed by the second image beside it.
+#     
+#         Keypoints are delineated with circles, while lines are connected
+#         between matching keypoints.
+#     
+#         img1,img2 - Grayscale images
+#         kp1,kp2 - Detected list of keypoints through any of the OpenCV keypoint 
+#                   detection algorithms
+#         matches - A list of matches of corresponding keypoints through any
+#                   OpenCV keypoint matching algorithm
+#         """
+#     
+#         # Create a new output image that concatenates the two images together
+#         # (a.k.a) a montage
+#         rows1 = img1.shape[0]
+#         cols1 = img1.shape[1]
+#         rows2 = img2.shape[0]
+#         cols2 = img2.shape[1]
+#     
+#         out = np.zeros((max([rows1,rows2]),cols1+cols2,3), dtype='uint8')
+#     
+#         # Place the first image to the left
+#         out[:rows1,:cols1] = np.dstack([img1, img1, img1])
+#     
+#         # Place the next image to the right of it
+#         out[:rows2,cols1:] = np.dstack([img2, img2, img2])
+#     
+#         # For each pair of points we have between both images
+#         # draw circles, then connect a line between them
+#         for mat in matches:
+#     
+#             # Get the matching keypoints for each of the images
+#             print(mat, dir(mat))
+#             
+#             img1_idx = mat.queryIdx
+#             img2_idx = mat.trainIdx
+#     
+#             # x - columns
+#             # y - rows
+#             (x1,y1) = kp1[img1_idx].pt
+#             (x2,y2) = kp2[img2_idx].pt
+#     
+#             # Draw a small circle at both co-ordinates
+#             # radius 4
+#             # colour blue
+#             # thickness = 1
+#             cv2.circle(out, (int(x1),int(y1)), 4, (255, 0, 0), 1)   
+#             cv2.circle(out, (int(x2)+cols1,int(y2)), 4, (255, 0, 0), 1)
+#     
+#             # Draw a line in between the two points
+#             # thickness = 1
+#             # colour blue
+#             cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (255, 0, 0), 1)
+#     
+#         # Show the image
+#         cv2.namedWindow('Matched Features', 
+#                          cv2.WINDOW_NORMAL
+#                         #old: cv2.cv.CV_WINDOW_NORMAL
+#                         )
+# 
+#         cv2.imshow('Matched Features', out)
+#         cv2.waitKey(0)
+#         cv2.destroyWindow('Matched Features')
+#     
+#         # Also return the image if you'd like a copy
+#         return out
 
 
     #alternative method - might remove later
@@ -226,8 +228,11 @@ class PatternRecognition(object):
         img = self._prepareImage(img)    
 
         features, descs = self.detector.detectAndCompute(img, None)
-        matches = self.matcher.knnMatch(descs, 
-                                        trainDescriptors=self.base_descs, k=2)
+        
+
+        matches = self.matcher.knnMatch(descs.astype(np.float32), 
+                                        self.base_descs.astype(np.float32), 
+                                        k=2)
         print("\t Match Count: ", len(matches))
         matches_subset = self._filterMatches(matches)
         if not len(matches_subset):
@@ -304,5 +309,64 @@ class PatternRecognition(object):
 
 
 if __name__ == '__main__':
-    pass
-    #TODO
+    import sys
+    from fancytools.os.PathStr import PathStr
+    import imgProcessor
+    from imgProcessor.imgIO import imread
+    import pylab as plt
+
+    #1. LOAD TEST IMAGE
+    path = PathStr(imgProcessor.__file__).dirname().join(
+                'media', 'electroluminescence', 'EL_cell_cracked.png')
+    orig = imread(path)
+    
+    #2. DISTORT REFERENCE IMAGE RANDOMLY:
+    rows,cols = orig.shape
+        #rescale
+    r0 = 1+0.2*(np.random.rand()-1)
+    r1 = 1+0.2*(np.random.rand()-1)
+    dst = cv2.resize(orig,None,fx=r0, fy=r1, interpolation = cv2.INTER_CUBIC)
+        #translate
+    M = np.float32([[1,0,np.random.randint(-20,20)],[0,1,np.random.randint(-20,20)]])
+    dst = cv2.warpAffine(dst,M,(cols,rows))
+        #rotate:
+    M = cv2.getRotationMatrix2D((cols/2,rows/2),
+                np.random.randint(0,90),1)
+    dst = cv2.warpAffine(dst,M,(cols,rows))
+    
+    #3. CORRECT DISTORTION:
+    pat = PatternRecognition(orig)
+    h = pat.findHomography(dst)[0]
+    hinv = pat.invertHomography(h)
+    corrected = cv2.warpPerspective(dst, hinv,orig.shape[::-1])
+    
+    #4. CALCULATE ERROR:
+    diff = orig.astype(int) - corrected
+    diff[corrected==0]=0
+    
+    err = np.abs(diff).mean()/orig.mean()
+    print('relative error: {:f} %'.format(err*100))
+    
+    assert err < 0.03 #  must be smaller 5%
+    
+    if 'no_window' not in sys.argv:
+        #PLOT:
+        f, axarr = plt.subplots(2,2)
+        axarr[0,0].imshow(orig)
+        axarr[0,0].set_title('original')
+        
+        im = axarr[0,1].imshow(dst)
+        axarr[0,1].set_title('randomly distorted')
+        plt.colorbar(im, ax=axarr[0,1])
+    
+        axarr[1,0].imshow(corrected)   
+        axarr[1,0].set_title('corrected')
+        
+    
+        im = axarr[1,1].imshow(diff)   
+        axarr[1,1].set_title('error')
+        plt.colorbar(im, ax=axarr[1,1])
+        
+        plt.show()
+
+    
