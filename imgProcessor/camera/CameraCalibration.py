@@ -348,8 +348,10 @@ class CameraCalibration(object):
                  'psf':date}
         
         if light_spectrum is None:
-            light_spectrum = self.coeffs['light spectra'][0]
-            
+            try:
+                light_spectrum = self.coeffs['light spectra'][0]
+            except IndexError:
+                pass 
 
         #0.NOISE
         n = self.coeffs['noise']

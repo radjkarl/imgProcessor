@@ -1,9 +1,7 @@
 from __future__ import division
-from builtins import range
+
 import cv2
 import numpy as np
-
-
 
 # from scipy.signal import convolve2d
 from scipy.ndimage.filters import convolve

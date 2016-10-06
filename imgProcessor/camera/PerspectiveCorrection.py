@@ -3,7 +3,7 @@ from __future__ import print_function
 
 import numpy as np
 import cv2
-from transforms3d import euler
+from transforms3d.euler import mat2euler
 
 from fancytools.math.Point3D import Point3D
 
@@ -217,7 +217,7 @@ class PerspectiveCorrection(object):
     def _getTiltFactor(self, img):
         #CALCULATE VIGNETTING OF WARPED OBJECT:
         _,r = self.pose()
-        eulerAngles = euler.mat2euler(cv2.Rodrigues(r)[0], axes='rzxy')
+        eulerAngles = mat2euler(cv2.Rodrigues(r)[0], axes='rzxy')
         
         tilt = eulerAngles[1]
         rot = eulerAngles[0]

@@ -17,6 +17,8 @@ from fancytools.math.boundingBox import boundingBox
 #local
 from imgProcessor.imgIO import imread
 from imgProcessor.measure.sharpness._base import SharpnessBase
+from imgProcessor.transformations import toUIntArray
+from scipy.ndimage.measurements import center_of_mass
 
 
 
@@ -67,7 +69,6 @@ class SharpnessfromPointSources(SharpnessBase):
         self.calc_std = calc_std
         #ensure odd number:
         self.kernel_size = k = max_kernel_size//2*2+1
-        
         if min_dist is None:
             min_dist = max_kernel_size//2+10
         self.min_dist = min_dist
@@ -75,26 +76,33 @@ class SharpnessfromPointSources(SharpnessBase):
         self._psf = np.zeros(shape=(k,k))
 
 
-    def addImg(self, img, roi):
+    def addImg(self, img, roi=None):
         '''
         img - background, flat field, ste corrected image
         roi - [(x1,y1),...,(x4,y4)] -  boundaries where points are
         '''
         self.img = imread(img, 'gray')
+        s0,s1 = self.img.shape
+
+
+        if roi is None:
+            roi = ((0,0),(s0,0),(s0,s1),(0,s1)) 
 
         k = self.kernel_size
         hk = k//2
 
         #mask image
+        img2 = self.img.copy()#.astype(int)
+
         mask = np.zeros(self.img.shape)
         cv2.fillConvexPoly(mask, np.asarray(roi, dtype=np.int32), color=1)
         mask = mask.astype(bool)
-        img2 = self.img.copy().astype(int)
         im = img2[mask]
         
-        bg = im.mean()
+        bg = im.mean() #assume image average with in roi == background 
         mask = ~mask
         img2[mask] = -1
+
 
         #find points from local maxima:
         self.points = np.zeros(shape=(self.max_points,2), dtype=int)
@@ -103,6 +111,12 @@ class SharpnessfromPointSources(SharpnessBase):
         _findPoints(img2, thresh, self.min_dist, self.points)
         self.points = self.points[:np.argmin(self.points,axis=0)[0]]
 
+        #correct point position, to that every point is over max value:
+        for n, p in enumerate(self.points):
+            sub = self.img[p[1]-hk:p[1]+hk+1, p[0]-hk:p[0]+hk+1]
+            i,j = np.unravel_index(np.nanargmax(sub), sub.shape)
+            self.points[n] += [j-hk, i-hk]
+
         #remove points that are too close to their neighbour or the border
         mask = maximum_filter(mask, hk)
         i = np.ones(self.points.shape[0], dtype=bool)
@@ -110,6 +124,7 @@ class SharpnessfromPointSources(SharpnessBase):
             if mask[p[1],p[0]]: #too close to border
                 i[n]=False
             else:
+                #too close to other points
                 for pp in self.points[n+1:]:
                     if norm(p-pp) < hk+1: 
                         i[n]=False
@@ -123,13 +138,13 @@ class SharpnessfromPointSources(SharpnessBase):
 #         self.n_points += len(self.points)
 
         #for finding best peak position:
-        def fn(xxx_todo_changeme,cx,cy):#par
-            (x,y) = xxx_todo_changeme
-            return 1-(((x-cx)**2 + (y-cy)**2)*(1/8)).flatten() 
+#         def fn(xy,cx,cy):#par
+#             (x,y) = xy
+#             return 1-(((x-cx)**2 + (y-cy)**2)*(1/8)).flatten() 
         
-        x,y = np.mgrid[-2:3,-2:3]
-        x = x.flatten()
-        y = y.flatten()
+#         x,y = np.mgrid[-2:3,-2:3]
+#         x = x.flatten()
+#         y = y.flatten()
         #for shifting peak:
         xx,yy = np.mgrid[0:k,0:k]
         xx = xx.astype(float)
@@ -138,30 +153,74 @@ class SharpnessfromPointSources(SharpnessBase):
 
         self.subs = []
 
+
+#         import pylab as plt
+#         plt.figure(20)
+#         img = self.drawPoints()
+#         plt.imshow(img, interpolation='none')
+# #                 plt.figure(21)
+# #                 plt.imshow(sub2, interpolation='none')
+#         plt.show()
+
+        #thresh = 0.8*bg + 0.1*im.max()
         for i, p in enumerate(self.points):
+            
             sub = self.img[p[1]-hk:p[1]+hk+1,
                            p[0]-hk:p[0]+hk+1].astype(float)
-
-            #SHIFT SUB ARRAY to align peak maximum exactly in middle:
-                #only eval a 5x5 array in middle of sub:
-            peak = sub[hk-2:hk+3,hk-2:hk+3].copy()
-            peak -= peak.min()
-            peak/=peak.max()
-            peak = peak.flatten()
-                #fit paraboloid to get shift in x,y:
-            p, _ = curve_fit(fn, (x,y), peak, (0,0))
-            coords = np.array([xx+p[0],yy+p[1]])
-                #shift array:
-            sub =  map_coordinates(sub, coords, 
-                        mode='nearest').reshape(k,k)
-            #normalize:
-            sub-=bg
-            sub /= sub.max()
-            self._psf+=sub
+            sub2 = sub.copy()
             
-            if self.calc_std:
-                self.subs.append(sub)
-    
+            mean = sub2.mean()
+            mx = sub2.max()
+            sub2[sub2<0.5*(mean+mx)]=0#only select peak
+            try:
+                #SHIFT SUB ARRAY to align peak maximum exactly in middle:
+                    #only eval a 5x5 array in middle of sub:
+                #peak = sub[hk-3:hk+4,hk-3:hk+4]#.copy()
+                
+#                 peak -= peak.min()
+#                 peak/=peak.max()
+#                 peak = peak.flatten()
+                    #fit paraboloid to get shift in x,y:
+#                 p, _ = curve_fit(fn, (x,y), peak, (0,0))
+                c0,c1 = center_of_mass(sub2)
+
+#                 print (p,c0,c1,hk)
+                
+                
+                
+                #coords = np.array([xx+p[0],yy+p[1]])
+                coords = np.array([xx+(c0-hk),yy+(c1-hk)])
+                
+                #print (c0,c1)
+
+                
+                #import pylab as plt
+                #plt.imshow(sub2, interpolation='none')
+                
+                    #shift array:
+                sub =  map_coordinates(sub, coords, 
+                            mode='nearest').reshape(k,k)
+                #plt.figure(2)
+                #plt.imshow(sub, interpolation='none')
+                #plt.show()
+
+                #normalize:
+                sub-=bg
+                sub /= sub.max()
+                
+#                 import pylab as plt
+#                 plt.figure(20)
+#                 plt.imshow(sub, interpolation='none')
+# #                 plt.figure(21)
+# #                 plt.imshow(sub2, interpolation='none')
+#                 plt.show()
+                
+                self._psf+=sub
+                
+                if self.calc_std:
+                    self.subs.append(sub)
+            except ValueError:
+                pass #sub.shape == (0,0)
     
     def std(self, i=None, filter_below=1.0):
         if i is None:
@@ -187,6 +246,8 @@ class SharpnessfromPointSources(SharpnessBase):
         p = p.sum(axis=0)
         return np.array(trend), (p-stdmap, p, p+stdmap)
 
+
+    #TODO: move and unit in extra PSF filter file
     @staticmethod
     def _filter(arr, val):
         a = (arr[0,:],arr[1,:],arr[:,0],arr[:,-1])
@@ -207,8 +268,7 @@ class SharpnessfromPointSources(SharpnessBase):
 #             ibg = p<mn
 #             p[ibg] = mn
 #         else:
-#             ibg = p < p.min()
-        print() 
+#             ibg = p < p.min() 
         #decrease kernel size if possible
         if correct_size:
             b = boundingBox(p==0)

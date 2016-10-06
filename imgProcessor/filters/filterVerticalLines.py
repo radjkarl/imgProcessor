@@ -1,4 +1,3 @@
-from builtins import range
 from numba import jit
 
 @jit(nopython=True)
