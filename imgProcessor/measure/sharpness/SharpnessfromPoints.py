@@ -205,6 +205,9 @@ class SharpnessfromPointSources(SharpnessBase):
                 #plt.show()
 
                 #normalize:
+                bg = 0.25* (  sub[0].mean()   + sub[-1].mean() 
+                            + sub[:,0].mean() + sub[:,-1].mean())
+                 
                 sub-=bg
                 sub /= sub.max()
                 
@@ -221,26 +224,71 @@ class SharpnessfromPointSources(SharpnessBase):
                     self.subs.append(sub)
             except ValueError:
                 pass #sub.shape == (0,0)
-    
-    def std(self, i=None, filter_below=1.0):
+            
+
+    def intermetidatePSF(self, n=5, steps=None):
+        s0,s1 = self._psf.shape
+        if steps is not None:
+            n = len(steps)
+        else:
+            steps = np.linspace(1,len(self.subs)-1,n, dtype=int)
+        ipsf = np.empty((n,s0,s1))
+        for o, j in enumerate(steps):
+            ipsf[o] = np.mean(self.subs[:j], axis=0)
+            ipsf[o] /= ipsf[o].sum()
+        return ipsf, steps
+
+
+    def std(self, i=None, filter_below=1.0, ref_psf=None):
         if i is None:
             i = len(self.points)
-        p = self.psf(filter_below)
-        s0, s1 = self._shape
+#         p = self.psf(filter_below)
+        s0, s1 = self.subs[0].shape
         
-        subs = np.array([s[s0,s1] for s in self.subs])
+#         subs = np.array([s[s0,s1] for s in self.subs])
+        subs = np.array(self.subs)
+        ipsfs,_ = self.intermetidatePSF(steps=range(len(subs)))
+#         np.save('sssss', ipsfs)
 #         subs/=subs.sum(axis=(1,2))
-        for s in subs:
-            self._filter(s, filter_below)
-            s/=s.sum()
+#         for s in subs:
+#             self._filter(s, filter_below)
+#             s/=s.sum()
 #         print p
 #         print subs[0]
 #         return subs
-        sp = ((subs-p)**2)
-        trend = [np.nan]
-        for n in range(2,len(subs)+1):
-            trend.append( ((1/(n-1)) * ( sp[:n].sum(axis=0)  
-                                          )**0.5).sum() )
+#         sp = ((subs-p)**2)
+#         trend = [np.nan]
+        trend = []
+        if ref_psf is None:
+            ref_psf = ipsfs[-1]
+        for n in range(1,len(subs)):
+            #RMSE per step
+#             if n ==100:
+#                 import pylab as plt
+#                 plt.plot(ref_psf.sum(axis=0))
+#                 plt.plot(ipsfs[n].sum(axis=0), 'o-')
+#                 plt.plot(ipsfs[-1].sum(axis=0), 'o-')
+# 
+#                 plt.show()
+            
+            trend.append( ((ref_psf-ipsfs[n])**2).mean()**0.5 )
+            
+#         for n in range(2,len(subs)+1):
+            
+#             trend.append( ((1/(n-1)) * ( sp[:n].sum(axis=0)  
+#                                           )**0.5).mean() )          
+            
+            #standard deviation per step (psf.sum()==1)
+#             import pylab as plt
+#             plt.plot(p.mean(axis=0))
+#             plt.plot(sp[0].mean(axis=0))
+#             
+#             plt.show()
+#             trend.append( ((1/(n-1)) * ( sp[:n].sum(axis=0)  
+#                                           )**0.5).mean() )
+        return np.array(trend), (None,None,None)
+
+        
         stdmap = (1/(i-1)) * ( sp.sum(axis=0)  )**0.5
         stdmap = stdmap.sum(axis=0)
         p = p.sum(axis=0)
@@ -257,7 +305,8 @@ class SharpnessfromPointSources(SharpnessBase):
         arr -= t
         arr[arr<0]=0
 
-
+    
+    #TODO: remove because is already in module PSF
     def psf(self, correct_size=True, filter_below=0.00):
         p = self._psf.copy()
         #filter background oscillations
