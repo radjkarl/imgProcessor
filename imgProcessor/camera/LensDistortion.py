@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 from __future__ import division
 from __future__ import print_function
 
@@ -21,6 +22,7 @@ class LensDistortion(object):
     '''
     ftype = 'npz'
 
+    # TODO: default argument is mutable
     def __init__(self, coeffs={}):
         # SAVED CALIBRATION RESULTS
         self._coeffs = coeffs
@@ -28,6 +30,7 @@ class LensDistortion(object):
         self.opts = {}
         self.mapx, self.mapy = None, None
 
+    # TODO: does not match overriden method
     def calibrate(self, board_size, method='Chessboard', images=[],
                   max_images=100, sensorSize_mm=None,
                   detect_sensible=False):
@@ -183,7 +186,7 @@ class LensDistortion(object):
         assert self.findCount > 0, 'cannot draw chessboard if nothing found'
         if img is None:
             img = self.img
-        elif isinstance(img, bool) and img == False:
+        elif isinstance(img, bool) and not img:
             img = np.zeros(shape=(self.img.shape), dtype=self.img.dtype)
         else:
             img = imread(img, dtype='uint8')
@@ -333,7 +336,8 @@ class LensDistortion(object):
 
     def getCameraParams(self):
         '''
-        value positions based on http://docs.opencv.org/modules/imgproc/doc/geometric_transformations.html#cv.InitUndistortRectifyMap
+        value positions based on 
+        http://docs.opencv.org/modules/imgproc/doc/geometric_transformations.html#cv.InitUndistortRectifyMap
         '''
         c = self.coeffs['cameraMatrix']
         fx = c[0][0]
@@ -382,8 +386,8 @@ class LensDistortion(object):
         r = self.coeffs['reprojectionError']
         # transform to standard uncertainty
         # we assume rectangular distribution:
-        ux = ux / (2 * 3**0.5)
-        uy = uy / (2 * 3**0.5)
+        ux /= 2 * 3 ** 0.5
+        uy /= 2 * 3 ** 0.5
         return (ux, r), (uy, r), ()
 
 

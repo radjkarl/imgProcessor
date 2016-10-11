@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import division
 from __future__ import print_function
 
@@ -18,7 +19,8 @@ from imgProcessor.utils.calcAspectRatioFromCorners import calcAspectRatioFromCor
 
 
 class PerspectiveCorrection(object):
-
+    
+    # TODO: does not match overriden method
     def __init__(self,
                  img_shape,
                  obj_height_mm=None,

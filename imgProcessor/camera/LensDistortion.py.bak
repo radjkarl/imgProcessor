@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 import numpy as np
 import cv2
 from collections import OrderedDict
@@ -379,8 +380,8 @@ class LensDistortion(object):
         r = self.coeffs['reprojectionError']
         # transform to standard uncertainty
         # we assume rectangular distribution:
-        ux = ux / (2 * 3**0.5)
-        uy = uy / (2 * 3**0.5)
+        ux /= 2 * 3 ** 0.5
+        uy /= 2 * 3 ** 0.5
         return (ux, r), (uy, r), ()
 
 

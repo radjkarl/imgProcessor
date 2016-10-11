@@ -1,3 +1,4 @@
+# coding=utf-8
 '''
 Run all submodules as __main__ and execute their test procedure
 

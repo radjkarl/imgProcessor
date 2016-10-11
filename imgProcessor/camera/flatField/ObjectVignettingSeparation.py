@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import division
 from __future__ import print_function
 
@@ -46,7 +47,7 @@ class ObjectVignettingSeparation(PatternRecognition):
     >>> o = ObjectFlatFieldSeparation(ref_img)
     >>> for img in imgs:
     >>>     o.addImg(img)
-    >>> flatField, object = o.separate()
+    >>> flatField, obj = o.separate()
     """
 
     def __init__(self, img, bg=None, maxDev=1e-4, maxIter=10):

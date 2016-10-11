@@ -1,3 +1,4 @@
+# coding=utf-8
 '''
 An image processing library based on OpenCV, numpy, scipy and skimage.
 

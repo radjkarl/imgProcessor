@@ -1,3 +1,4 @@
+# coding=utf-8
 from six import string_types
 import numpy as np
 import cv2

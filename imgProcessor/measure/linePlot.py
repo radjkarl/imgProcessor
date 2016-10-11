@@ -1,3 +1,4 @@
+# coding=utf-8
 '''
 Created on 6 Oct 2016
 
@@ -8,10 +9,10 @@ import numpy as np
 
 
 def linePlot(img, x0, y0, x1, y1, resolution=None, order=3):
-    
+
     if resolution is None:
-        resolution = int( ((x1-x0)**2 + (y1-y0)**2 )**0.5 )
-    
+        resolution = int(((x1 - x0)**2 + (y1 - y0)**2)**0.5)
+
     if order == 0:
         x = np.linspace(x0, x1, resolution, dtype=int)
         y = np.linspace(y0, y1, resolution, dtype=int)
@@ -19,20 +20,18 @@ def linePlot(img, x0, y0, x1, y1, resolution=None, order=3):
 
     x = np.linspace(x0, x1, resolution)
     y = np.linspace(y0, y1, resolution)
-    return map_coordinates(img, np.vstack((y,x)), order=order)
-
+    return map_coordinates(img, np.vstack((y, x)), order=order)
 
 
 if __name__ == '__main__':
 
     import pylab as plt
     import sys
-    
 
     x, y = np.mgrid[-5:5:0.1, -5:5:0.1]
     z = np.sqrt(x**2 + y**2) + np.sin(x**2 + y**2)
 
-    x0, y0 = 5, 4.5 
+    x0, y0 = 5, 4.5
     x1, y1 = 60, 75
 
     zi = linePlot(z, x0, y0, x1, y1)
@@ -43,7 +42,7 @@ if __name__ == '__main__':
         axes[0].imshow(z)
         axes[0].plot([x0, x1], [y0, y1], 'ro-')
         axes[0].axis('image')
-    
+
         axes[1].plot(zi)
-        
+
         plt.show()

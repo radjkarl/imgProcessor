@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import division
 
 # origin [now heavily modified]
@@ -35,8 +36,8 @@ def linearToPolarMaps(shape, center=None, final_radius=None,
     if phase_width is None:
         phase_width = 2 * np.pi * final_radius
 
-    phi , R = np.meshgrid(np.linspace(1.5*np.pi,-0.5*np.pi, phase_width), 
-                          np.linspace(initial_radius, final_radius, final_radius-initial_radius))
+    phi, R = np.meshgrid(np.linspace(1.5 * np.pi, -0.5 * np.pi, phase_width),
+                         np.linspace(initial_radius, final_radius, final_radius - initial_radius))
     mapX, mapY = _polar2cart(R, phi, center)
     return mapY.astype(np.float32), mapX.astype(np.float32)
 

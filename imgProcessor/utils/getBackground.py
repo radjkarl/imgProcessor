@@ -1,3 +1,4 @@
+# coding=utf-8
 from imgProcessor.camera.DarkCurrentMap import averageSameExpTimes
 from imgProcessor.imgIO import imread
 

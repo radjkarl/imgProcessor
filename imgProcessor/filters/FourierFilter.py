@@ -10,7 +10,9 @@ class FourierFilter(object):
     '''
     http://docs.opencv.org/trunk/doc/py_tutorials/py_imgproc/py_transforms/py_fourier_transform/py_fourier_transform.html
 
-    Tsai, D.-M., Wu, S.-C., & Li, W.-C. (2012). Defect detection of solar cells in electroluminescence images using Fourier image reconstruction. Solar Energy Materials and Solar Cells, 99, 250�262. doi:10.1016/j.solmat.2011.12.007
+    Tsai, D.-M., Wu, S.-C., & Li, W.-C. (2012). Defect detection of solar cells in electroluminescence images 
+      using Fourier image reconstruction. Solar Energy Materials and Solar Cells, 
+      99, 250-262. doi:10.1016/j.solmat.2011.12.007
     '''
 
     def __init__(self, img):

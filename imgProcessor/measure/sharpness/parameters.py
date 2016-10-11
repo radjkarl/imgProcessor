@@ -1,3 +1,4 @@
+# coding=utf-8
 '''
 functions taken from http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry
 is reference of

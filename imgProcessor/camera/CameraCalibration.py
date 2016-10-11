@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import print_function
 from six import string_types
 
@@ -339,7 +340,7 @@ class CameraCalibration(object):
             try:
                 light_spectrum = self.coeffs['light spectra'][0]
             except IndexError:
-                pass 
+                pass
 
         # 0.NOISE
         n = self.coeffs['noise']
@@ -405,7 +406,7 @@ class CameraCalibration(object):
             try:
                 image = self._correctArtefacts(image, threshold)
             except Exception as errm:
-                print('Error: %s' %errm)
+                print('Error: %s' % errm)
         # 5. DEBLUR
         if deblur:
             print('... remove blur')

@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import division
 
 from scipy.ndimage import median_filter

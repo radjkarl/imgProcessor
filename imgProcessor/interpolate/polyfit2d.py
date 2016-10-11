@@ -1,3 +1,4 @@
+# coding=utf-8
 # code origin: http://stackoverflow.com/a/7997925
 # grid method added + debug
 import itertools

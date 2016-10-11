@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import division
 from __future__ import print_function
 
@@ -132,7 +133,7 @@ class PerspectiveTransformation(object):
 
         return (min_x, min_y, max_x, max_y)
 
-    def _stitchDirRecursive(self, dir_list, round=0):
+    def _stitchDirRecursive(self, dir_list, recursion_round=0):
         if (len(dir_list) < 1):
             return self.base_img_rgb
         # Find key points in base image for motion estimation
@@ -158,16 +159,9 @@ class PerspectiveTransformation(object):
             # if ( closestImage == None or averagePointDistance <
             # closestImage['dist'] ):
             if (closestImage is None or inlierRatio > closestImage['inliers']):
-                closestImage = {}
-                closestImage['h'] = H
-                closestImage['inliers'] = inlierRatio
-                closestImage['dist'] = averagePointDistance
-                closestImage['path'] = next_img_path
-                closestImage['rgb'] = next_img_rgb
-                closestImage['img'] = next_img
-                closestImage['feat'] = next_features
-                closestImage['desc'] = next_descs
-                closestImage['match'] = matches_subset
+                closestImage = {'h':     H, 'inliers': inlierRatio, 'dist': averagePointDistance, 'path': next_img_path,
+                                'rgb':   next_img_rgb, 'img': next_img, 'feat': next_features, 'desc': next_descs,
+                                'match': matches_subset}
 
         print("Closest Image: ", closestImage['path'])
         print("Closest Image Ratio: ", closestImage['inliers'])
@@ -178,7 +172,7 @@ class PerspectiveTransformation(object):
         self.base_img = cv2.GaussianBlur(cv2.cvtColor(
             self.base_img_rgb, cv2.COLOR_BGR2GRAY), (5, 5), 0)
 
-        return self._stitchDirRecursive(dir_list, round + 1)
+        return self._stitchDirRecursive(dir_list, recursion_round + 1)
 
     def _stitchImg(self, H_inv, inliers, img, overlap=0):
         # TODO: use img_orig with can be float array

@@ -1,3 +1,4 @@
+# coding=utf-8
 '''
 a simple script to see and save photos in a given folder
 ... in case you can't find your webcam app

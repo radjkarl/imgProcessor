@@ -1,4 +1,4 @@
-
+# coding=utf-8
 import numpy as np
 from numba import jit
 from scipy.ndimage.filters import maximum_filter

@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import division
 from __future__ import print_function
 
@@ -96,7 +97,8 @@ class PatternRecognition(object):
 #     #only for opencv2.4 because that method is built into 3.0  - remove later
 #     def _drawMatches(self, img1, kp1, img2, kp2, matches):
 #         """
-#         ##TAKEN FROM http://stackoverflow.com/questions/20259025/module-object-has-no-attribute-drawmatches-opencv-python
+#         ##TAKEN FROM 
+#         ##http://stackoverflow.com/questions/20259025/module-object-has-no-attribute-drawmatches-opencv-python
 #         #DOESNT WORK FOR knn matcher
 #
 #         My own implementation of cv2.drawMatches as OpenCV 2.4.9
