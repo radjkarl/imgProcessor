@@ -313,7 +313,7 @@ class CameraCalibration(object):
                 bgImages=None,
                 exposure_time=None,
                 light_spectrum=None,
-                threshold=0.2,
+                threshold=0.1,
                 keep_size=True,
                 date=None,
                 deblur=True,
@@ -336,7 +336,10 @@ class CameraCalibration(object):
                     'psf': date}
 
         if light_spectrum is None:
-            light_spectrum = self.coeffs['light spectra'][0]
+            try:
+                light_spectrum = self.coeffs['light spectra'][0]
+            except IndexError:
+                pass 
 
         # 0.NOISE
         n = self.coeffs['noise']
@@ -397,12 +400,12 @@ class CameraCalibration(object):
             print('Error: %s' % errm)
 
         # 4. REPLACE DECECTIVE PX WITH MEDIAN FILTERED FALUE
-        print('... remove artefacts')
-        try:
-            image = self._correctArtefacts(image, threshold)
-        except Exception as errm:
-            print('Error: %s' % errm)
-
+        if threshold:
+            print('... remove artefacts')
+            try:
+                image = self._correctArtefacts(image, threshold)
+            except Exception as errm:
+                print('Error: %s' %errm)
         # 5. DEBLUR
         if deblur:
             print('... remove blur')

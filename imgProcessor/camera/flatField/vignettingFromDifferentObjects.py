@@ -1,6 +1,6 @@
 from __future__ import division
 from __future__ import print_function
-from builtins import object
+
 import numpy as np
 
 from scipy.ndimage.filters import gaussian_filter, maximum_filter, \
