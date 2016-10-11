@@ -6,8 +6,7 @@ from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
 from imgProcessor.imgSignal import getSignalMinimum, hasBackground
 
 
-
-def SNRaverage(snr, method='average', excludeBackground=True, 
+def SNRaverage(snr, method='average', excludeBackground=True,
                checkBackground=True,
                backgroundLevel=None):
     '''
@@ -18,10 +17,10 @@ def SNRaverage(snr, method='average', excludeBackground=True,
     :type  checkBackground: bool
     :returns: averaged SNR as float
     '''
-    if excludeBackground:  
-        #get background level
-        if backgroundLevel is None: 
-            try: 
+    if excludeBackground:
+        # get background level
+        if backgroundLevel is None:
+            try:
                 f = FitHistogramPeaks(snr).fitParams
                 if checkBackground:
                     if not hasBackground(f):
@@ -31,25 +30,24 @@ def SNRaverage(snr, method='average', excludeBackground=True,
             except ValueError:
                 backgroundLevel = snr.min()
         if excludeBackground:
-            snr = snr[snr>=backgroundLevel]
-    
+            snr = snr[snr >= backgroundLevel]
+
     if method == 'RMS':
         avg = (snr**2).mean()**0.5
-    
+
     elif method == 'average':
         avg = snr.mean()
     elif method == 'median':
         avg = np.median(snr)
-    
+
     elif method == 'X75':
         r = (snr.min(), snr.max())
-        hist, bin_edges = np.histogram(snr, bins=2*int(r[1]-r[0]), range=r)
+        hist, bin_edges = np.histogram(snr, bins=2 * int(r[1] - r[0]), range=r)
         hist = np.asfarray(hist) / hist.sum()
         cdf = np.cumsum(hist)
-        i = np.argmax(cdf>0.25)
+        i = np.argmax(cdf > 0.25)
         avg = bin_edges[i]
     else:
         raise NotImplemented("given SNR average doesn't exist")
-    
+
     return avg
-                

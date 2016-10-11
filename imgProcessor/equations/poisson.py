@@ -1,15 +1,17 @@
 from __future__ import division
 import numpy as np
-#TODO: embed for FitHistogramPeaks
+# TODO: embed for FitHistogramPeaks
+
+
 def poisson(x, a, b, c, d=0):
     '''
     Poisson function
     a -> height of the curve's peak
     b -> position of the center of the peak
-    c ->  standard deviation 
+    c ->  standard deviation
     d -> offset
     '''
-    from scipy.misc import factorial #save startup time
+    from scipy.misc import factorial  # save startup time
     lamb = 1
-    X = (x/(2*c)).astype(int)
-    return a * (( lamb**X/factorial(X)) * np.exp(-lamb) ) +d
+    X = (x / (2 * c)).astype(int)
+    return a * ((lamb**X / factorial(X)) * np.exp(-lamb)) + d

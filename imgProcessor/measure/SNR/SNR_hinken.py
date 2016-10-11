@@ -4,12 +4,11 @@ import numpy as np
 from imgProcessor.imgIO import imread
 
 
-
 def SNR_hinken(imgs, bg=0, roi=None):
     '''
     signal-to-noise ratio (SNR) as mean(images) / std(images)
     as defined in Hinken et.al. 2011 (DOI: 10.1063/1.3541766)
-    
+
     works on unloaded images
     no memory overload if too many images are given
     '''
@@ -19,20 +18,20 @@ def SNR_hinken(imgs, bg=0, roi=None):
         bg = imread(bg)[roi]
         if roi is not None:
             bg = bg[roi]
-    #calc mean:
+    # calc mean:
     for i in imgs:
         img = imread(i).asfarray()
         if roi is not None:
             img = img[roi]
         img -= bg
         if mean is None:
-            #init
+            # init
             mean = np.zeros_like(img)
             std = np.zeros_like(img)
         mean += img
         del img
     mean /= M
-    #calc std of mean:
+    # calc std of mean:
     for i in imgs:
         img = imread(i).asfarray()
         if roi is not None:
