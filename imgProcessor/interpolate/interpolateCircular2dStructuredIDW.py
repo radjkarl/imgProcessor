@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 from numba import jit
 from math import atan2
@@ -15,8 +17,8 @@ def interpolateCircular2dStructuredIDW(grid, mask, kernel=15, power=2,
     gy = grid.shape[0]
 
     #FOR EVERY PIXEL
-    for i in xrange(gx):
-        for j in xrange(gy):
+    for i in range(gx):
+        for j in range(gy):
             
             if mask[i,j]:
                 
@@ -42,8 +44,8 @@ def interpolateCircular2dStructuredIDW(grid, mask, kernel=15, power=2,
                 PHI = atan2(j-cy, i-cx)
                 
                 #FOR EVERY NEIGHBOUR IN KERNEL              
-                for xi in xrange(xmn,xmx):
-                    for yi in xrange(ymn,ymx):
+                for xi in range(xmn,xmx):
+                    for yi in range(ymn,ymx):
                         if  (xi != i or yi != j) and not mask[xi,yi]:
                             nR = ((xi-cx)**2+(yi-cy)**2)**0.5
                             dr =  R - nR
@@ -58,11 +60,11 @@ def interpolateCircular2dStructuredIDW(grid, mask, kernel=15, power=2,
                             
                             dist = ((fr*dr)**2+(fphi*dphi)**2)**2
 
-                            wi = 1.0 / dist**(0.5*power)
+                            wi = 1 / dist**(0.5*power)
                             sumWi += wi
                             value += wi * grid[xi,yi]  
                 if sumWi:
-                    grid[i,j] = value/sumWi               
+                    grid[i,j] = value / sumWi               
 
     return grid
 

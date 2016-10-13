@@ -1,3 +1,4 @@
+from __future__ import division
 
 import numpy as np
 from numba import jit
@@ -15,12 +16,11 @@ def fastNaNmedianFilter(arr, ksize=30,every=5):
     assert ksize > 3*every
     s0,s1 = arr.shape[:2]
     
-    ss0 = int(round(s0/every))
-    every = s0/ss0
-    ss1 = s1/every
+    ss0 = s0//every
+    every = s0//ss0
+    ss1 = s1//every
     
     out = np.ones((ss0+1,ss1+1))
-
     ss0,ss1 = _calc(arr, out, ksize, every)
     out = out[:ss0,:ss1]
     return resize(out,arr.shape[:2])
@@ -32,9 +32,9 @@ def _calc(arr, out, ksize,every):
     gx = arr.shape[0]
     gy = arr.shape[1]
     ii = 0
-    for i in xrange(0,gx,every):
+    for i in range(0,gx,every):
         jj = 0
-        for j in xrange(0,gy,every):
+        for j in range(0,gy,every):
                       
             xmn = i-ksize
             if xmn < 0:
@@ -78,10 +78,13 @@ if __name__ == '__main__':
     if 'no_window' not in sys.argv:
         plt.figure('image')
         plt.imshow(img, interpolation='none')
+        plt.colorbar()
         plt.figure('background')
         plt.imshow(bg, interpolation='none')
-    
+        plt.colorbar()
         plt.figure('difference')
         plt.imshow(img-bg, interpolation='none')
+        plt.colorbar()
+
         
         plt.show()

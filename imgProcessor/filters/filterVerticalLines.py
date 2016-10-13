@@ -8,10 +8,10 @@ def filterVerticalLines(arr, min_line_length=4):
     gy = arr.shape[0]
     gx = arr.shape[1]
     mn = min_line_length-1
-    for i in xrange(gy):
-        for j in xrange(gx):
+    for i in range(gy):
+        for j in range(gx):
             if arr[i,j]:
-                for d in xrange(min_line_length):
+                for d in range(min_line_length):
                     if not arr[i+d,j]:
                         break
                 if d == mn:

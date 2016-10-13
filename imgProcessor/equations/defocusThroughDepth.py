@@ -1,3 +1,4 @@
+from __future__ import division
 
 
 def defocusThroughDepth(u, uf, f, fn, k=2.355):
@@ -16,7 +17,7 @@ def defocusThroughDepth(u, uf, f, fn, k=2.355):
     
     !! assumes spatial invariant blur
     '''
-    A = f / fn
+    A = f/ fn
     return (k/A) * (f**2*abs(u-uf)) / (u*(uf-f)) 
     
     

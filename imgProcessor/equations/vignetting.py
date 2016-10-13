@@ -1,11 +1,12 @@
+from __future__ import division
 import numpy as np
 
 
 def guessVignettingParam(arr):
-    return (arr.shape[0]*0.7, 0, 0, 0,arr.shape[0]/2.0,arr.shape[1]/2.0)
+    return (arr.shape[0]*0.7, 0, 0, 0,arr.shape[0]/2,arr.shape[1]/2)
 
 
-def vignetting((x, y), f=100, alpha=0, rot=0, tilt=0, cx=50, cy=50):
+def vignetting(xy, f=100, alpha=0, rot=0, tilt=0, cx=50, cy=50):
     '''
     Vignetting equation using the KANG-WEISS-MODEL
     see http://research.microsoft.com/en-us/um/people/sbkang/publications/eccv00.pdf   
@@ -17,6 +18,7 @@ def vignetting((x, y), f=100, alpha=0, rot=0, tilt=0, cx=50, cy=50):
     cx - image center, x
     cy - image center, y
     '''
+    x,y = xy
     #distance to image center:
     dist = ((x-cx)**2 + (y-cy)**2)**0.5
     
@@ -30,7 +32,7 @@ def vignetting((x, y), f=100, alpha=0, rot=0, tilt=0, cx=50, cy=50):
     return A*G*T
 
 
-def tiltFactor((x, y), f, tilt, rot):
+def tiltFactor(xy, f, tilt, rot):
     '''
     this function is extra to only cover vignetting through perspective distortion
     
@@ -38,6 +40,7 @@ def tiltFactor((x, y), f, tilt, rot):
     tau - tilt angle of a planar scene
     Xi - rotation angle of a planar scene
     '''
+    x,y = xy
     return np.cos(tilt) * (1+(np.tan(tilt)/f) * (x*np.sin(rot)-y*np.cos(rot)) )**3
 
 
@@ -51,7 +54,6 @@ if __name__ == '__main__':
              'tilt':-0.5}
     vig = np.fromfunction(lambda x,y: vignetting((x,y), **param), (100,150))
     
-
 
     param = {'f':100,
              'rot':2,

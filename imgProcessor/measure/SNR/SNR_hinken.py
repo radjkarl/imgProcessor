@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 from imgProcessor.imgIO import imread
 
@@ -38,5 +40,5 @@ def SNR_hinken(imgs, bg=0, roi=None):
         img -= bg
         std += (mean - img)**2
         del img
-    std = (std/M)**0.5
-    return mean.mean() / std.mean() #* M**0.5
+    std = (std / M)**0.5
+    return mean.mean() / std.mean()

@@ -8,10 +8,10 @@ code transformed from C++.openCV -> python.cv2
 
 RETURN: focusMeasure - parameter describing sharpness of an image
 '''
+from __future__ import division
+
 import cv2
 import numpy as np
-
-
 
 def modifiedLaplacian(img):
     ''''LAPM' algorithm (Nayar89)'''
@@ -49,38 +49,38 @@ def normalizedGraylevelVariance(img):
 
 if __name__ == '__main__':
     from matplotlib import pyplot
-    from PyQt4 import QtGui
+    from qtpy import QtWidgets
     import os
     import sys
 
-    class Dialog(QtGui.QWidget):
+    class Dialog(QtWidgets.QWidget):
         '''
         Comparison of the above described relative
         sharpness measures - on one or multiple input images
         '''
         def __init__(self, *args, **kwargs):
-            QtGui.QWidget.__init__(self, *args, **kwargs)
+            QtWidgets.QWidget.__init__(self, *args, **kwargs)
             self.setWindowTitle('Sharpness comparison')
-            l = QtGui.QHBoxLayout()
+            l = QtWidgets.QHBoxLayout()
             self.setLayout(l)
-            btn1 = QtGui.QPushButton('one file (artificial defocus)')
+            btn1 = QtWidgets.QPushButton('one file (artificial defocus)')
             btn1.clicked.connect(self.oneFile)
             l.addWidget(btn1)
-            btn2 = QtGui.QPushButton('one folder (set of focus variations)')
+            btn2 = QtWidgets.QPushButton('one folder (set of focus variations)')
             btn2.clicked.connect(self.oneFolder)
             l.addWidget(btn2)  
         def oneFile(self, evt):
-            filename = QtGui.QFileDialog.getOpenFileName()
+            filename = QtWidgets.QFileDialog.getOpenFileName()
             if filename:
                 oneFileComparison(str(filename))
         def oneFolder(self, evt):
-            filename = QtGui.QFileDialog.getExistingDirectory()
+            filename = QtWidgets.QFileDialog.getExistingDirectory()
             if filename:
                 oneFolderComparison(str(filename))
 
 
     def oneFileComparison(filename):
-        gaussianFilterVals = range(1,30,2)
+        gaussianFilterVals = list(range(1,30,2))
         gaussianFilterVals.insert(0,0)
         img = _openImage(filename)
         fn = lambda x, img=img: img if x==0 else cv2.blur(img, (x, x) )
@@ -89,7 +89,7 @@ if __name__ == '__main__':
                 
     def oneFolderComparison(folder):
         d = [os.path.join(folder,x) for x in os.listdir(folder)]
-        xVals = range(len(d))
+        xVals = list(range(len(d)))
         _procedure(_openImage, d, xVals, 'focus variation', folder)
 
 
@@ -127,7 +127,7 @@ if __name__ == '__main__':
             fig.suptitle(figtitle, fontsize=14)
 
         #for csv export:
-        editor = QtGui.QTextEdit()
+        editor = QtWidgets.QTextEdit()
         t = '#x, modifiedLaplacian, varianceOfLaplacian, tenengrad, normalizedGraylevelVariance\n'
         for n,x in enumerate(xVals):
             t += '%s, %s, %s, %s, %s\n' %(x, y0[n], y1[n], y2[n], y3[n])
@@ -137,7 +137,7 @@ if __name__ == '__main__':
         pyplot.show()
     
     if 'no_window' not in sys.argv: 
-        app = QtGui.QApplication([])
+        app = QtWidgets.QApplication([])
         d=Dialog()
         d.show()
         sys.exit(app.exec_())    

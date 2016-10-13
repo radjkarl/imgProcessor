@@ -1,4 +1,5 @@
-
+from __future__ import division
+import numpy as np
 #TODO: embed for FitHistogramPeaks
 def poisson(x, a, b, c, d=0):
     '''
@@ -8,7 +9,7 @@ def poisson(x, a, b, c, d=0):
     c ->  standard deviation 
     d -> offset
     '''
-    from scipy.misc import factorial
+    from scipy.misc import factorial #save startup time
     lamb = 1
     X = (x/(2*c)).astype(int)
     return a * (( lamb**X/factorial(X)) * np.exp(-lamb) ) +d

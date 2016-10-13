@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 from imgProcessor.imgIO import imread
 from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
@@ -21,7 +24,7 @@ def scaleSignal(img, fitParams=None, backgroundToZero=False, reference=None):
         low, high = signalRange(img, fitParams)
         low2, high2 = signalRange(reference)
         img = np.asfarray(img)
-        ampl = (high2-low2)/(high-low)
+        ampl = (high2-low2) / (high-low)
         img-=low
         img *= ampl
         img += low2
@@ -30,7 +33,7 @@ def scaleSignal(img, fitParams=None, backgroundToZero=False, reference=None):
         offs, div = scaleParams(img, fitParams, backgroundToZero)
         img = np.asfarray(img)  - offs 
         img /= div 
-        print 'offset: %s, divident: %s' %(offs, div)
+        print('offset: %s, divident: %s' %(offs, div))
         return img
 
 
@@ -64,9 +67,9 @@ def hasBackground(fitParams):
     bg = getBackgroundPeak(fitParams)
     if signal == bg:
         return False
-    r = signal[0]/bg[0]
+    r = signal[0] / bg[0]
     if r < 1:
-        r = 1/r
+        r = 1 / r
     return r < 100
 
 
@@ -89,9 +92,9 @@ def  signalMinimum(img, fitParams=None, n_std=3):
     def solve(p1, p2):
         s1,m1,std1 = p1
         s2,m2,std2 = p2
-        a = 1/(2*std1**2) - 1/(2*std2**2)
-        b = m2/(std2**2) - m1/(std1**2)
-        c = m1**2 /(2*std1**2) - m2**2 / (2*std2**2) - np.log((std2*s1)/(std1*s2))
+        a = (1/(2*std1**2)) - (1/(2*std2**2))
+        b = (m2/(std2**2)) - (m1/(std1**2))
+        c = (m1**2/(2*std1**2)) - (m2**2 / (2*std2**2)) - np.log(((std2*s1)/(std1*s2)))
         return np.roots([a,b,c])
     i = solve(bg, signal)
     try:
@@ -117,9 +120,9 @@ def getSignalMinimum(fitParams, n_std=3):
     def solve(p1, p2):
         s1,m1,std1 = p1
         s2,m2,std2 = p2
-        a = 1/(2*std1**2) - 1/(2*std2**2)
-        b = m2/(std2**2) - m1/(std1**2)
-        c = m1**2 /(2*std1**2) - m2**2 / (2*std2**2) - np.log((std2*s1)/(std1*s2))
+        a = (1/(2*std1**2)) - (1/(2*std2**2))
+        b = (m2/(std2**2)) - (m1/(std1**2))
+        c = (m1**2/(2*std1**2)) - (m2**2/ (2*std2**2)) - np.log(((std2*s1)/(std1*s2)))
         return np.roots([a,b,c])
     
     i = solve(bg, signal)
@@ -155,7 +158,7 @@ def signalRange(img, fitParams=None, nSigma=3):
 #         return (signPeak[1] - nSigma*signPeak[2],signPeak[1] + nSigma*signPeak[2])
 
     except Exception as e:
-        print e
+        print(e)
         #in case peaks were not found:
         s = img.std()
         m = img.mean()
@@ -197,7 +200,7 @@ def scaleParamsFromReference(img, reference):
     
     params, fitCovariances = curve_fit(fn, refh, imgh, p0=(0,1)) 
     perr = np.sqrt(np.diag(fitCovariances))
-    print 'error scaling to reference image: %s' %perr[0]
+    print('error scaling to reference image: %s' %perr[0])
     #if perr[0] < 0.1:
     return params[0],params[1]  
 

@@ -1,6 +1,9 @@
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 import cv2
-from transforms3d import euler
+from transforms3d.euler import mat2euler
 
 from fancytools.math.Point3D import Point3D
 
@@ -104,11 +107,11 @@ class PerspectiveCorrection(object):
                         #estimate size
                         w = self.opts['obj_width_mm']
                         h = self.opts['obj_height_mm']
-                        aspectRatio = float(w)/h
+                        aspectRatio = w/h
                     except TypeError:
                         aspectRatio = calcAspectRatioFromCorners(self.quad, 
                                                                 self.opts['in_plane'])
-                        print 'aspect ratio assumed to be %s' %aspectRatio
+                        print('aspect ratio assumed to be %s' %aspectRatio)
                     #new image border keeping aspect ratio
                     if fixedX or fixedY:
                         if fixedX:
@@ -214,7 +217,7 @@ class PerspectiveCorrection(object):
     def _getTiltFactor(self, img):
         #CALCULATE VIGNETTING OF WARPED OBJECT:
         _,r = self.pose()
-        eulerAngles = euler.mat2euler(cv2.Rodrigues(r)[0], axes='rzxy')
+        eulerAngles = mat2euler(cv2.Rodrigues(r)[0], axes='rzxy')
         
         tilt = eulerAngles[1]
         rot = eulerAngles[0]
@@ -245,7 +248,7 @@ class PerspectiveCorrection(object):
         snew = self._newBorders
         out = np.empty(snew[::-1], dtype=self.img.dtype)        
 
-        sx,sy = snew[0]/n0,snew[1]/n1
+        sx,sy = snew[0]/n0, snew[1]/n1
         
         objP = np.array([[0, 0 ],
                          [sx,0 ],
@@ -253,8 +256,8 @@ class PerspectiveCorrection(object):
                          [0, sy] ],dtype=np.float32)
         
         # warp every cell in grid:
-        for ix in xrange(n0):
-            for iy in xrange(n1):
+        for ix in range(n0):
+            for iy in range(n1):
                 quad = grid[ix:ix+2,iy:iy+2].reshape(4,2)[np.array([0,2,3,1])]
                 hcell = cv2.getPerspectiveTransform(
                                 quad.astype(np.float32), objP)
@@ -367,7 +370,7 @@ class PerspectiveCorrection(object):
                                  flags=cv2.INTER_LANCZOS4  )
 
         pxSizeFactorX= (1/np.abs(np.gradient(wx)[1]))
-        pxSizeFactorY= (1/np.abs(np.gradient(wy)[0]))
+        pxSizeFactorY= (1,np.abs(np.gradient(wy)[0]))
 
         self.maps['depthMap'] = depthMap
 
@@ -531,7 +534,7 @@ class PerspectiveCorrection(object):
         '''           
         if aspectRatio > 1: #x is bigger -> reduce y
             x_length = PerspectiveCorrection._quadXLength(corners)
-            y = x_length / aspectRatio
+            y = x_length/ aspectRatio
             return x_length, y
         else: # y is bigger -> reduce x
             y_length = PerspectiveCorrection._quadYLength(corners)          

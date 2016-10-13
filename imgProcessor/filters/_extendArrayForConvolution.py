@@ -2,7 +2,7 @@ import numpy as np
 
 
 
-def extendArrayForConvolution(arr, (kx, ky), 
+def extendArrayForConvolution(arr, xxx_todo_changeme, 
                           modex='reflect', 
                           modey='reflect'):
     '''
@@ -14,7 +14,7 @@ def extendArrayForConvolution(arr, (kx, ky),
     
     only supports 'warp' and 'reflect' at the moment 
     '''
-
+    (kx, ky) = xxx_todo_changeme
     s0,s1 = arr.shape
     
     assert ky < s0

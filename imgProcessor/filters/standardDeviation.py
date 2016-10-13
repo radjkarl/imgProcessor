@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 from numba import jit
@@ -40,8 +42,8 @@ def _calc(img, ksizeX, ksizeY, blurred, std):
     hkx = ksizeX//2
     hky = ksizeY//2
 
-    for i in xrange(gx):
-        for j in xrange(gy):
+    for i in range(gx):
+        for j in range(gy):
             #get kernel boundaries:
             xmn = i-hkx
             if xmn < 0:
@@ -60,8 +62,8 @@ def _calc(img, ksizeX, ksizeY, blurred, std):
             val = 0
             mean = blurred[i,j]
             #calculate local standard deviation:            
-            for ii in xrange(xmx-xmn):
-                for jj in xrange(ymx-ymn):
+            for ii in range(xmx-xmn):
+                for jj in range(ymx-ymn):
                     val += ( img[xmn+ii,ymn+jj] - mean )**2
 
             npx = ii*jj    
