@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import division
 from __future__ import print_function
 
@@ -13,25 +14,24 @@ from imgProcessor.equations.vignetting import vignetting, guessVignettingParam
 
 
 def _highGrad(arr):
-    #mask high gradient areas in given array 
+    # mask high gradient areas in given array
     s = min(arr.shape)
-    return maximum_filter(np.abs(laplace(arr, mode='reflect')) > 0.01,#0.02
-                          min(max(s//5,3),15) )
+    return maximum_filter(np.abs(laplace(arr, mode='reflect')) > 0.01,  # 0.02
+                          min(max(s // 5, 3), 15))
 
 
 def function(img, mask):
-    arr = fit2dArrayToFn(img, vignetting, mask=~mask, 
-                               guess=guessVignettingParam(img))[0]
-    arr /= arr.max()            
+    arr = fit2dArrayToFn(img, vignetting, mask=~mask,
+                         guess=guessVignettingParam(img))[0]
+    arr /= arr.max()
     return arr
 
 
 def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):
-    
     '''
     calculate flatField from 2d-polynomal fit filling
     all high gradient areas within averaged fit-image
-    
+
     returns flatField, average background level, fitted image, valid indices mask
     '''
     if inplace:
@@ -42,13 +42,13 @@ def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):
     lastm = 0
     for _ in range(max_iter):
         out2 = polyfit2dGrid(out, mask, 2, copy=True)
-        print('residuum: ', np.abs(out2-out).mean())
-        if np.abs(out2-out).mean() < max_dev:
+        print('residuum: ', np.abs(out2 - out).mean())
+        if np.abs(out2 - out).mean() < max_dev:
             out = out2
             break
         out = out2
-        mask =  _highGrad(out) 
-        
+        mask = _highGrad(out)
+
 #         import pylab as plt
 #         plt.imshow(mask)
 #         plt.figure(2)
@@ -58,11 +58,11 @@ def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):
 #         out3[mask]=0
 #         plt.imshow(out3)
 #         plt.show()
-        
+
         m = mask.sum()
         if m == lastm:
             break
         lastm = m
 
-    out = np.clip(out,0.1,1) 
-    return  out
+    out = np.clip(out, 0.1, 1)
+    return out
