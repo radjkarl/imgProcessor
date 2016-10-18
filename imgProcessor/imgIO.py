@@ -7,6 +7,8 @@ from six import string_types
 from imgProcessor import ARRAYS_ORDER_IS_XY
 
 from imgProcessor.transformations import transpose, toNoUintArray, toUIntArray
+from PIL import Image
+
 # from imgProcessor import reader
 
 COLOR2CV = {'gray':cv2.IMREAD_GRAYSCALE,
@@ -60,8 +62,12 @@ def imread(img, color=None, dtype=None, ignore_order=False):
     return img
 
 
-def imwrite(name, arr, **kwargs):
-    return cv2.imwrite(name, toUIntArray(arr, **kwargs))
+def imwrite(name, arr, dtype=None, **kwargs):
+    if dtype in (float, np.float64, np.float32):
+        # save as 32bit float tiff
+        Image.fromarray(arr).save(name)
+    else:
+        return cv2.imwrite(name, toUIntArray(arr, **kwargs))
 
 
 def out(img):
