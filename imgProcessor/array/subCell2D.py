@@ -5,10 +5,13 @@ import numpy as np
 
 
 
-def subCell2DGenerator(arr, shape):
+def subCell2DGenerator(arr, shape, d01=None):
     '''
     generator to access evenly sized sub-cells in a 2d array
     returns indices and sub arrays as (i,j,sub)
+
+    d01(tuple) - cell size in y and x
+
 
     >>> a = np.array([[[0,1],[1,2]],[[2,3],[3,4]]])
     >>> gen = subCell2DGenerator(a,(2,2))
@@ -21,7 +24,10 @@ def subCell2DGenerator(arr, shape):
     x,y=0,0
     g0,g1 = shape
     s0,s1 = arr.shape[:2]
-    d0,d1 = int(round(s0/g0)),int(round(s1/g1))
+    if d01 is not None:
+        d0,d1 = d01
+    else:
+        d0,d1 = int(round(s0/g0)),int(round(s1/g1))
     y1 = d0
     for i in range(g0):
         for j in range(g1):
@@ -33,14 +39,14 @@ def subCell2DGenerator(arr, shape):
         x = 0
 
 
-def subCell2DFnArray(arr, fn, cells, dtype=None):
+def subCell2DFnArray(arr, fn, cells, dtype=None, **kwargs):
     '''
     Return array where every cell is the output of a given cell function
     mx = subCell2DFnArray(myArray, np.max, (10,6) )
     --> here mx is a 2d array containing all cell maxima
     '''
     out = np.empty(shape=cells, dtype=dtype)
-    for i,j,c in subCell2DGenerator(arr, cells):
+    for i,j,c in subCell2DGenerator(arr, cells, **kwargs):
         out[i,j] = fn(c)
     return out
 

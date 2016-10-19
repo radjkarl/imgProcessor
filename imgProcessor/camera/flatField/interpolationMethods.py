@@ -20,15 +20,16 @@ def _highGrad(arr):
                           min(max(s // 5, 3), 15))
 
 
-def function(img, mask):
+def function(img, mask, **kwargs):
     arr = fit2dArrayToFn(img, vignetting, mask=~mask,
-                         guess=guessVignettingParam(img))[0]
+                         guess=guessVignettingParam(img), **kwargs)[0]
     arr /= arr.max()
     return arr
 
 
 def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):
     '''
+    replace all masked values
     calculate flatField from 2d-polynomal fit filling
     all high gradient areas within averaged fit-image
 
@@ -38,31 +39,22 @@ def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):
         out = img
     else:
         out = img.copy()
-#     mask = ~mask
     lastm = 0
     for _ in range(max_iter):
-        out2 = polyfit2dGrid(out, mask, 2, copy=True)
-        print('residuum: ', np.abs(out2 - out).mean())
-        if np.abs(out2 - out).mean() < max_dev:
+        out2 = polyfit2dGrid(out, mask, order=2, copy=not inplace)
+
+        res = (np.abs(out2 - out)).mean()
+        print('residuum: ', res)
+        if res < max_dev:
             out = out2
             break
         out = out2
         mask = _highGrad(out)
 
-#         import pylab as plt
-#         plt.imshow(mask)
-#         plt.figure(2)
-#         plt.imshow(out)
-#         plt.figure(3)
-#         out3 = out2.copy()
-#         out3[mask]=0
-#         plt.imshow(out3)
-#         plt.show()
-
         m = mask.sum()
-        if m == lastm:
+        if m == lastm or m == img.size:
             break
         lastm = m
 
-    out = np.clip(out, 0.1, 1)
+    out = np.clip(out, 0.1, 1, out=out if inplace else None)
     return out

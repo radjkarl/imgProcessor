@@ -27,17 +27,26 @@ def polyval2d(x, y, m, dtype=None):
     return z
 
 
-def polyfit2dGrid(arr, mask, order=3, copy=False):
+def polyfit2dGrid(arr, mask, order=3, copy=False, outgrid=None):
     '''
-    replace all masked values with polynomal fitted ones
+    replace all masked values with polynomial fitted ones
     '''
-    x,y = np.where(~mask)
-    z = arr[~mask]
+    valid = ~mask
+    y,x = np.where(valid)
+    z = arr[valid]
     p = polyfit2d(x,y,z,order)
-    xx,yy = np.where(mask)
+    if outgrid is not None:
+        yy,xx = outgrid
+    else:
+        yy,xx = np.where(mask)
+    new = polyval2d(xx,yy, p, dtype=arr.dtype)
+    
+    if outgrid is not None:
+        return new
+    
     if copy:
         arr = arr.copy()
-    arr[mask] = polyval2d(xx, yy, p, dtype=arr.dtype)
+    arr[mask] = new
     return arr
  
     
@@ -47,14 +56,14 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     shape=100,100
-    arr = np.fromfunction(lambda x,y: (x-50)**2+1.5*(y-50)**2, shape)
+    arr = np.fromfunction(lambda x,y: (x-50)**2+1.9*(y-50)**2, shape)
     arr/=arr.max()
     mask = arr > 0.2
 
     arrin = arr.copy()
     arrin[mask] = np.nan
 
-    arrout = polyfit2dGrid(arrin.copy(), mask)
+    arrout = polyfit2dGrid(arrin.copy(), mask, order=2)
 
     if 'no_window' not in sys.argv:
         plt.figure('original - structured data')
