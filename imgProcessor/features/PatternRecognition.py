@@ -42,12 +42,12 @@ class PatternRecognition(object):
 
                 if max((s0, s1)) > m:
                     if s0 > s1:
-                        self._fH = m // s0
+                        self._fH = m / s0
                         s1 *= self._fH
                         s0 = m
                     else:
-                        self._fH = m // s1
-                        s0 *= m // s1
+                        self._fH = m / s1
+                        s0 *= m / s1
                         s1 = m
                 else:
                     self._fH = 1
@@ -55,7 +55,7 @@ class PatternRecognition(object):
                 s0 *= self._fH
                 s1 *= self._fH
 
-            image = resize(image, (int(round(s0)), int(round(s1))),
+            image = resize(image, (int(round(s0)), int(round(s1)) ),
                            preserve_range=True)
 
         img8bit = self._scaleTo8bit(image)
