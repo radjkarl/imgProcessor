@@ -18,7 +18,7 @@ from imgProcessor.utils.decompHomography import decompHomography
 from imgProcessor.features.PatternRecognition import PatternRecognition
 
 
-from imgProcessor.filters.fastNaNmedianFilter import fastNaNmedianFilter
+from imgProcessor.filters.fastNaNFilter import fastNaNFilter
 
 
 # START VEREINFACHEN
@@ -262,7 +262,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         new_flatField = s.avg
 
 #         every = int(100/3.5)
-#         new_flatField = fastNaNmedianFilter(new_flatField, 100, every)
+#         new_flatField = fastNaNFilter(new_flatField, 100, every)
 
         # STOP ITERATION?
         # RMSE excluding NaNs:
@@ -307,7 +307,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         f = int(max(s0, s1) / downscale_size)
         every = int(f / 3.5)
 
-        s = self.flatField = fastNaNmedianFilter(self.flatField, f, every)
+        s = self.flatField = fastNaNFilter(self.flatField, f, every)
 
 #         plt.imshow(self.flatField)
 #         plt.colorbar()
