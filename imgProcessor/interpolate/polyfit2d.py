@@ -27,10 +27,15 @@ def polyval2d(x, y, m, dtype=None):
     return z
 
 
-def polyfit2dGrid(arr, mask, order=3, copy=False, outgrid=None):
+def polyfit2dGrid(arr, mask=None, order=3, copy=True, outgrid=None):
     '''
     replace all masked values with polynomial fitted ones
     '''
+    if mask is None:
+        assert outgrid is not None
+        mask = np.zeros_like(arr, dtype=bool)
+    elif mask.sum() == 0 and outgrid is None:
+        return arr
     valid = ~mask
     y,x = np.where(valid)
     z = arr[valid]
@@ -40,7 +45,6 @@ def polyfit2dGrid(arr, mask, order=3, copy=False, outgrid=None):
     else:
         yy,xx = np.where(mask)
     new = polyval2d(xx,yy, p, dtype=arr.dtype)
-    
     if outgrid is not None:
         return new
     
@@ -55,8 +59,8 @@ if __name__ == '__main__':
     import sys
     import matplotlib.pyplot as plt
 
-    shape=100,100
-    arr = np.fromfunction(lambda x,y: (x-50)**2+1.9*(y-50)**2, shape)
+    shape=100,150
+    arr = np.fromfunction(lambda x,y: (2*x-50)**2+1.9*(y-50)**2, shape)
     arr/=arr.max()
     mask = arr > 0.2
 

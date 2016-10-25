@@ -20,11 +20,19 @@ def _highGrad(arr):
                           min(max(s // 5, 3), 15))
 
 
-def function(img, mask, **kwargs):
-    arr = fit2dArrayToFn(img, vignetting, mask=~mask,
-                         guess=guessVignettingParam(img), **kwargs)[0]
-    arr /= arr.max()
-    return arr
+def function(img, mask=None, replace_all=False, outgrid=None):
+    if outgrid is not None:
+        replace_all = True
+    if mask is None:
+        mask = np.zeros_like(img, dtype=bool)  
+    img2 = fit2dArrayToFn(img, vignetting, 
+                         mask=~mask, guess=guessVignettingParam(img), 
+                         outgrid=outgrid)[0]
+    if not replace_all:
+        img[mask] = img2[mask]
+        img2 = img
+    img2 /= img2.max()
+    return img2
 
 
 def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):

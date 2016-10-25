@@ -57,7 +57,7 @@ def subCell2DSlices(arr, shape, d01=None,p01=None):
 
 
 def subCell2DCoords(*args, **kwargs):
-    for _,_,s0,s1 in subCell2DSlices(*args, **kwargs):        
+    for _,_,s0,s1 in subCell2DSlices(*args, **kwargs):    
         yield ( (s1.start, s1.start, s1.stop),
                 (s0.start, s0.stop, s0.stop) )
 
