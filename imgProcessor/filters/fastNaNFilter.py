@@ -6,14 +6,14 @@ from numba import jit
 from skimage.transform import resize
 
 
-def fastNaNFilter(arr, ksize=30,every=5, fn='median'):
+def fastNaNFilter(arr, ksize=30,every=5, resize=True, fn='median'):
     '''
     a fast 2d median filter for large kernel sizes that also 
     works with nans
     the computation speed is increased because only 'every'nsth position 
     within the median kernel is evaluated
     '''
-    assert ksize > 3*every
+    assert ksize >= 3*every
     s0,s1 = arr.shape[:2]
     
     ss0 = s0//every
@@ -23,6 +23,8 @@ def fastNaNFilter(arr, ksize=30,every=5, fn='median'):
     out = np.ones((ss0+1,ss1+1))
     ss0,ss1 = _calc(arr, out, ksize, every, typ=0 if fn=='median' else 1)
     out = out[:ss0,:ss1]
+    if not resize:
+        return out
     return resize(out,arr.shape[:2])
 
 

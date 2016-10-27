@@ -65,7 +65,7 @@ def imread(img, color=None, dtype=None, ignore_order=False):
 def imwrite(name, arr, dtype=None, **kwargs):
     if dtype in (float, np.float64, np.float32):
         # save as 32bit float tiff
-        Image.fromarray(arr).save(name)
+        Image.fromarray(np.asfarray(arr)).save(name)
     else:
         return cv2.imwrite(name, toUIntArray(arr, **kwargs))
 

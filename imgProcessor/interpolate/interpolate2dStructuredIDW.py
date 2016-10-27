@@ -13,9 +13,9 @@ def interpolate2dStructuredIDW(grid, mask, kernel=15, power=2, fx=1, fy=1):
     [power] -> distance weighting factor: 1/distance**[power]
 
     '''
-    weights = np.empty(shape=((2*kernel,2*kernel)))
-    for xi in range(-kernel,kernel):
-        for yi in range(-kernel,kernel):
+    weights = np.empty(shape=((2*kernel+1,2*kernel+1)))
+    for xi in range(-kernel,kernel+1):
+        for yi in range(-kernel,kernel+1):
             dist = ((fx*xi)**2+(fy*yi)**2)
             if dist:
                 weights[xi+kernel,yi+kernel] = 1 / dist**(0.5*power)
@@ -52,8 +52,8 @@ def _calc(grid, mask, kernel, weights):
                 value = 0.0 
                 c = 0
                 #FOR EVERY NEIGHBOUR IN KERNEL              
-                for xi in range(xmn,xmx):
-                    for yi in range(ymn,ymx):
+                for xi in range(xmn,xmx+1):
+                    for yi in range(ymn,ymx+1):
                         if  (xi != i or yi != j) and not mask[xi,yi]:
                             wi = weights[xi-i+kernel,yi-j+kernel]
                             sumWi += wi
@@ -69,22 +69,25 @@ def _calc(grid, mask, kernel, weights):
 if __name__ == '__main__':
     import pylab as plt
     import sys
+    from time import time
 
-    shape = (100,100)
+    shape = (200,200)
 
     #array with random values:
     arr = np.random.rand(*shape)
     #mask containing valid cells: 
-    mask = np.random.randint(10, size=shape)
+    mask = np.random.randint(50, size=shape)
     mask[mask<1]=False
     mask = mask.astype(bool)
 
     #substituting all cells with mask==True with interpolated value:
+    t0 = time()
     arr1 = interpolate2dStructuredIDW(arr.copy(), mask, kernel=20,power=1)
     arr2 = interpolate2dStructuredIDW(arr.copy(), mask, kernel=20,power=2)
     arr3 = interpolate2dStructuredIDW(arr.copy(), mask, kernel=20,power=3)
     arr5 = interpolate2dStructuredIDW(arr.copy(), mask, kernel=20,power=5)
-    
+    print ('time=%f' %(time()-t0))
+
     
     
     if 'no_window' not in sys.argv:
