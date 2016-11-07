@@ -25,6 +25,7 @@ def function(img, mask=None, replace_all=False, outgrid=None):
         replace_all = True
     if mask is None:
         mask = np.zeros_like(img, dtype=bool)  
+        replace_all = True
     img2 = fit2dArrayToFn(img, vignetting, 
                          mask=~mask, guess=guessVignettingParam(img), 
                          outgrid=outgrid)[0]
@@ -35,7 +36,8 @@ def function(img, mask=None, replace_all=False, outgrid=None):
     return img2
 
 
-def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):
+def polynomial(img, mask, inplace=False, replace_all=False, 
+               max_dev=1e-5, max_iter=20, order=2):
     '''
     replace all masked values
     calculate flatField from 2d-polynomal fit filling
@@ -49,8 +51,11 @@ def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):
         out = img.copy()
     lastm = 0
     for _ in range(max_iter):
-        out2 = polyfit2dGrid(out, mask, order=2, copy=not inplace)
-
+        out2 = polyfit2dGrid(out, mask, order=order, copy=not inplace, 
+                             replace_all=replace_all)
+        if replace_all:
+            out = out2
+            break
         res = (np.abs(out2 - out)).mean()
         print('residuum: ', res)
         if res < max_dev:
@@ -63,6 +68,5 @@ def polynomial(img, mask, inplace=False, max_dev=1e-5, max_iter=20):
         if m == lastm or m == img.size:
             break
         lastm = m
-
-    out = np.clip(out, 0.1, 1, out=out if inplace else None)
+    out = np.clip(out, 0, 1, out=out)# if inplace else None)
     return out

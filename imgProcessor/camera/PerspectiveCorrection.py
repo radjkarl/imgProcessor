@@ -27,7 +27,7 @@ class PerspectiveCorrection(object):
                  cameraMatrix=None,
                  distCoeffs=0,
                  do_correctIntensity=False,
-                 new_size=None,
+                 new_size=(None,None),
                  in_plane=False,
                  cv2_opts={} ):
         '''
@@ -45,6 +45,10 @@ class PerspectiveCorrection(object):
         and distCoeffs should be 0
         !!!
         '''
+        #TODO: remove camera matrix and dist coeffs completely - dont needed
+        #since img needs to be lens corrected anyway
+        
+        #TODO: insert aspect ratio and remove obj_width, height
         self.opts = {'obj_height_mm':obj_height_mm,
                      'obj_width_mm':obj_width_mm,
                      'distCoeffs':distCoeffs,
@@ -73,7 +77,7 @@ class PerspectiveCorrection(object):
         self._homography = None
         self._homography_is_fixed = True
         self.tvec, self.rvec = None, None
-  
+        
         #evaluate input:
         if isinstance(ref, np.ndarray) and ref.shape == (3,3):
             #REF IS HOMOGRAPHY
@@ -83,7 +87,9 @@ class PerspectiveCorrection(object):
             self.quad = sortCorners(ref)
             #REF IS IMAGE
         else: 
-            self.pattern = PatternRecognition(imread(ref))
+            ref = imread(ref)
+            self._refshape = ref.shape[:2]
+            self.pattern = PatternRecognition(ref)
             self._homography_is_fixed = False
 
     
@@ -101,6 +107,8 @@ class PerspectiveCorrection(object):
                         raise TypeError()
                     elif sx is not None and sy is None:
                         fixedX = sx
+                        raise TypeError()
+                    else:
                         raise TypeError()
                 except TypeError:
                     try:
@@ -122,7 +130,6 @@ class PerspectiveCorrection(object):
                             sx = sy*aspectRatio
                     else:                                        
                         sx,sy = self._calcQuadSize(self.quad, aspectRatio)
-                            
                 self._newBorders = (int(round(sx)),int(round(sy)))
                 #image edges:
                 objP = np.array([
@@ -134,11 +141,16 @@ class PerspectiveCorrection(object):
                 self._homography = cv2.getPerspectiveTransform(
                                         self.quad.astype(np.float32), objP)
             else:
-                #GET HOMOGRAPHY USING PATTERN RECOGNITION
+                #GET HOMOGRAPHY FROM REFERENCE IMAGE USING PATTERN RECOGNITION
                 self._Hinv = h = self.pattern.findHomography(self.img)[0]
                 self._homography = self.pattern.invertHomography(h)
-                s = self.img.shape
-                self._newBorders = (s[1], s[0])
+                sx, sy = self.opts['new_size']
+                ssy,ssx  = self._refshape
+                if sx is None:
+                    sx = ssx
+                if sy is None:
+                    sy = ssy
+                self._newBorders = (sx,sy)
         
         return self._homography
 
@@ -189,7 +201,8 @@ class PerspectiveCorrection(object):
         w = wquad[:,0].max() - wquad[:,0].min()
         h = wquad[:,1].max() - wquad[:,1].min() 
         #(int(w),int(h))
-        dist = cv2.warpPerspective(corr, homography, (int(w),int(h)), flags=cv2.INTER_CUBIC | cv2.WARP_INVERSE_MAP)
+        dist = cv2.warpPerspective(corr, homography, (int(w),int(h)), 
+                                   flags=cv2.INTER_CUBIC | cv2.WARP_INVERSE_MAP)
 
         #move middle of dist to middle of the old quad: 
         bg = np.zeros(shape=s)
@@ -209,25 +222,34 @@ class PerspectiveCorrection(object):
         self._poseFromQuad()
         
         if self.opts['do_correctIntensity']:
-            self.img *= self._getTiltFactor(self.img)
+            self.img *= self._getTiltFactor(self.img.shape)
 
         return self.img
 
-
-    def _getTiltFactor(self, img):
-        #CALCULATE VIGNETTING OF WARPED OBJECT:
-        _,r = self.pose()
+    def objectOrientation(self):
+        tvec,r = self.pose()
         eulerAngles = mat2euler(cv2.Rodrigues(r)[0], axes='rzxy')
         
+        #my measurement shows that *2 brings right results
+        #TODO: WHY???
         tilt = eulerAngles[1]
         rot = eulerAngles[0]
-        f = self.opts['cameraMatrix'][0,0]
-        s = img.shape
+        dist = tvec[2,0]#only take depth component np.linalg.norm(tvec)
+        return dist, tilt, rot
+
+    def _getTiltFactor(self, shape):
+        #CALCULATE VIGNETTING OF WARPED OBJECT:
+#         f = self.opts['cameraMatrix'][0,0]
+        
+        dist, tilt, rot = self.objectOrientation()
+        print (dist,999999999888888888)
+        #dist=1000
+        rot -= np.pi/2# because of different references
         self.maps['tilt_factor'] = tf = np.fromfunction(lambda x,y: tiltFactor((x, y), 
-                                              f=f, tilt=tilt, rot=rot), s[:2])
+                                              f=dist, tilt=tilt, rot=rot), shape[:2])
         #if img is color:
-        if tf.shape != s:
-            tf = np.repeat(tf, s[-1]).reshape(s)
+        if tf.shape != shape:
+            tf = np.repeat(tf, shape[-1]).reshape(shape)
         return tf
 
 
@@ -240,7 +262,7 @@ class PerspectiveCorrection(object):
         h = self.homography#TODO: cleanup only needed to get newBorder attr.
 
         if self.opts['do_correctIntensity']:
-            self.img = self.img / self._getTiltFactor(self.img)
+            self.img = self.img / self._getTiltFactor(self.img.shape)
 
         s0,s1 = grid.shape[:2]
         n0,n1 = s0-1,s1-1
@@ -271,6 +293,13 @@ class PerspectiveCorrection(object):
         return out    
 
 
+    def uncorrect(self, img):
+        img = imread(img)
+        s = img.shape[:2]
+        return cv2.warpPerspective(img, self.homography, s[::-1], 
+                                   flags=cv2.INTER_CUBIC | cv2.WARP_INVERSE_MAP)
+
+
     def correct(self, img):
         '''
         ...from perspective distortion: 
@@ -283,7 +312,7 @@ class PerspectiveCorrection(object):
             self._homography = None
         h = self.homography
         if self.opts['do_correctIntensity']:
-            self.img = self.img / self._getTiltFactor(self.img)
+            self.img = self.img / self._getTiltFactor(self.img.shape)
         warped = cv2.warpPerspective(self.img, 
                                      h, 
                                      self._newBorders,
@@ -417,11 +446,11 @@ class PerspectiveCorrection(object):
 
     
     def pose(self):
-        if self.tvec is None:
-            if self.quad is not None:
-                self._poseFromQuad()
-            else:
-                self._poseFromHomography()
+#         if self.tvec is None:
+        if self.quad is not None:
+            self._poseFromQuad()
+        else:
+            self._poseFromHomography()
         return self.tvec, self.rvec
 
 
@@ -462,18 +491,19 @@ class PerspectiveCorrection(object):
 
     @property
     def obj_points(self):
-        if self._obj_points is None:
-            h = self.opts['obj_height_mm']
-            w = self.opts['obj_width_mm']
-            if w is None or h is None:
-                w,h = 100,100
+        #if self._obj_points is None:
+        h,w = self.img.shape
+#         h = self.opts['obj_height_mm']
+#         w = self.opts['obj_width_mm']
+#         if w is None or h is None:
+#             w,h = 100,100
 
-            self._obj_points = np.array([
-                        [0, 0, 0 ],
-                        [w, 0, 0],
-                        [w, h, 0],
-                        [0, h, 0],
-                        ],dtype=np.float32)
+        self._obj_points = np.array([
+                    [0, 0, 0 ],
+                    [w, 0, 0],
+                    [w, h, 0],
+                    [0, h, 0],
+                    ],dtype=np.float32)
         return self._obj_points
 
 

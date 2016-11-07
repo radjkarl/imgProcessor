@@ -18,7 +18,9 @@ from imgProcessor.utils.decompHomography import decompHomography
 from imgProcessor.features.PatternRecognition import PatternRecognition
 
 
-from imgProcessor.filters.fastNaNFilter import fastNaNFilter
+from imgProcessor.filters.fastFilter import fastFilter
+from imgProcessor.utils.getBackground import getBackground
+from imgProcessor.camera.LensDistortion import LensDistortion
 
 
 # START VEREINFACHEN
@@ -50,7 +52,9 @@ class ObjectVignettingSeparation(PatternRecognition):
     >>> flatField, obj = o.separate()
     """
 
-    def __init__(self, img, bg=None, maxDev=1e-4, maxIter=10):
+    def __init__(self, img, bg=None, maxDev=1e-4, maxIter=10, remove_border_size=0,
+                 feature_size=5,
+                 cameraMatrix=None, distortionCoeffs=None):#20
         """
         Args:
             img (path or array): Reference image
@@ -60,27 +64,38 @@ class ObjectVignettingSeparation(PatternRecognition):
                             Stop iterative refinement, if deviation is smaller
             maxIter (int): Stop iterative refinement after maxIter steps
         """
+        self.lens = None
+        if cameraMatrix is not None:
+            self.lens =  LensDistortion()  
+            self.lens._coeffs['distortionCoeffs'] = distortionCoeffs
+            self.lens._coeffs['cameraMatrix'] = cameraMatrix
+
+
+
         self.maxDev = maxDev
         self.maxIter = maxIter
-
+        self.remove_border_size = remove_border_size
+        self.feature_size = feature_size
         img = imread(img, 'gray')
 
         self.bg = bg
         if bg is not None:
-            self.bg = imread(bg, 'gray', dtype=img.dtype)
-            img = cv2.subtract(img, self.bg)
+            self.bg = getBackground(bg)
+            if not isinstance(self.bg, np.ndarray):
+                self.bg = np.full_like(img, self.bg, dtype=np.uint16)
+            else:
+                self.bg = self.bg.astype(np.uint16)
 
+            img = cv2.subtract(img, self.bg)
+            
+        if self.lens is not None:
+            img = self.lens.correct(img, keepSize=True)
         # CREATE TEMPLATE FOR PATTERN COMPARISON:
         pos = self._findObject(img)
         self.obj_shape = img[pos].shape
 
-#         plt.imshow(img)
-#         print pos
-#         plt.show()
-
         PatternRecognition.__init__(self, img[pos])
 
-#         self.flatField = np.zeros(shape=img.shape, dtype=np.float64)
         self._ff_mma = MaskedMovingAverage(shape=img.shape,
                                            dtype=np.float64)
 
@@ -102,7 +117,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         self._ff_mma.avg = arr
 
     def addImg(self, img, maxShear=0.015, maxRot=100, minMatches=12,
-               borderWidth=100):
+               borderWidth=3):#borderWidth=100
         """
         Args:
             img (path or array): image containing the same object as in the reference image
@@ -134,22 +149,12 @@ class ObjectVignettingSeparation(PatternRecognition):
             self.fits.append(fit)
 
             # ADD IMAGE TO THE INITIAL flatField ARRAY:
-#             smooth = gaussian_filter(img, sigma=5)
             i = img > self.signal_ranges[-1][0]
+            
             # remove borders (that might have erroneous light):
             i = minimum_filter(i, borderWidth)
             self._ff_mma.update(img, i)
 
-#
-#             img[~i] = 0
-#             ii = self.flatField < img
-#             self.flatField[ii] = img[ii]
-#             import pylab as plt
-#             plt.imshow(self.flatField)
-#             plt.figure(2)
-#             plt.imshow(i)
-#             print self.signal_ranges
-#             plt.show()
             # image added
             return True
         return False
@@ -159,20 +164,15 @@ class ObjectVignettingSeparation(PatternRecognition):
         for step in self:
             print('iteration step %s/%s' % (step, self.maxIter))
 
-#         import pylab as plt
-#         plt.figure(1)
-#         plt.imshow(self.flatField)
-#         plt.colorbar()
-#         plt.show()
-
-#         return self.flatField,self.flatField<0.3
         smoothed_ff, mask = self.smooth()
+
+        if self.lens is not None:
+            smoothed_ff = self.lens.distortImage(smoothed_ff)
+            mask = self.lens.distortImage(mask.astype(np.uint8)).astype(bool)
+
         return smoothed_ff, mask, self.flatField, self.object
 
     def smooth(self):
-        #         ff = self.flatField.copy()
-        #         ff[ff<0.3]= np.nan
-
         # TODO: there is non nan in the ff img, or?
         mask = self.flatField == 0
         from skimage.filters.rank import median, mean
@@ -180,47 +180,37 @@ class ObjectVignettingSeparation(PatternRecognition):
 
         ff = mean(median(self.flatField, disk(5), mask=~mask),
                   disk(13), mask=~mask)
-#         mask = np.isfinite(ff)
-#         import pylab as plt
-#         plt.figure(1)
-#         plt.imshow(ff)
-#         plt.figure(2)
-#         plt.imshow(self.flatField)
-#         plt.figure(3)
-#         plt.imshow(ff==0)
-#         plt.show()
+
         return ff.astype(float) / ff.max(), mask
 
     def __iter__(self):
         # use iteration to refine the flatField array
 
-        remove_border_size = 20
-        feature_size = 50
-
         # keep track of deviation between two iteration steps
         # for break criterion:
         self._last_dev = None
-        self.n = 1  # iteration number
+        self.n = 0  # iteration number
 
         # CREATE IMAGE FIT MASK:
         self._fit_masks = []
         for i, f in enumerate(self.fits):
                 # INDEX FOREGROUND:
             mask = f < self.signal_ranges[i][0]
-            mask = maximum_filter(mask, feature_size)
+            mask = maximum_filter(mask, self.feature_size)
+#             import pylab as plt
 #             plt.imshow(self.flatField)
 # #             plt.figure(2)
 # #             plt.imshow(f)
 # #             from imgProcessor.signal import signalRange
-# #
 # #             print self.signal_ranges[i], signalRange(f)
 #             plt.show()
             # IGNORE BORDER
-            if remove_border_size:
-                mask[:remove_border_size, :] = 1
-                mask[-remove_border_size:, :] = 1
-                mask[:, -remove_border_size:] = 1
-                mask[:, :remove_border_size] = 1
+            r = self.remove_border_size
+            if r:
+                mask[:r, :] = 1
+                mask[-r:, :] = 1
+                mask[:, -r:] = 1
+                mask[:, :r] = 1
             self._fit_masks.append(mask)
 
         return self
@@ -229,10 +219,13 @@ class ObjectVignettingSeparation(PatternRecognition):
         # THE IMAGED OBJECT WILL BE AVERAGED FROM ALL
         # INDIVITUAL IMAGES SHOWING THIS OBJECT FROM DIFFERENT POSITIONS:
         obj = MaskedMovingAverage(shape=self.obj_shape)
-        for f, h in zip(self.fits, self.Hinvs):
-            warpedflatField = cv2.warpPerspective(self.flatField,
-                                                  h, (f.shape[1], f.shape[0]))
-            obj.update(f / warpedflatField, warpedflatField != 0)
+        
+        with np.errstate(divide='ignore', invalid='ignore'):
+            for f, h in zip(self.fits, self.Hinvs):
+                warpedflatField = cv2.warpPerspective(self.flatField,
+                                                      h, (f.shape[1], f.shape[0]))
+                obj.update(f / warpedflatField, warpedflatField != 0)
+        
         self.object = obj.avg
 
         # THE NEW flatField WILL BE OBTAINED FROM THE WARPED DIVIDENT
@@ -248,21 +241,8 @@ class ObjectVignettingSeparation(PatternRecognition):
                                       )
             div = np.nan_to_num(div)
             s.update(div, div != 0)
-
-
-#         plt.imshow(self.flatField)
-#         plt.figure(2)
-#         plt.imshow(s.avg)
-#         plt.figure(3)
-#         plt.imshow(f)
-#
-# #         print self.signal_ranges
-#         plt.show()
-
+            
         new_flatField = s.avg
-
-#         every = int(100/3.5)
-#         new_flatField = fastNaNFilter(new_flatField, 100, every)
 
         # STOP ITERATION?
         # RMSE excluding NaNs:
@@ -272,8 +252,6 @@ class ObjectVignettingSeparation(PatternRecognition):
         if self.n > self.maxIter or (self._last_dev and (
             (self.n > 4 and dev > self._last_dev)
                 or dev < self.maxDev)):
-            #             self.flatField_mask = np.logical_or(s.n==0,s.avg<0)
-            #             self.flatField_mask = np.logical_or(s.n==0,)
             raise StopIteration
 
         # remove erroneous values:
@@ -307,7 +285,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         f = int(max(s0, s1) / downscale_size)
         every = int(f / 3.5)
 
-        s = self.flatField = fastNaNFilter(self.flatField, f, every)
+        s = self.flatField = fastFilter(self.flatField, f, every)
 
 #         plt.imshow(self.flatField)
 #         plt.colorbar()
@@ -336,14 +314,16 @@ class ObjectVignettingSeparation(PatternRecognition):
         if self.bg is not None:
             img = cv2.subtract(img, self.bg)
 
+        if self.lens is not None:
+            img = self.lens.correct(img, keepSize=True)
+
         (H, _, _, _, _, _, _, n_matches) = self.findHomography(img)
         H_inv = self.invertHomography(H)
 
         s = self.obj_shape
-#         print self._fH,55555555555555
         fit = cv2.warpPerspective(img, H_inv, (s[1], s[0])
 
-                                  #                                    (int( s[1]/self._fH),
+                                  # (int( s[1]/self._fH),
                                   # int( s[0]/self._fH) )
                                   )
 #         plt.imshow(fit)
@@ -354,9 +334,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         '''
         Create a bounding box around the object within an image
         '''
-
         from imgProcessor.imgSignal import signalMinimum
-
         # img is scaled already
         i = img > signalMinimum(img)  # img.max()/2.5
         # filter noise, single-time-effects etc. from mask:
@@ -364,10 +342,15 @@ class ObjectVignettingSeparation(PatternRecognition):
         return boundingBox(i)
 
 
-def vignettingFromSameObject(imgs, bg, inPlane_scale_factor=None):
+def vignettingFromSameObject(imgs, bg, inPlane_scale_factor=None,
+                            **kwargs):
+    '''
+    important: first image should shown most iof the device
+    because it is used as reference
+    '''
     # TODO: inPlane_scale_factor
 
-    s = ObjectVignettingSeparation(imgs[0], bg)
+    s = ObjectVignettingSeparation(imgs[0], bg,  **kwargs)
     for img in imgs[1:]:
         s.addImg(img)
     return s.separate()[:2]

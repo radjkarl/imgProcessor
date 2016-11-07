@@ -105,8 +105,11 @@ def  signalMinimum(img, fitParams=None, n_std=3):
 
 
 def getSignalMinimum(fitParams, n_std=3):
-    assert len(fitParams) > 1, 'need 2 peaks so get minimum signal'
-
+    assert len(fitParams) > 0, 'need min. 1 peak so get minimum signal'
+    if len(fitParams) == 1:
+        signal = fitParams[0]
+        return signal[1]-n_std*signal[2]
+        
     i= signalPeakIndex(fitParams)
     signal = fitParams[i]
     bg = fitParams[i-1]
@@ -126,7 +129,11 @@ def getSignalMinimum(fitParams, n_std=3):
         return np.roots([a,b,c])
     
     i = solve(bg, signal)
-    return i[np.logical_and(i>bg[1], i<signal[1])][0]
+    try:
+        return i[np.logical_and(i>bg[1], i<signal[1])][0]
+    except IndexError:
+        #something didnt work out - fallback
+        return smn
 
 
 

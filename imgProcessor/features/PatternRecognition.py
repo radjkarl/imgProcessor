@@ -253,7 +253,10 @@ class PatternRecognition(object):
         p2 = np.array([k.pt for k in kp2])  # /self._fH
 
         H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
-        print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
+        if status is None:
+            raise Exception('no homography found')
+        else:
+            print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
 
         inliers = np.sum(status)
         inlierRatio = inliers / len(status)
@@ -267,7 +270,7 @@ class PatternRecognition(object):
 
         return (H, inliers, inlierRatio, averagePointDistance,
                 img, features,
-                descs, matches_subset)
+                descs, len(matches_subset))
 
     # alternative method - might remove later
     def _findHomography_BR(self, img):
