@@ -18,8 +18,9 @@ from imgProcessor.equations.vignetting import vignetting
 from imgProcessor.interpolate.polyfit2d import polyfit2dGrid
 from imgProcessor.utils.getBackground import getBackground
 
-# from imgProcessor.camera.flatField.ObjectFlatFieldSeparation import ObjectFlatFieldSeparation
-
+#####################
+#DEPRECIATED - REMOVE FILE
+#####################
 
 def highGrad(arr):
     # mask high gradient areas in given array
@@ -54,6 +55,7 @@ class FlatFieldFromImgFit(object):
             for n, i in enumerate(images):
                 print('%s/%s' % (n + 1, len(images)))
                 self.addImg(i)
+
 
     def addImg(self, i):
         img = imread(i, 'gray', dtype=float)

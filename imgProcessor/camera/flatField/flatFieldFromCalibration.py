@@ -14,7 +14,7 @@ from imgProcessor.features.SingleTimeEffectDetection import SingleTimeEffectDete
 # from imgProcessor.utils.baseClasses import Iteratives
 
 
-def flatFieldFromCalibration(images, bgImages=None, calcStd=False, nlf=None):
+def flatFieldFromCalibration(images, bgImages=None, calcStd=False, nlf=None, nstd=10):
     '''
     returns a flat-field correction map
     through conditional average of multiple images reduced by a background image
@@ -43,24 +43,17 @@ def flatFieldFromCalibration(images, bgImages=None, calcStd=False, nlf=None):
             nlf = oneImageNLF(i0, i1)[0]
 
         det = SingleTimeEffectDetection(
-            (i0, i1), nlf, nStd=3, calcVariance=calcStd)
-
-#         m = MaskedMovingAverage(shape=i0.shape, calcVariance=calcStd)
-#         m.update(i0)
+            (i0, i1), nlf, nStd=nstd, calcVariance=calcStd)
 
         for i in images[1:]:
             i = imread(i)
-#             thresh = m.avg - nlf(m.avg) * 3
-
             # exclude erroneously darker areas:
-            thresh = det.noSTE - nlf(det.noSTE) * 3
+            thresh = det.noSTE - nlf(det.noSTE) * nstd
             mask = i > thresh
 
             # filter STE:
             det.addImage(i, mask)
-
-#             m.update(i, ind)
-
+            
         ma = det.noSTE
 
     else:

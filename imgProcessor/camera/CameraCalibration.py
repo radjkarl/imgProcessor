@@ -310,6 +310,9 @@ class CameraCalibration(object):
         cal = CameraCalibration()
         path = cal._correctPath(path)
         d = pickle.load(open(path,'rb'))
+        #for py2 pickels, the following works:
+        #with open(path, 'rb') as f:
+        #    d = pickle.load(f, encoding='latin1') 
         cal.coeffs.update(d)
         return cal
 
@@ -328,7 +331,7 @@ class CameraCalibration(object):
                 threshold=0.1,
                 keep_size=True,
                 date=None,
-                deblur=True,
+                deblur=False,
                 denoise=False):
         '''
         exposure_time [s]
@@ -446,8 +449,8 @@ class CameraCalibration(object):
         denoise using non-local-means
         with guessing best parameters
         '''
-        from skimage.restoration import nl_means_denoising # save startup time
-        return nl_means_denoising(image, 
+        from skimage.restoration import denoise_nl_means # save startup time
+        return denoise_nl_means(image, 
                                   patch_size=7, 
                                   patch_distance=11, 
                                   h=signalStd(image)*0.1)

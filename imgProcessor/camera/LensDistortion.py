@@ -33,7 +33,7 @@ class LensDistortion(object):
     # TODO: does not match overriden method
     def calibrate(self, board_size, method='Chessboard', images=[],
                   max_images=100, sensorSize_mm=None,
-                  detect_sensible=False):
+                  detect_sensible=True):
         '''
         sensorSize_mm - (width, height) [mm] Physical size of the sensor
         '''
@@ -278,16 +278,28 @@ class LensDistortion(object):
             pass
         return self.coeffs
 
-    def undistortPoints(self, points):
+    def undistortPoints(self, points, keepSize=False):
+        '''
+        points --> list of (x,y) coordinates
+        '''
         s = self.img.shape
         cam = self.coeffs['cameraMatrix']
         d = self.coeffs['distortionCoeffs']
 
-        (newCameraMatrix, _) = cv2.getOptimalNewCameraMatrix(cam,
-                                                             d, (s[1], s[
-                                                                 0]), 1,
-                                                             (s[1], s[0]))
-        return cv2.undistortPoints(points, cam, d, P=newCameraMatrix)
+        pts = np.asarray(points, dtype=np.float32)
+        if pts.ndim == 2:
+            pts = np.expand_dims(pts, axis=0)
+
+        (newCameraMatrix, roi) = cv2.getOptimalNewCameraMatrix(cam,
+                                                             d, s[::-1], 1,
+                                                                s[::-1])
+        if not keepSize:
+            xx, yy = roi[:2]
+            pts[0,0]-=xx
+            pts[0,1]-=yy
+            
+        return cv2.undistortPoints(pts, 
+                                   cam, d, P=newCameraMatrix)
 
     def correct(self, image, keepSize=False):
         '''

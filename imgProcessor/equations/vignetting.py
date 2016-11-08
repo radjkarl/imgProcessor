@@ -25,7 +25,10 @@ def vignetting(xy, f=100, alpha=0, rot=0, tilt=0, cx=50, cy=50):
     #OFF_AXIS ILLUMINATION FACTOR:
     A = 1.0/(1+(dist/f)**2)**2
     #GEOMETRIC FACTOR:
-    G = (1-alpha*dist)
+    if alpha != 0:
+        G = (1-alpha*dist)
+    else:
+        G = 1
     #TILT FACTOR:
     T = tiltFactor((x,y), f, tilt, rot)
 
@@ -36,7 +39,7 @@ def tiltFactor(xy, f, tilt, rot):
     '''
     this function is extra to only cover vignetting through perspective distortion
     
-    f - focal length
+    f - focal length [ox]
     tau - tilt angle of a planar scene
     Xi - rotation angle of a planar scene
     '''
@@ -46,19 +49,20 @@ def tiltFactor(xy, f, tilt, rot):
 
 
 if __name__ == '__main__':
-    from matplotlib import pyplot as plt
+    import pylab as plt
     import sys
         
-    param = {'cx':50, 
+    param = {'cx':75, 
              'cy':50,
-             'tilt':-0.5}
-    vig = np.fromfunction(lambda x,y: vignetting((x,y), **param), (100,150))
+             'tilt':0.2,
+             'rot':0.3}
+    vig = np.fromfunction(lambda y,x: vignetting((x,y), **param), (100,150))
     
 
     param = {'f':100,
-             'rot':2,
-             'tilt':0.1}
-    tilt = np.fromfunction(lambda x,y: tiltFactor((x,y), **param), (100,150))
+             'rot':0.3,
+             'tilt':0.2}
+    tilt = np.fromfunction(lambda y,x: tiltFactor((x,y), **param), (100,150))
 
     if 'no_window' not in sys.argv:
         plt.figure('vignetting')

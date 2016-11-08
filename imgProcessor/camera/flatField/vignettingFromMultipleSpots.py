@@ -46,11 +46,20 @@ def vignettingFromMultipleSpots(
             t = threshold_otsu(img)
         else:
             t = thresh
+
         # take brightest spot
         spots, n = label(minimum_filter(img > t, 3),
                          background=0, return_num=True)
-        spot_sizes = [(spots == i).sum() for i in range(n)]
-        spot = spots == np.argmax(spot_sizes)
+        spot_sizes = [(spots == i).sum() for i in range(1,n+1)]
+#         import pylab as plt
+#         plt.imshow(spots)
+#         plt.colorbar()
+#         plt.show()
+        try:
+            spot = spots == np.argmax(spot_sizes)+1
+        except ValueError:
+            print("couldn't find spot in image")
+            continue
 
         if averageSpot:
             spot = center_of_mass(spot)
@@ -63,6 +72,8 @@ def vignettingFromMultipleSpots(
             mx = mx2
 
         mask[spot] = 1
+        
+
 
     # scale fitimg:
     fitimg /= mx

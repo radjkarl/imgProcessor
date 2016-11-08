@@ -12,7 +12,7 @@ from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
 
 from imgProcessor.imgIO import imread
 from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
-from imgProcessor.imgSignal import getSignalPeak
+from imgProcessor.imgSignal import getSignalPeak, getSignalMinimum
 
 from imgProcessor.utils.getBackground import getBackground
 
@@ -20,7 +20,8 @@ from imgProcessor.utils.getBackground import getBackground
 class FlatFieldFromImgFit(object):
 
     def __init__(self, images=None, bg_images=None,
-                 nstd=3, ksize=None, scale_factor=None):
+                 #nstd=3, 
+                 ksize=None, scale_factor=None):
         '''
         calculate flat field from multiple non-calibration images
         through ....
@@ -28,7 +29,7 @@ class FlatFieldFromImgFit(object):
         * masked moving average of all images to even out individual deviations
         * fit vignetting function of average OR 2d-polynomal
         '''
-        self.nstd = nstd
+        #self.nstd = nstd
         self.ksize = ksize
         self.scale_factor = scale_factor
 
@@ -46,55 +47,66 @@ class FlatFieldFromImgFit(object):
                 print('%s/%s' % (n + 1, len(images)))
                 self.addImg(i)
 
+
     def _firstImg(self, img):
 
         if self.scale_factor is None:
             # determine so that smaller image size has 50 px
             self.scale_factor = 100 / min(img.shape)
-#         if self.scale_factor !=1:
-#             self._small_shape = [int(s*self.scale_factor) for s in img.shape]
-#         self._orig_shape = img.shape
-            img = rescale(img, self.scale_factor)
+        img = rescale(img, self.scale_factor)
 
         self._m = MaskedMovingAverage(shape=img.shape)
         if self.ksize is None:
             self.ksize = max(3, int(min(img.shape) / 10))
         self._first = False
+        return img
+
 
     def _read(self, img):
         img = imread(img, 'gray', dtype=float)
         img -= self.bg
+        return img
+
+
+    @property
+    def result(self):
+        return self._m.avg
+
 
     def addImg(self, i):
         img = self._read(i)
 
         if self._first:
-            self._firstImg(img)
+            img = self._firstImg(img)
         elif self.scale_factor != 1:
             img = rescale(img, self.scale_factor)
-
-        f = FitHistogramPeaks(img)
-        sp = getSignalPeak(f.fitParams)
-
+        try:
+            f = FitHistogramPeaks(img)
+        except AssertionError:
+            return
+        #sp = getSignalPeak(f.fitParams)
+        mn = getSignalMinimum(f.fitParams)
         # non-backround indices:
-        ind = img > sp[1] - self.nstd * sp[2]
+        ind = img > mn#sp[1] - self.nstd * sp[2]
         # blur:
-        blurred = minimum_filter(img, 3)
+        blurred = minimum_filter(img, 3)#remove artefacts
         blurred = maximum_filter(blurred, self.ksize)
         gblurred = gaussian_filter(blurred, self.ksize)
-        blurred[ind] = gblurred[ind]
+        #blurred[ind] = gblurred[ind]
 
         # scale [0-1]:
         mn = img[~ind].mean()
         if np.isnan(mn):
             mn = 0
-        mx = blurred.max()
+        mx = gblurred.max()
+        gblurred -= mn
+        gblurred /= (mx - mn)
         blurred -= mn
         blurred /= (mx - mn)
+        
+        ind = np.logical_and(ind, blurred > self._m.avg)
 
-        ind = blurred > self._m.avg
-
-        self._m.update(blurred, ind)
+        self._m.update(gblurred, ind)
         self.bglevel += mn
         self._mx += mx
 
@@ -103,4 +115,4 @@ class FlatFieldFromImgFit(object):
 
 def vignettingFromDifferentObjects(imgs, bg):
     f = FlatFieldFromImgFit(imgs, bg)
-    return f._m.avg, f.m.n > 0
+    return f._m.avg, f._m.n > 0
