@@ -250,7 +250,8 @@ class CameraCalibration(object):
         if s is None:
             self.coeffs['shape'] = array.shape
         elif s != array.shape:
-            raise Exception('array shapes are different: stored(%s), given(%s)' %(s, array.shape))
+            raise Exception("""array shapes are different: stored(%s), given(%s)
+            if shapes are transposed, execute self.transpose() once """ %(s, array.shape))
 
 
     def addFlatField(self, arr, date=None, info='', error=None, light_spectrum='visible'):
@@ -309,10 +310,12 @@ class CameraCalibration(object):
     def loadFromFile(path):
         cal = CameraCalibration()
         path = cal._correctPath(path)
-        d = pickle.load(open(path,'rb'))
-        #for py2 pickels, the following works:
-        #with open(path, 'rb') as f:
-        #    d = pickle.load(f, encoding='latin1') 
+        try:
+            d = pickle.load(open(path,'rb'))
+        except UnicodeDecodeError:
+            #for py2 pickels, the following works:
+            with open(path, 'rb') as f:
+                d = pickle.load(f, encoding='latin1') 
         cal.coeffs.update(d)
         return cal
 
@@ -322,6 +325,34 @@ class CameraCalibration(object):
         c = dict(self.coeffs)
         with open(path, 'wb') as outfile:
             pickle.dump(c, outfile, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+    def transpose(self):
+        '''
+        transpose all calibration arrays
+        in case different array shape orders were used (x,y) vs. (y,x)
+        '''
+        def _t(item):
+            if type(item) == list:
+                for n, it in enumerate(item):
+                    if type(it) == tuple:
+                        it = list(it)
+                        item[n] = it
+                    if type(it) == list:
+                        _t(it)
+                    if isinstance(it, np.ndarray) and it.shape == s:
+                        item[n] = it.T
+
+        s = self.coeffs['shape']
+        
+        for item in self.coeffs.values():
+            if type(item) == dict:
+                for item2 in item.values():
+                    _t(item2)
+            else:
+                _t(item)
+            
+        self.coeffs['shape'] = s[::-1]
 
     
     def correct(self, images,
@@ -465,7 +496,7 @@ class CameraCalibration(object):
         '''
         #either exposureTime or bgImages has to be given
         if exposuretime is not None or bgImages is not None:
-            print('... remove background')
+            print('... remove dark current')
 
             if bgImages is not None:
                 

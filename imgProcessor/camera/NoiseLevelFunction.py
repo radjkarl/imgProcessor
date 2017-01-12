@@ -62,7 +62,6 @@ def estimateFromImages(imgs1, imgs2=None, mn_mx=None, nbins=100):
     y_avg = np.average(np.nan_to_num(y_vals), 
                        weights=w_vals,
                         axis=0)
-    
     w_vals = np.sum(w_vals, axis=0)
     w_vals /= w_vals.sum()
 
@@ -114,7 +113,7 @@ def _validI(x, y, weights):
     return indices that have enough data points and are not erroneous 
     '''
     #density filter:
-    i = weights > np.median(weights)
+    i = np.logical_and(np.isfinite(y), weights > np.median(weights))
     #filter outliers:
     try:
         grad = np.abs(np.gradient(y[i]))
@@ -144,6 +143,11 @@ def smooth(x,y,weights):
 
 #     return np.poly1d(np.polyfit(x,y,w=weights,deg=2))
     p = np.polyfit(x,y,w=weights,deg=2)
+    if np.any(np.isnan(p)):
+        # couldn't even do polynomial fit
+        # as last option: assume constant noise 
+        my  = np.average(y, weights=weights)
+        return lambda x: my
     return lambda xint: np.poly1d(p)(np.clip(xint,x[0],x[-1]))
 
 

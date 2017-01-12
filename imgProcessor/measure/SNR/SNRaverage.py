@@ -38,8 +38,12 @@ def SNRaverage(snr, method='average', excludeBackground=True,
 
     elif method == 'average':
         avg = snr.mean()
+#         if np.isnan(avg):
+#             avg = np.nanmean(snr)
     elif method == 'median':
         avg = np.median(snr)
+#         if np.isnan(avg):
+#             avg = np.nanmedian(snr) 
 
     elif method == 'X75':
         r = (snr.min(), snr.max())

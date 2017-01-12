@@ -9,6 +9,7 @@ from imgProcessor.array.subCell2D import subCell2DFnArray, subCell2DCoords
 from imgProcessor.interpolate.polyfit2d import polyfit2dGrid
 from imgProcessor.camera.flatField.interpolationMethods import function
 from imgProcessor.interpolate.offsetMeshgrid import offsetMeshgrid
+from equations.angleOfView import angleOfView
 
     
 
@@ -177,7 +178,7 @@ def flatFieldDiscreteSteps(imgs, n_cells_device,
 
     '''   
     assert fit_fn in ('polynomial global', 'function global',
-                      'function', 'polynomial')
+                      'function', 'polynomial', 'koentges', 'koentges global')
     
     if bg_img is not None:
         bg_img = imread(bg_img)
@@ -191,7 +192,9 @@ def flatFieldDiscreteSteps(imgs, n_cells_device,
     #grid resolution:
     g0,g1 = int(s0/d0)+1,  int(s1/d1)+1
 
+    #averaged areas in device for all images:
     devices = np.full((len(imgs), n0, n1), np.nan)
+    #image to grid for all images:
     grid = np.full((len(imgs), g0,g1), np.nan)
 
     if thresh is None:
@@ -247,7 +250,7 @@ def flatFieldDiscreteSteps(imgs, n_cells_device,
         for (n, q0,q1,qq0,qq1) in gen.iter():
             ffs[n,qq0,qq1] =  devices[n,q0,q1] / avgobj[q0,q1]
         ff2 = np.nanmean(ffs, axis=0)
-
+        #STOP?
         dev = (np.nanmean((ff - ff2)**2))**0.5#RMS
         ff = ff2
         if n > max_iter or dev < max_dev:
@@ -262,11 +265,22 @@ def flatFieldDiscreteSteps(imgs, n_cells_device,
         ff2 = polyfit2dGrid(ff,mask, order=5, outgrid=(yy,xx))
     elif fit_fn == 'function global':
         ff2 = function( ff, mask, outgrid=(yy,xx))
+        
+    elif fit_fn == 'koentges global':
+            ff2 = function( ff, mask, fn=lambda XY, a: 
+                            angleOfView(XY,ff.shape, a=a), guess=(0.01), 
+                            replace_all=True, down_scale_factor=1,
+                            outgrid=(yy,xx))
+        
     else:
         if fit_fn == 'polynomial':
             ff = polyfit2dGrid( ff, mask, order=3)
-        else:#'function'
+        elif fit_fn == 'function':
             ff = function( ff, mask)
+        else:
+            ff = function( ff, mask, fn=lambda XY, a: 
+                            angleOfView(XY,ff.shape, a=a), guess=(0.01), 
+                            replace_all=False, down_scale_factor=1)
         #rescale:
             #cv2.remap better than scipy_map_coordinated, 
             #because of borderinterpolation 'reflect':

@@ -13,7 +13,7 @@ from scipy.ndimage.filters import maximum_filter, minimum_filter  # , median_fil
 from fancytools.math.boundingBox import boundingBox
 from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
 
-from imgProcessor.imgIO import imread
+from imgProcessor.imgIO import imread, imwrite
 from imgProcessor.utils.decompHomography import decompHomography
 from imgProcessor.features.PatternRecognition import PatternRecognition
 
@@ -21,6 +21,7 @@ from imgProcessor.features.PatternRecognition import PatternRecognition
 from imgProcessor.filters.fastFilter import fastFilter
 from imgProcessor.utils.getBackground import getBackground
 from imgProcessor.camera.LensDistortion import LensDistortion
+from fancytools.os.PathStr import PathStr
 
 
 # START VEREINFACHEN
@@ -69,8 +70,6 @@ class ObjectVignettingSeparation(PatternRecognition):
             self.lens =  LensDistortion()  
             self.lens._coeffs['distortionCoeffs'] = distortionCoeffs
             self.lens._coeffs['cameraMatrix'] = cameraMatrix
-
-
 
         self.maxDev = maxDev
         self.maxIter = maxIter
@@ -147,7 +146,6 @@ class ObjectVignettingSeparation(PatternRecognition):
             self.Hinvs.append(H_inv)
             # IMAGES WARPED TO THE BASE IMAGE
             self.fits.append(fit)
-
             # ADD IMAGE TO THE INITIAL flatField ARRAY:
             i = img > self.signal_ranges[-1][0]
             
@@ -156,14 +154,19 @@ class ObjectVignettingSeparation(PatternRecognition):
             self._ff_mma.update(img, i)
 
             # image added
-            return True
+            return fit
         return False
 
     def separate(self):
-        self._createInitialflatField()
+        self.flatField = self._createInitialflatField()
+        
+        #todo: remove follwing
+#         self.init_ff = self.flatField.copy()
+        
         for step in self:
             print('iteration step %s/%s' % (step, self.maxIter))
 
+        #TODO: remove smooth from here - is better be done in post proc.
         smoothed_ff, mask = self.smooth()
 
         if self.lens is not None:
@@ -285,7 +288,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         f = int(max(s0, s1) / downscale_size)
         every = int(f / 3.5)
 
-        s = self.flatField = fastFilter(self.flatField, f, every)
+        s = fastFilter(self.flatField, f, every)
 
 #         plt.imshow(self.flatField)
 #         plt.colorbar()
@@ -342,18 +345,37 @@ class ObjectVignettingSeparation(PatternRecognition):
         return boundingBox(i)
 
 
-def vignettingFromSameObject(imgs, bg, inPlane_scale_factor=None,
+def vignettingFromSameObject(imgs, bg, inPlane_scale_factor=None,debugFolder=None,
                             **kwargs):
     '''
     important: first image should shown most iof the device
     because it is used as reference
     '''
     # TODO: inPlane_scale_factor
+    if debugFolder:
+        debugFolder = PathStr(debugFolder)
 
     s = ObjectVignettingSeparation(imgs[0], bg,  **kwargs)
     for img in imgs[1:]:
-        s.addImg(img)
-    return s.separate()[:2]
+        fit = s.addImg(img)
+        
+        if debugFolder and fit is not False:
+            imwrite(debugFolder.join('fit_%s.tiff' %len(s.fits)), fit)
+
+    if debugFolder:
+            imwrite(debugFolder.join('init.tiff'), s.flatField)
+
+
+
+    smoothed_ff, mask, flatField, object = s.separate()
+
+
+    if debugFolder:
+            imwrite(debugFolder.join('object.tiff'), object)
+            imwrite(debugFolder.join('flatfield.tiff'), flatField, dtype=float)
+            imwrite(debugFolder.join('flatfield_smoothed.tiff'), smoothed_ff, dtype=float)
+            
+    return smoothed_ff, mask
 
 
 if __name__ == '__main__':

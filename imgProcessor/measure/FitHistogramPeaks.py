@@ -6,7 +6,7 @@ import numpy as np
 from fancytools.os.PathStr import PathStr
 from imgProcessor.imgIO import imread
 from imgProcessor.equations.gaussian import gaussian
-from fancytools.math.findXAt import findXAt
+# from fancytools.math.findXAt import findXAt
 
 
 
@@ -53,6 +53,13 @@ class FitHistogramPeaks(object):
                                                  range=(mnImg, mxImg))
         #bin edges give start and end of an area-> move that to the middle:
         self.xvals = bin_edges[:-1]+np.diff(bin_edges)*0.5
+        
+        #in the (quite unlikely) event of two yvals being identical in sequence
+        #peak detection wont work there, so remove these vals before:
+        valid = np.append(np.logical_and(self.yvals[:-1]!=0, np.diff(self.yvals)!=0),True)
+        self.yvals = self.yvals[valid]
+        self.xvals = self.xvals[valid]
+        
         
         self.fitParams = []
         
@@ -115,8 +122,8 @@ class FitHistogramPeaks(object):
             
         #sort for increasing x positions
         self.fitParams = sorted(self.fitParams, key=lambda p: p[1])
-        
 
+    
     @staticmethod
     def _sortPositions(peaks, valleys):
         #make a set of  from where to where to fit

@@ -5,7 +5,7 @@ various image transformation functions
 from __future__ import division
 
 import numpy as np
-
+import cv2
 
 def toUIntArray(img, dtype=None, cutNegative=True, cutHigh=True,
                 range=None, copy=True):
@@ -60,8 +60,8 @@ def toUIntArray(img, dtype=None, cutNegative=True, cutHigh=True,
                 img -= mn  # set minimum to 0
 
         if cutHigh:
-            ind = img > b
-            #img[img > b] = b
+            #ind = img > b
+            img[img > b] = b
         else:
             # scale values
             mx = np.nanmax(img)
@@ -69,8 +69,8 @@ def toUIntArray(img, dtype=None, cutNegative=True, cutHigh=True,
 
     img = img.astype(dtype)
 
-    if range is None and cutHigh:
-        img[ind] = b
+#     if range is not None and cutHigh:
+#         img[ind] = b
     return img
 
 
@@ -166,3 +166,41 @@ def rot90(img):
     else:
         NotImplemented
     return out
+
+
+
+def applyColorMap(gray, cmap='flame'):
+    '''
+    like cv2.applyColorMap(im_gray, cv2.COLORMAP_*) but with different color maps
+    '''
+    #TODO:implement more cmaps
+    if cmap != 'flame':
+        raise NotImplemented
+    #TODO: make better
+    mx = 256# if gray.dtype==np.uint8 else 65535
+    lut = np.empty(shape=(256,3))
+    cmap = (
+        #taken from pyqtgraph GradientEditorItem
+        (0.0, (0, 0, 0)),
+        (0.2, (7, 0, 220)),
+        (0.5, (236, 0, 134)), 
+        (0.8, (246, 246, 0)), 
+        (1.0, (255, 255, 255))
+        )
+    #build lookup table:
+    lastval, lastcol = cmap[0]
+    for step, col in cmap[1:]:
+        val = int(step*mx)
+        for i in range(3):
+            lut[lastval:val, i] = np.linspace(lastcol[i],col[i], val-lastval)
+        
+        lastcol = col
+        lastval = val
+
+    s0,s1 = gray.shape
+    out = np.empty(shape=(s0,s1,3), dtype=np.uint8)
+
+    for i in range(3):
+        out[...,i] = cv2.LUT(gray, lut[:,i])
+    return out
+
