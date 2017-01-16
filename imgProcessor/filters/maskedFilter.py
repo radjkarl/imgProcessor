@@ -9,29 +9,44 @@ import numpy as np
 from numba import njit
 
 
-def maskedFilter(arr, mask, ksize=30, fn='median'):
+def maskedFilter(arr, mask, ksize=30, fill_mask=True,
+                 fn='median'):
     '''
     fn['mean', 'median']
-    replaced masked areas with filtered results
+    
+    fill_mask=True:
+        replaced masked areas with filtered results
+
+    fill_mask=False:
+    masked areas are ignored
     '''
     if fn == 'median':
         raise Exception('[median] doesnt work at the moment')
     c = {#'median':_calcMedian,
          'mean':_calcMean,
          }[fn]
-    c(arr, mask, ksize)
-    return arr
+    
+    
+    if fill_mask:
+        mask1 = mask 
+        out = arr
+    else:
+        mask1 = ~mask
+        out = np.full_like(arr, fill_value=np.nan)
+    mask2 = ~mask 
+    c(arr, mask1, mask2, out, ksize)
+    return out
     
 #TODO: only filter method differs
 # find better way for replace it than making n extra defs
 @njit
-def _calcMean(arr, mask, ksize):
+def _calcMean(arr, mask1, mask2, out, ksize):
     gx = arr.shape[0]
     gy = arr.shape[1]
     for i in range(gx):
         for j in range(gy):   
             #print (mask[i,j])
-            if mask[i,j]:
+            if mask1[i,j]:
                 xmn = i-ksize
                 if xmn < 0:
                     xmn = 0
@@ -49,17 +64,19 @@ def _calcMean(arr, mask, ksize):
                 n = 0
                 for ii in range(xmn,xmx):
                     for jj in range(ymn,ymx):
-                        if not mask[ii,jj]:
+                        if mask2[ii,jj]:
                             val += arr[ii,jj]
                             n += 1
+
+
                 if n > 0: 
-                    arr[i,j] = val/n
-                
+                    out[i,j] = val/n
 
 
-# 
+
+#TODO
 # @njit
-# def _calcMean(arr, mask, ksize):
+# def _calcMedian(arr, mask, ksize):
 #     gx = arr.shape[0]
 #     gy = arr.shape[1]
 #     for i in range(gx):

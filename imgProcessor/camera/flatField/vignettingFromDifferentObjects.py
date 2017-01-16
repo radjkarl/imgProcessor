@@ -12,7 +12,7 @@ from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
 
 from imgProcessor.imgIO import imread
 from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
-from imgProcessor.imgSignal import getSignalPeak, getSignalMinimum
+from imgProcessor.imgSignal import getSignalMinimum
 
 from imgProcessor.utils.getBackground import getBackground
 
@@ -48,6 +48,8 @@ class FlatFieldFromImgFit(object):
                 self.addImg(i)
 
 
+
+
     def _firstImg(self, img):
 
         if self.scale_factor is None:
@@ -71,6 +73,11 @@ class FlatFieldFromImgFit(object):
     @property
     def result(self):
         return self._m.avg
+#         return minimum_filter(self._m.avg,self.ksize)
+    @property
+    def mask(self):
+        return self._m.n>0
+#         return minimum_filter(self._m.n>0,self.ksize)
 
 
     def addImg(self, i):
@@ -89,8 +96,9 @@ class FlatFieldFromImgFit(object):
         # non-backround indices:
         ind = img > mn#sp[1] - self.nstd * sp[2]
         # blur:
-        blurred = minimum_filter(img, 3)#remove artefacts
-        blurred = maximum_filter(blurred, self.ksize)
+        #blurred = minimum_filter(img, 3)#remove artefacts
+        #blurred = maximum_filter(blurred, self.ksize)
+        blurred = img
         gblurred = gaussian_filter(blurred, self.ksize)
         #blurred[ind] = gblurred[ind]
 
@@ -112,7 +120,11 @@ class FlatFieldFromImgFit(object):
 
         self._n += 1
 
+        if self._n == 1:
+            np.save('aaaaa', self.result)
+
+
 
 def vignettingFromDifferentObjects(imgs, bg):
     f = FlatFieldFromImgFit(imgs, bg)
-    return f._m.avg, f._m.n > 0
+    return f.result, f._n

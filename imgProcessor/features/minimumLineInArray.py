@@ -26,7 +26,8 @@ def _lineSumXY(x, res, sub, f):
 
 def minimumLineInArray(arr, relative=False, f=0,
                        refinePosition=True,
-                       max_pos=100
+                       max_pos=100,
+                       return_pos_arr=False,
                        # order=2
                        ):
     '''
@@ -45,11 +46,9 @@ def minimumLineInArray(arr, relative=False, f=0,
     res = np.empty((s0, s0), dtype=float)
 
     _lineSumXY(x, res, arr, f)
-#     if f != 0:
-#     import pylab as plt
-#     plt.imshow(res, interpolation='none')
-#     plt.colorbar()
-#     plt.show()
+
+    if return_pos_arr:
+        return res
 
     # best integer index
     i, j = np.unravel_index(np.nanargmin(res), res.shape)
@@ -65,31 +64,6 @@ def minimumLineInArray(arr, relative=False, f=0,
         except TypeError:
             pass
 
-            # fit a polynomial 2nd degree through the i,j and its neighbours
-#             # calculate its minimum:
-#             x = [-1,0,1]
-#             y1 = res[i-1:i+2,j]
-#             y2 = res[i,j-1:j+2]
-#             ii = pol.polyroots( pol.polyder( pol.polyfit(x,y1,2) ) )[0]
-#             jj = pol.polyroots( pol.polyder( pol.polyfit(x,y2,2) ) )[0]
-#             if not np.isnan(ii):
-#                 i  += ii
-#             if not np.isnan(jj):
-#                 j  += jj
-
-
-#     #find closest neighbour, ii,jj:
-#     ii,jj = i+1,j+1
-#     try:
-#         if res[i-1,j] < res[i+1,j]:
-#             ii = i-1
-#     except IndexError:
-#         ii = i-1
-#     try:
-#         if res[i,j-1] < res[i,j+1]:
-#             jj = i-1
-#     except IndexError:
-#         jj = i-1
 
     if not relative:
         return i, j
@@ -97,14 +71,30 @@ def minimumLineInArray(arr, relative=False, f=0,
     hs = (s0 - 1) / 2
     return i - hs, j - hs
 
-#     dy0 = 2*(hs-i) +2#...no idea why +2
-#     dy1 = 2*(hs-j) +2
-#     return dy0,dy1
+
+
+#     from imgProcessor.imgIO import imread
+# #     img = imread(r'C:\Users\elkb4\Desktop\PhD\Thesis\materials\EL_mod_dist_gradH.png')
+#     img = np.load('inp.npy').T
+#     arr = img[35:645,327:650].T
+#     
+#     pos = minimumLineInArray(arr, return_pos_arr=True)
+#     i,j = minimumLineInArray(arr)
+#     pos2 = minimumLineInArray(-arr, return_pos_arr=True)
+#     i2,j2 = minimumLineInArray(-arr)
+#     
+#     print (i,j,i2,j2)
+#     np.save('aa', arr)
+#     np.save('bb', pos)
+#     np.save('cc', pos2)
 
 
 if __name__ == '__main__':
     import pylab as plt
     import sys
+    
+
+ 
 #     np.random.seed(100)
     s0, s1 = 31, 200
 

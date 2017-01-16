@@ -2,35 +2,54 @@ from __future__ import division
 from __future__ import print_function
 
 import cv2
+# cv2.ocl.setUseOpenCL(False)
+
 import numpy as np
 from skimage.transform import resize
 
 from imgProcessor.imgSignal import signalRange
 
 
+
 class PatternRecognition(object):
 
-    def __init__(self, image, fineKernelSize=3, maxImageSize=1000):
+    def __init__(self, image, fineKernelSize=3, maxImageSize=1000, minInlierRatio=0.15,
+                 fast=False):
         '''
         maxImageSize -> limit image size to speed up process, set to False to deactivate
+        
+        minInlierRatio --> [e.g:0.2] -> min 20% inlier need to be matched, else: raise Error
+        
         '''
         self.fineKernelSize = fineKernelSize
         self.signal_ranges = []
         self.maxImageSize = maxImageSize
+        self.minInlierRatio = minInlierRatio
         self._fH = None  # homography factor, if image was resized
 
         self.base8bit = self._prepareImage(image)
-
         # Parameters for nearest-neighbour matching
-        flann_params = dict(algorithm=1, trees=2)
-        self.matcher = cv2.FlannBasedMatcher(flann_params, {})
+#         flann_params = dict(algorithm=1, trees=2)
+#         self.matcher = cv2.FlannBasedMatcher(flann_params, {})
 
         # PATTERN DETECTOR:
-        self.detector = cv2.BRISK_create()
+#         self.detector = cv2.BRISK_create()
+
+        if fast:
+            self.detector = cv2.ORB_create()
+        else:
+            self.detector = cv2.ORB_create(
+                    nfeatures=70000, 
+                    #scoreType=cv2.ORB_FAST_SCORE
+                    )
+        
+        
+        
         # removed because of license issues:
         # cv2.xfeatures2d.SIFT_create()
         f, d = self.detector.detectAndCompute(self.base8bit, None)
-        self.base_features, self.base_descs = f, d
+        self.base_features, self.base_descs = f, d#.astype(np.float32)
+
 
     def _prepareImage(self, image):
         # resize is image too big:
@@ -59,9 +78,12 @@ class PatternRecognition(object):
                            preserve_range=True)
 
         img8bit = self._scaleTo8bit(image)
+        if img8bit.ndim == 3:#multi channel img like rgb
+            img8bit = cv2.cvtColor(img8bit,cv2.COLOR_BGR2GRAY)
 
         return cv2.GaussianBlur(img8bit, (self.fineKernelSize,
                                           self.fineKernelSize), 0)
+
 
     def _scaleTo8bit(self, img):
         '''
@@ -92,128 +114,6 @@ class PatternRecognition(object):
         # invert homography
         return np.linalg.inv(H)
 
-#
-#     #only for opencv2.4 because that method is built into 3.0  - remove later
-#     def _drawMatches(self, img1, kp1, img2, kp2, matches):
-#         """
-#         ##TAKEN FROM 
-#         ##http://stackoverflow.com/questions/20259025/module-object-has-no-attribute-drawmatches-opencv-python
-#         #DOESNT WORK FOR knn matcher
-#
-#         My own implementation of cv2.drawMatches as OpenCV 2.4.9
-#         does not have this function available but it's supported in
-#         OpenCV 3.0.0
-#
-#         This function takes in two images with their associated
-#         keypoints, as well as a list of DMatch data structure (matches)
-#         that contains which keypoints matched in which images.
-#
-#         An image will be produced where a montage is shown with
-#         the first image followed by the second image beside it.
-#
-#         Keypoints are delineated with circles, while lines are connected
-#         between matching keypoints.
-#
-#         img1,img2 - Grayscale images
-#         kp1,kp2 - Detected list of keypoints through any of the OpenCV keypoint
-#                   detection algorithms
-#         matches - A list of matches of corresponding keypoints through any
-#                   OpenCV keypoint matching algorithm
-#         """
-#
-#         # Create a new output image that concatenates the two images together
-#         # (a.k.a) a montage
-#         rows1 = img1.shape[0]
-#         cols1 = img1.shape[1]
-#         rows2 = img2.shape[0]
-#         cols2 = img2.shape[1]
-#
-#         out = np.zeros((max([rows1,rows2]),cols1+cols2,3), dtype='uint8')
-#
-#         # Place the first image to the left
-#         out[:rows1,:cols1] = np.dstack([img1, img1, img1])
-#
-#         # Place the next image to the right of it
-#         out[:rows2,cols1:] = np.dstack([img2, img2, img2])
-#
-#         # For each pair of points we have between both images
-#         # draw circles, then connect a line between them
-#         for mat in matches:
-#
-#             # Get the matching keypoints for each of the images
-#             print(mat, dir(mat))
-#
-#             img1_idx = mat.queryIdx
-#             img2_idx = mat.trainIdx
-#
-#             # x - columns
-#             # y - rows
-#             (x1,y1) = kp1[img1_idx].pt
-#             (x2,y2) = kp2[img2_idx].pt
-#
-#             # Draw a small circle at both co-ordinates
-#             # radius 4
-#             # colour blue
-#             # thickness = 1
-#             cv2.circle(out, (int(x1),int(y1)), 4, (255, 0, 0), 1)
-#             cv2.circle(out, (int(x2)+cols1,int(y2)), 4, (255, 0, 0), 1)
-#
-#             # Draw a line in between the two points
-#             # thickness = 1
-#             # colour blue
-#             cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (255, 0, 0), 1)
-#
-#         # Show the image
-#         cv2.namedWindow('Matched Features',
-#                          cv2.WINDOW_NORMAL
-#                         #old: cv2.cv.CV_WINDOW_NORMAL
-#                         )
-#
-#         cv2.imshow('Matched Features', out)
-#         cv2.waitKey(0)
-#         cv2.destroyWindow('Matched Features')
-#
-#         # Also return the image if you'd like a copy
-#         return out
-
-    # alternative method - might remove later
-    def _findHomography_knnFlann(self, img):
-        img = self._prepareImage(img)
-
-        # Initiate SIFT detector
-        sift = cv2.xfeatures2d.SIFT_create()  # old: cv2.SIFT()
-
-        # find the keypoints and descriptors with SIFT
-        kp1, des1 = sift.detectAndCompute(self.base8bit, None)
-        kp2, des2 = sift.detectAndCompute(img, None)
-
-        # FLANN parameters
-        FLANN_INDEX_KDTREE = 0
-        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-        search_params = dict(checks=50)   # or pass empty dictionary
-
-        flann = cv2.FlannBasedMatcher(index_params, search_params)
-
-        matches = flann.knnMatch(des1, des2, k=2)
-
-        # store all the good matches as per Lowe's ratio test.
-        good = []
-        for m, n in matches:
-            if m.distance < 0.7 * n.distance:
-                good.append(m)
-
-        src_pts = np.float32(
-            [kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-        dst_pts = np.float32(
-            [kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-
-        H, status = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-        print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
-
-        inliers = np.sum(status)
-        inlierRatio = inliers / len(status)
-
-        return (H, inliers, inlierRatio)
 
     def findHomography(self, img):
         '''
@@ -226,11 +126,33 @@ class PatternRecognition(object):
 
         features, descs = self.detector.detectAndCompute(img, None)
 
-        matches = self.matcher.knnMatch(descs.astype(np.float32),
-                                        self.base_descs.astype(np.float32),
-                                        k=2)
-        print("\t Match Count: ", len(matches))
-        matches_subset = self._filterMatches(matches)
+        ######################
+        #TODO: CURRENTLY BROKEN IN OPENCV3.1 - WAITNG FOR NEW RELEASE 3.2
+#         matches = self.matcher.knnMatch(descs,#.astype(np.float32),
+#                                         self.base_descs,
+#                                         k=3)
+#         print("\t Match Count: ", len(matches))
+#         matches_subset = self._filterMatches(matches)
+
+        #its working alternative (for now):
+        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+        matches_subset = bf.match(descs,self.base_descs)
+        
+ 
+        ######################
+#         matches = bf.knnMatch(descs,self.base_descs, k=2)
+#         # Apply ratio test
+#         matches_subset = []
+#         medDist = np.median([m.distance for m in matches])
+#         matches_subset = [m for m in matches if m.distance < medDist]
+#         for m in matches:
+#             print(m.distance)
+#         for m,n in matches:
+#             if m.distance < 0.75*n.distance:
+#                 matches_subset.append([m])
+        
+        
+
         if not len(matches_subset):
             raise Exception('no matches found')
         print("\t Filtered Match Count: ", len(matches_subset))
@@ -249,17 +171,23 @@ class PatternRecognition(object):
             kp2.append(features[match.queryIdx])
 
         # /self._fH #scale with _fH, if image was resized
+
         p1 = np.array([k.pt for k in kp1])
         p2 = np.array([k.pt for k in kp2])  # /self._fH
 
-        H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
+        H, status = cv2.findHomography(p1, p2, 
+                                       cv2.RANSAC,  #method
+                                       5.0#max reprojection error (1...10)
+                                       )
         if status is None:
             raise Exception('no homography found')
         else:
-            print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
+            inliers = np.sum(status)
+            print('%d / %d  inliers/matched' %(inliers, len(status)))
+            inlierRatio = inliers/ len(status)
+            if self.minInlierRatio>inlierRatio:
+                raise Exception('bad fit!')
 
-        inliers = np.sum(status)
-        inlierRatio = inliers / len(status)
         # scale with _fH, if image was resized
         # see
         # http://answers.opencv.org/question/26173/the-relationship-between-homography-matrix-and-scaling-images/
@@ -272,41 +200,6 @@ class PatternRecognition(object):
                 img, features,
                 descs, len(matches_subset))
 
-    # alternative method - might remove later
-    def _findHomography_BR(self, img):
-        '''
-        Find homography of the image through pattern
-        comparison with the base image
-        '''
-        print("\t Finding points...")
-        # Find points in the next frame
-        img = self._prepareImage(img)
-        # Initiate SIFT detector
-        sift = cv2.xfeatures2d.SIFT_create()  # old: cv2.SIFT()
-        # find the keypoints and descriptors with SIFT
-        kp1, des1 = sift.detectAndCompute(self.base8bit, None)
-        kp2, des2 = sift.detectAndCompute(img, None)
-        # Create matcher
-        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-        # Do matching
-        matches = bf.knnMatch(des1, des2, k=2)
-        # store all the good matches as per Lowe's ratio test.
-        good = []
-        for m, n in matches:
-            if m.distance < 0.7 * n.distance:
-                good.append(m)
-
-        src_pts = np.float32(
-            [kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-        dst_pts = np.float32(
-            [kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-
-        H, status = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-        print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
-
-        inliers = np.sum(status)
-        inlierRatio = inliers / len(status)
-        return (H, inliers, inlierRatio)
 
 
 if __name__ == '__main__':

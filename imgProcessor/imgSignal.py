@@ -155,6 +155,19 @@ def signalStd(img):
     return signal[2]
 
 
+def backgroundMean(img, fitParams=None,):
+    try:
+        if fitParams is None:
+            fitParams = FitHistogramPeaks(img).fitParams
+        bg = getBackgroundPeak(fitParams)
+        return bg[1]
+
+    except Exception as e:
+        print(e)
+        #in case peaks were not found:
+        return img.mean()
+
+
 def signalRange(img, fitParams=None, nSigma=3):
     try:
         if fitParams is None:

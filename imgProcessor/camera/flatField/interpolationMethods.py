@@ -20,15 +20,20 @@ def _highGrad(arr):
                           min(max(s // 5, 3), 15))
 
 
-def function(img, mask=None, replace_all=False, outgrid=None):
+def function(img, mask=None, replace_all=False, outgrid=None, fn=vignetting,
+             guess=None, **kwargs):
     if outgrid is not None:
         replace_all = True
     if mask is None:
         mask = np.zeros_like(img, dtype=bool)  
         replace_all = True
-    img2 = fit2dArrayToFn(img, vignetting, 
-                         mask=~mask, guess=guessVignettingParam(img), 
-                         outgrid=outgrid)[0]
+    if fn == vignetting and guess is None:
+        guess = guessVignettingParam(img)
+    #else:
+    #    guess = None
+    img2 = fit2dArrayToFn(img, fn, 
+                         mask=~mask, guess=guess, 
+                         outgrid=outgrid, **kwargs)[0]
     if not replace_all:
         img[mask] = img2[mask]
         img2 = img

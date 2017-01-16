@@ -28,6 +28,10 @@ def rint(x):
 
 
 def subCell2DSlices(arr, shape, d01=None,p01=None):
+    '''
+    d01 --> cell size
+    p01 --> position of top left edge
+    '''
     if p01 is not None:
         yinit,xinit = p01
     else:

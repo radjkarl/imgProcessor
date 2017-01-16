@@ -5,7 +5,8 @@ import numpy as np
 
 
 
-def polyfit2d(x, y, z, order=3):
+def polyfit2d(x, y, z, order=3 #bounds=None
+              ):
     '''
     fit unstructured data 
     '''
@@ -39,7 +40,8 @@ def polyfit2dGrid(arr, mask=None, order=3, replace_all=False,
             p = polyfit2d(x.flatten(),y.flatten(),arr.flatten(),order)
             return polyval2d(x,y, p, dtype=arr.dtype)
         mask = np.zeros_like(arr, dtype=bool)
-    elif mask.sum() == 0 and outgrid is None:
+    elif mask.sum() == 0 and not replace_all and outgrid is None:
+
         return arr
     valid = ~mask
     y,x = np.where(valid)

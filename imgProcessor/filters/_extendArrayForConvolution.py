@@ -2,25 +2,27 @@ import numpy as np
 
 
 
-def extendArrayForConvolution(arr, xxx_todo_changeme, 
+def extendArrayForConvolution(arr, kernelXY, 
                           modex='reflect', 
                           modey='reflect'):
     '''
     extends a given array right right border handling
     for convolution
     -->in opposite to skimage and skipy this function 
-    allows to chose different mode = ('reflext', 'wrap')
+    allows to chose different mode = ('reflect', 'wrap')
     in x and y direction
     
     only supports 'warp' and 'reflect' at the moment 
     '''
-    (kx, ky) = xxx_todo_changeme
+    (kx, ky) = kernelXY
+    kx//=2
+    ky//=2
     s0,s1 = arr.shape
     
     assert ky < s0
     assert kx < s1
     
-    arr2 = np.full((s0+2*ky, s1+2*kx), np.nan,dtype=arr.dtype)
+    arr2 = np.zeros((s0+2*ky, s1+2*kx), dtype=arr.dtype)
     arr2[ky:-ky,kx:-kx]=arr
     
     #original array:
@@ -64,7 +66,7 @@ def extendArrayForConvolution(arr, xxx_todo_changeme,
             br2[:] = arr[-1:-ky-1:-1 , :kx]
             
     else:
-        raise Exception('modey not suported')
+        raise Exception('modey not supported')
     
     
     if modex == 'wrap':
@@ -74,7 +76,7 @@ def extendArrayForConvolution(arr, xxx_todo_changeme,
         arr2[ky:-ky,:kx] = l[:,::-1]
         arr2[ky:-ky,-kx:] = rr   
     else:
-        raise Exception('modey not suported')
+        raise Exception('modex not supported')
 
     return arr2
 

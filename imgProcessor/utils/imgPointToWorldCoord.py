@@ -6,7 +6,7 @@ from numpy.linalg import inv
 import numpy as np
 
 
-def imgPointToWorldCoord(xxx_todo_changeme, rvec,
+def imgPointToWorldCoord(XY, rvec,
                          tvec, cameraMatrix, zconst=0):
     '''
     @returns 3d object coords
@@ -18,7 +18,7 @@ def imgPointToWorldCoord(xxx_todo_changeme, rvec,
     and
     http://stackoverflow.com/questions/12299870/computing-x-y-coordinate-3d-from-image-point
     '''
-    (ix, iy) = xxx_todo_changeme
+    (ix, iy) = XY
     uvPoint = np.array([ix.ravel(), iy.ravel(), np.ones(
         shape=ix.size)]).reshape(3, ix.size)
 
@@ -36,6 +36,8 @@ def imgPointToWorldCoord(xxx_todo_changeme, rvec,
 
 
 if __name__ == '__main__':
+    import sys
+    import pylab as plt
     from imgProcessor.utils.genericCameraMatrix import genericCameraMatrix
 
     # assume:
@@ -81,3 +83,11 @@ if __name__ == '__main__':
         (ix, iy), rvec, tvec, cameraMatrix, zconst)
     # should be close to  [-2629.5, 1272.6, 285.]
     assert np.allclose(objectPoints2, [-2629.5, 1272.6, 285.], rtol=50)
+    
+    
+    if 'no_window' not in sys.argv:
+        plt.figure('objectPoints')
+        plt.plot(objectPoints[:, 0], objectPoints[:, 1])
+        plt.figure('imagePoints')
+        plt.plot(imagePoints[:, 0], imagePoints[:, 1])
+        plt.show()

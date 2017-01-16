@@ -7,20 +7,28 @@ import numpy as np
 from scipy.ndimage.filters import convolve
 # from imgProcessor.filters.nanConvolve import nanConvolve 
 
+def _angles(orientations):
+#     print(np.arange(orientations)*(np.pi/orientations))
+    return np.arange(orientations)*(np.pi/orientations)
+#     angle = 0
+#     dangle = np.pi/orientations
+#     for o in range(orientations):
+#         yield angle
+#         angle+=dangle   
+
 
 def _mkConvKernel(ksize, orientations, image):
     assert ksize[0]%2 and ksize[1]%2
-    dangle = np.pi/orientations
-    angle = 0
+    #dangle = np.pi/orientations
+    #angle = 0
     k0,k1 = ksize
     mx,my = (k0//2)+1,(k1//2)+1
 #     length = 0.5*(k0+k1)
-
     kernel = np.empty( (orientations,k0,k1) )
-    for i in range(orientations):
+    for i, a in enumerate(_angles(orientations)):
         #make line kernel
-        x = int(round(4*np.cos(angle)*k0))
-        y = int(round(4*np.sin(angle)*k1))
+        x = int(round(4*np.cos(a)*k0))
+        y = int(round(4*np.sin(a)*k1))
         k = np.zeros((2*k0,2*k1), dtype=np.uint8)
         cv2.line(k, (-x+k0,-y+k1), (x+k0,y+k1), 
                  255, 
@@ -29,13 +37,13 @@ def _mkConvKernel(ksize, orientations, image):
         ki = k[mx:mx+k0,my:my+k1].astype(float)/255
         kernel[i] = ki / ki.sum()
 #         ki /= ki.sum()
-        angle+=dangle
+        #angle+=dangle
 #     kernel /= kernel.sum(axis=(1,2))
 #     kernel/=length
     return kernel
         
 
-def hog(image, orientations=6, ksize=(5,5)):
+def hog(image, orientations=8, ksize=(5,5)):
     '''
     returns the Histogram of Oriented Gradients
     
@@ -46,17 +54,24 @@ def hog(image, orientations=6, ksize=(5,5)):
     but faster and with less options
     '''
     s0,s1 = image.shape
-
-    k = _mkConvKernel(ksize, orientations, image)
+    
+    #speed up the process through saving generated kernels:
+    try:
+        k = hog.kernels[str(ksize)+str(orientations)]
+    except KeyError:
+        k = _mkConvKernel(ksize, orientations, image)
+        hog.kernels[str(ksize)+str(orientations)] = k
+    
     out = np.empty(shape=(s0,s1,orientations))
     image[np.isnan(image)]=0
-#     if np.isnan(np.sum(image)):
-#         image = 
-    
+
+
     for i in range(orientations):
         out[:,:,i] = convolve(image, k[i]#, mode='same' 
                               )          
     return out
+hog.kernels = {}
+
 
 
 if __name__ == '__main__':

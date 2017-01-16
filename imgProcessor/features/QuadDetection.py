@@ -35,6 +35,7 @@ class QuadDetection(object):
 
 #         if self.vertices is None:
         lines = self._findQuadLines()
+
 #             if refinePositions:
 #                 lines = self._refineLines(lines)
         self.vertices = self._verticesFromLines(lines)
@@ -59,12 +60,12 @@ class QuadDetection(object):
             self._corrected = True
             return img
 
-    @staticmethod
-    def _to8bitImg(img):
-        if img.dtype == np.uint8:
-            return img
-        r = signalRange(img)
-        return toUIntArray(img, dtype=np.uint8, range=r)
+#     @staticmethod
+#     def _to8bitImg(img):
+#         if img.dtype == np.uint8:
+#             return img
+#         r = signalRange(img)
+#         return toUIntArray(img, dtype=np.uint8, range=r)
 
     @staticmethod
     def _findEdgeLine(img, axis=0, start=0, stop=-1, direction=1):
@@ -153,7 +154,7 @@ class QuadDetection(object):
         # take first ...whatever
         #_, thresh = cv2.threshold(self._to8bitImg(self.img), 0, 255, cv2.cv.CV_THRESH_OTSU)
         thresh = img > signalMinimum(img)
-#         print signalMinimum(img),88888888
+
         # remove small features:
         thresh = minimum_filter(thresh, 5)
         thresh = maximum_filter(thresh, 5)
