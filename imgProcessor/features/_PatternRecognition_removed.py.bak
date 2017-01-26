@@ -84,78 +84,78 @@
 #         return out
 
     # alternative method - might remove later
-# """    def _findHomography_knnFlann(self, img):
-#         img = self._prepareImage(img)
-# 
-#         # Initiate SIFT detector
-#         sift = cv2.xfeatures2d.SIFT_create()  # old: cv2.SIFT()
-# 
-#         # find the keypoints and descriptors with SIFT
-#         kp1, des1 = sift.detectAndCompute(self.base8bit, None)
-#         kp2, des2 = sift.detectAndCompute(img, None)
-# 
-#         # FLANN parameters
-#         FLANN_INDEX_KDTREE = 0
-#         index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-#         search_params = dict(checks=50)   # or pass empty dictionary
-# 
-#         flann = cv2.FlannBasedMatcher(index_params, search_params)
-# 
-#         matches = flann.knnMatch(des1, des2, k=2)
-# 
-#         # store all the good matches as per Lowe's ratio test.
-#         good = []
-#         for m, n in matches:
-#             if m.distance < 0.7 * n.distance:
-#                 good.append(m)
-# 
-#         src_pts = np.float32(
-#             [kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-#         dst_pts = np.float32(
-#             [kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-# 
-#         H, status = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-#         print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
-# 
-#         inliers = np.sum(status)
-#         inlierRatio = inliers / len(status)
-# 
-#         return (H, inliers, inlierRatio)
-#     
-#     
-# 
-#     # alternative method - might remove later
-#     def _findHomography_BR(self, img):
-#         '''
-#         Find homography of the image through pattern
-#         comparison with the base image
-#         '''
-#         print("\t Finding points...")
-#         # Find points in the next frame
-#         img = self._prepareImage(img)
-#         # Initiate SIFT detector
-#         sift = cv2.xfeatures2d.SIFT_create()  # old: cv2.SIFT()
-#         # find the keypoints and descriptors with SIFT
-#         kp1, des1 = sift.detectAndCompute(self.base8bit, None)
-#         kp2, des2 = sift.detectAndCompute(img, None)
-#         # Create matcher
-#         bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-#         # Do matching
-#         matches = bf.knnMatch(des1, des2, k=2)
-#         # store all the good matches as per Lowe's ratio test.
-#         good = []
-#         for m, n in matches:
-#             if m.distance < 0.7 * n.distance:
-#                 good.append(m)
-# 
-#         src_pts = np.float32(
-#             [kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-#         dst_pts = np.float32(
-#             [kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-# 
-#         H, status = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-#         print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
-# 
-#         inliers = np.sum(status)
-#         inlierRatio = inliers / len(status)
-#         return (H, inliers, inlierRatio)"""
+    def _findHomography_knnFlann(self, img):
+        img = self._prepareImage(img)
+
+        # Initiate SIFT detector
+        sift = cv2.xfeatures2d.SIFT_create()  # old: cv2.SIFT()
+
+        # find the keypoints and descriptors with SIFT
+        kp1, des1 = sift.detectAndCompute(self.base8bit, None)
+        kp2, des2 = sift.detectAndCompute(img, None)
+
+        # FLANN parameters
+        FLANN_INDEX_KDTREE = 0
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=50)   # or pass empty dictionary
+
+        flann = cv2.FlannBasedMatcher(index_params, search_params)
+
+        matches = flann.knnMatch(des1, des2, k=2)
+
+        # store all the good matches as per Lowe's ratio test.
+        good = []
+        for m, n in matches:
+            if m.distance < 0.7 * n.distance:
+                good.append(m)
+
+        src_pts = np.float32(
+            [kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+        dst_pts = np.float32(
+            [kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+
+        H, status = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
+
+        inliers = np.sum(status)
+        inlierRatio = inliers / len(status)
+
+        return (H, inliers, inlierRatio)
+    
+    
+
+    # alternative method - might remove later
+    def _findHomography_BR(self, img):
+        '''
+        Find homography of the image through pattern
+        comparison with the base image
+        '''
+        print("\t Finding points...")
+        # Find points in the next frame
+        img = self._prepareImage(img)
+        # Initiate SIFT detector
+        sift = cv2.xfeatures2d.SIFT_create()  # old: cv2.SIFT()
+        # find the keypoints and descriptors with SIFT
+        kp1, des1 = sift.detectAndCompute(self.base8bit, None)
+        kp2, des2 = sift.detectAndCompute(img, None)
+        # Create matcher
+        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+        # Do matching
+        matches = bf.knnMatch(des1, des2, k=2)
+        # store all the good matches as per Lowe's ratio test.
+        good = []
+        for m, n in matches:
+            if m.distance < 0.7 * n.distance:
+                good.append(m)
+
+        src_pts = np.float32(
+            [kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+        dst_pts = np.float32(
+            [kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+
+        H, status = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
+
+        inliers = np.sum(status)
+        inlierRatio = inliers / len(status)
+        return (H, inliers, inlierRatio)
