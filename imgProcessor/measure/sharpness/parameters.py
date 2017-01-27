@@ -17,8 +17,8 @@ def modifiedLaplacian(img):
     ''''LAPM' algorithm (Nayar89)'''
     M = np.array([-1, 2, -1])
     G = cv2.getGaussianKernel(ksize=3, sigma=-1)
-    Lx = cv2.sepFilter2D(src=img, ddepth=cv2.cv.CV_64F, kernelX=M, kernelY=G)
-    Ly = cv2.sepFilter2D(src=img, ddepth=cv2.cv.CV_64F, kernelX=G, kernelY=M)
+    Lx = cv2.sepFilter2D(src=img, ddepth=cv2.CV_64F, kernelX=M, kernelY=G)
+    Ly = cv2.sepFilter2D(src=img, ddepth=cv2.CV_64F, kernelX=G, kernelY=M)
     FM = np.abs(Lx) + np.abs(Ly)
     return cv2.mean(FM)[0]
     
@@ -33,10 +33,13 @@ def varianceOfLaplacian(img):
 
 def tenengrad(img, ksize=3):
     ''''TENG' algorithm (Krotkov86)'''
-    Gx = cv2.Sobel(img, ddepth=cv2.cv.CV_64F, dx=1, dy=0, ksize=ksize)
-    Gy = cv2.Sobel(img, ddepth=cv2.cv.CV_64F, dx=0, dy=1, ksize=ksize)
+    Gx = cv2.Sobel(img, ddepth=cv2.CV_64F, dx=1, dy=0, ksize=ksize)
+    Gy = cv2.Sobel(img, ddepth=cv2.CV_64F, dx=0, dy=1, ksize=ksize)
     FM = Gx*Gx + Gy*Gy
-    return cv2.mean(FM)[0]
+    mn = cv2.mean(FM)[0]
+    if np.isnan(mn):
+        return np.nanmean(FM)
+    return mn
 
 
 def normalizedGraylevelVariance(img):
@@ -110,7 +113,7 @@ if __name__ == '__main__':
             y2.append(tenengrad(img))
             y3.append(normalizedGraylevelVariance(img))
 
-        fig, ax = pyplot.subplots(2,2)
+        _, ax = pyplot.subplots(2,2)
         ax[0][0].plot(xVals,y0)
         ax[0][0].set_title('modifiedLaplacian')
         ax[0][1].plot(xVals,y1)

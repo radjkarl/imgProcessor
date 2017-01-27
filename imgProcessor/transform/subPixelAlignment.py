@@ -9,47 +9,103 @@ from scipy.optimize import brent
 
 from imgProcessor.filters.fastFilter import fastFilter
 from imgProcessor.interpolate.polyfit2d import polyfit2dGrid
+from scipy.ndimage.filters import minimum_filter, gaussian_filter, median_filter
+from imgProcessor.interpolate.interpolate2dStructuredFastIDW import interpolate2dStructuredFastIDW
+from skimage.filters.edges import roberts
 # from imgProcessor.interpolate.interpolate2dStructuredFastIDW import interpolate2dStructuredFastIDW
 
 
+#traceback #RuntimeWarning: Mean of empty slice#
+# import warnings
+# warnings.simplefilter("error")
 
-def _fit(offs, y0,y1): 
+
+
+def _fit(offs, x, y0,y1): 
     #return absolute average deviation
-    dy = np.abs(_shift(offs, y0,y1)-y1)
-    return np.nanmean(dy)
+    dy = np.abs(_shift(offs, x, y0)-y1)
+    return dy.mean()
+#     if 
+#     return np.nanmean(dy)#dy.mean()#'
+    try:
+        return np.nanmean(dy)
+    except RuntimeWarning:
+        return np.NaN 
 
-
-def _shift(offs, y0,y1):
+def _shift(offs, x, y0):
     #shift y0 in x direction
-    x = np.arange(len(y0))
-    return np.interp(x+offs,x,y0)
+#     x = np.arange(len(y0))
+#     ind = ~np.logical_or(np.isnan(y1),np.isnan(y1))
+#     x = x[ind]
+#     y0 = y0[ind]
+#     y1 = y1[ind]
+    return np.interp(x+offs,x,y0, left=0, right=0)
+
+
+# def addBorder(img, size=50):
+#     s0,s1 = img.shape
+#     img2 = np.zeros(shape=(s0+size*2,s1+size*2), dtype=img.dtype )
+#     img2[size:-size, size:-size]=img
+#     return img2
+# 
+# def delBorder(img, size=50):
+#     return img[size:-size, size:-size]
 
 
 
-def iterativeSubPixelAligmentMaps(img, ref, niter=10,nitermin=1,
+def iterativeSubPixelAligmentMaps(img, ref, niter=10,nitermin=3,
                                   maxLastDev=0.1,maxDev=30,
                                   #borderValue=0, borderMode=cv2.BORDER_CONSTANT,
-                                  borderMode=cv2.BORDER_CONSTANT,borderValue=np.nan,
+                                  borderMode=cv2.BORDER_CONSTANT,
+                                  borderValue=np.nan,
                                   **kwargs):
     '''
     like subPixelAlignment
     but repeating process till dev<maxDev
     '''
+    
+#     img = addBorder(img)
+#     ref = addBorder(ref)
+
+
+
+#     img = img/img.max()
+#     ref = ref/ref.max()
+#     print(img.min(), img.max())
+#     img = roberts(img)
+#     ref = roberts(ref)
+    
     res = None
     img2 = img
     n=1
     lastoff = 100
+#     smoothOrder = 0
+#     if 'smoothOrder' in kwargs:
+#         smoothOrder = kwargs.pop('smoothOrder')
+
+
+
     
     while True:
         offset = _findOffset(img2, ref, maxDev=maxDev,**kwargs)
         
+#         import pylab as plt
+#         plt.figure(1)
+#         plt.imshow(offset[...,0], interpolation='none')
+#         plt.colorbar()
+#         plt.figure(2)
+#         plt.imshow(offset[...,1], interpolation='none')
+#         plt.colorbar()
+#  
+#         plt.show()
         newoff = np.abs(offset).mean()
-        if newoff>lastoff:
+        print(newoff)
+
+        if n>nitermin and (newoff>lastoff or newoff<maxLastDev):
             break
         lastoff = newoff
 
-        if n>nitermin and np.abs(offset).mean()<maxLastDev or n>niter:
-            break
+
         n+=1
      
         if res is None:
@@ -64,14 +120,20 @@ def iterativeSubPixelAligmentMaps(img, ref, niter=10,nitermin=1,
         img2 =  cv2.remap(img, mapY, mapX, 
                           interpolation=cv2.INTER_LANCZOS4,#cv2.INTER_NEAREST
                           borderMode=borderMode,borderValue=borderValue)
-       
+        if n>niter:
+            break
+#         import pylab as plt  
+#         plt.figure(n)
+#         o = offset.copy()
+#           
+#         plt.imshow(img2, interpolation='none')#img2-ref)#(o[...,0]**2+o[...,1]**2)**0.5)#img2-ref)
+#         plt.colorbar()
+#     plt.show()
     
     return img2, (mapX, mapY), res    
 
 
-def subPixelAlignment(img, ref, grid=None, nCells=5,
-                       smoothOrder=5, maxDev=5, 
-                       concentrateNNeighbours=2, maps=None):
+def subPixelAlignment(img, ref, maps=None, **kwargs):
     '''
     align images showing almost the same content 
     with only a small positional error
@@ -83,8 +145,7 @@ def subPixelAlignment(img, ref, grid=None, nCells=5,
            higher values will be excluded
     '''
     if maps is None:
-        maps = subPixelAlignmentMaps(img, ref, grid, nCells,
-                       smoothOrder, maxDev)
+        maps = subPixelAlignmentMaps(img, ref,**kwargs)
     mapX,mapY = maps
 
     return cv2.remap(img, mapY, mapX, interpolation=cv2.INTER_LANCZOS4,
@@ -92,9 +153,13 @@ def subPixelAlignment(img, ref, grid=None, nCells=5,
 
 
 def _findOffset(img, ref, grid=None, nCells=5,
-                       smoothOrder=5, maxDev=None,
+                       method='fit',#'smooth'
+                       #smoothOrder=5, 
+                       maxDev=None,
                        maxGrad=None,
-                       concentrateNNeighbours=2):
+                       concentrateNNeighbours=2,
+                       #ignoreFirstNCells=0
+                       ):
     s0,s1 = img.shape
     aR = s0/s1
     if grid is None:
@@ -124,97 +189,214 @@ def _findOffset(img, ref, grid=None, nCells=5,
     xr = np.linspace(0,s1,grid[1]+1, dtype=int)
     yr = np.linspace(0,s0,grid[0]+1, dtype=int)
 
+
+
+    def _stuff(y0,y1):
+        ind = np.logical_and(np.isfinite(y0),np.isfinite(y1))
+        if ind.any():
+            
+            x = np.arange(len(y0))
+            x = x[ind]
+            y0 = y0[ind]
+            y1 = y1[ind]
+#             print(y0.min(), y0.mean())
+            y0-=y0.min()
+            y0/=y0.max()
+            y1-=y1.min()
+            y1/=y1.max()        
+        
+        #if  np.isfinite(y0).any() and np.isfinite(y1).any():
+            #print(111)
+            #scale:
+#             y0 = y0-np.nanmin(y0)
+#             y1 = y1-np.nanmin(y1)    
+#             y0 = y0/np.nanmean(y0)
+#             y1 = y1/np.nanmean(y1)
+            #with warnings.catch_warnings():
+            
+            out = brent (lambda offs: _fit(offs, x, y0, y1),
+                         brack=(-maxDev,maxDev))
+            if abs(out)>maxDev:
+                return np.nan
+#             print(out)
+#             if -2.61>out>-4:
+#                 import pylab as plt
+# #                 print(x)
+# #                 print(y0)
+# #                 print(y1)
+#                 plt.plot(x,y0)
+#                 plt.plot(x,y1)
+#                 plt.show()
+            return out
+#         print(77777)
+        return np.nan
+
+    g0,g1 = grid
     #vertical shift
-    for i in range(grid[1]):
+    for i in range(g1):
         ri0a = i0a[i]
         ri1a = i1a[i]
 #         print(ri0a)
-        for j in range(grid[0]):
-            
+        for j in range(g0):
+#             if (i<ignoreFirstNCells or j<ignoreFirstNCells 
+#                 or g1-i-1<ignoreFirstNCells or g0-j-1<ignoreFirstNCells):
+#                 continue
             k = min(grid[0]-j-1,min(j,concentrateNNeighbours))
+#             print(j,k)
+            slic = slice(yr[j-k],yr[j+1+k])
+            y0 = ri0a[slic]
+            y1 = ri1a[slic]
+#             print(y0)
+#             print(y1)
+#             print(11)
+#             print(111)
+            offset[j,i,0] = _stuff(y0,y1)
+            
 
-            y0 = ri0a[yr[j-k]:yr[j+1+k]]
-            y1 = ri1a[yr[j-k]:yr[j+1+k]]
+                
+            
+#             print(222)
 
-            if np.isfinite(y0).any() and np.isfinite(y1).any():
-
-                #scale:
-                y0 = y0-np.nanmin(y0)
-                y1 = y1-np.nanmin(y1)    
-                y0 = y0/np.nanmean(y0)
-                y1 = y1/np.nanmean(y1)
-
-                offs = brent (lambda offs: _fit(offs, y0, y1))
-                offset[j,i,0] = offs
 
     #horizontal shift
-    for i in range(grid[0]):
+    for i in range(g0):
         ri0b = i0b[i]
         ri1b = i1b[i]
-        for j in range(grid[1]):
-
+        for j in range(g1):
             k = min(grid[1]-j-1,min(j,concentrateNNeighbours))
+            slic = slice(xr[j-k], xr[j+1+k])
+            y0 = ri0b[slic]
+            y1 = ri1b[slic]
 
-            y0 = ri0b[xr[j-k]:xr[j+1+k]]
-            y1 = ri1b[xr[j-k]:xr[j+1+k]]
 
-            if np.isfinite(y0).any() and np.isfinite(y1).any():
-                #scale:
-                y0 = y0-np.nanmin(y0)
-                y1 = y1-np.nanmin(y1)    
-                y0 = y0/np.nanmean(y0)
-                y1 = y1/np.nanmean(y1)
-                with warnings.catch_warnings():
-                    offs = brent (lambda offs: _fit(offs, y0, y1))
-                offset[i,j,1] = offs
+            offset[i,j,1] = _stuff(y0,y1)
+#             if j==grid[1]-1 and i==6:
+#                  
+#                 ind = np.logical_and(np.isfinite(y0),np.isfinite(y1))
+#                 x = np.arange(len(y0))
+#                 x = x[ind]
+#                 y0 = y0[ind]
+#                 y1 = y1[ind]
+#                  
+#                 y0-=y0.min()
+#                 y0/=y0.mean()
+#                 y1-=y1.min()
+#                 y1/=y1.mean()  
+#                  
+#                 import pylab as plt
+# #                 ddd = []
+# #                 for oo in np.linspace(-20,20,300):
+# #                     ddd.append(np.abs(_shift(oo, x, y0)-y1).mean())
+# #                 plt.plot(np.linspace(-20,20,300), ddd)
+# #                 plt.show()
+#                 oo = offset[i,j,1]
+#                 print(oo)
+#                 plt.plot(y1)
+#                 plt.plot(y0)#
+#                 plt.plot(_shift(oo, x, y0),'o-')
+#                 plt.show()
+                
+                
+#             if not np.isnan(y0).all() and not np.isnan(y1).all():
+#                 #scale:
+#                 y0 = y0-np.nanmin(y0)
+#                 y1 = y1-np.nanmin(y1)    
+#                 y0 = y0/np.nanmean(y0)
+#                 y1 = y1/np.nanmean(y1)
+#                 with warnings.catch_warnings():
+#                     offs = brent (lambda offs: _fit(offs, y0, y1))
+#                 offset[i,j,1] = offs
 
-    o0,o1 = offset[...,0].copy(), offset[...,1].copy()
-
+#     o0,o1 = offset[...,0].copy(), offset[...,1].copy()
+#     return offset
     def getMask(oo):
         with np.errstate(invalid='ignore'):
             oo[np.abs(oo)>maxDev] = np.nan
+            return np.isnan(oo)
             ff = fastFilter(oo.copy(), ksize=3, fn='nanmedian')
-        return np.logical_or(np.isnan(oo), 
+            return np.logical_or(np.isnan(oo), 
                              #spatial change too high:
                              np.logical_and(ff>1, np.abs((oo-ff)/ff)>1) )
 
     #smooth OPTIONAL
-    if smoothOrder != 0:
-        so = smoothOrder
-        #if smooth order is too high to fit: reduce sequentially:
-        for _ in range(so):
-            try: 
-                o1 = polyfit2dGrid(
-                            o1, 
-                            mask=getMask(o1),
-                            order=so, 
-                            replace_all=True)
-                break
-            except: so-=1
-             
-        so = smoothOrder
-        for _ in range(so+1):
-            try: 
-                o0 = polyfit2dGrid(
-                            o0, 
-                            mask=getMask(o0),
-                            order=so, 
-                            replace_all=False)
-                 
-                break
-            except: 
-                so-=1
+    if method=='fit':
+#         maxGrad=2
+        
+        def _fit2(oi):
+            oo = oi.copy()
 
-#ALTERNATIVE:
-#     interpolate2dStructuredFastIDW(o0,getMask(o0))
-#     interpolate2dStructuredFastIDW(o1,getMask(o1))  
+#             s0 = np.sign(oo)
+#             oo = s0*minimum_filter(np.abs(oo),3)
+            
+            #if smooth order is too high to fit: reduce sequentially:
+            fit = []
+            err = []
+            
+            for f in range(maxGrad,0,-1):
+                try: 
+                    oi = polyfit2dGrid(
+                                oo, 
+                                mask=getMask(oo),
+                                order=f, 
+                                replace_all=True)
 
-#     o0 = gaussian_filter(median_filter(o0, 3),0.7)
-#     o1 = gaussian_filter(median_filter(o1, 3),0.7)
+                    fit.append(oi)
+                    err.append(np.nanmean(np.abs(oo-oi)))
+                    #break
+                except: 
+                    
+                    fit.append(None)
+                    err.append(np.nan)
+            i = np.nanargmin(err)
+            return fit[i]
 
+        o1 = _fit2(offset[...,1])
+        o0 = _fit2(offset[...,0])
+
+
+    else:
+
+    
+#         import pylab as plt
+#         plt.figure(100)
+#         plt.imshow(offset[...,0], interpolation='none')
+#         plt.colorbar()
+#         plt.figure(200)
+#         plt.imshow(offset[...,1], interpolation='none')
+#         plt.colorbar()
+#         plt.show()
+    
+        
+        o0 = offset[...,0]
+        o1 = offset[...,1]
+    
+        s0 = np.sign(o0)
+        o0 = offset[...,0]
+        s1 = np.sign(o1)
+        
+        o0 = s0*minimum_filter(np.abs(o0),3)
+        o1 = s1*minimum_filter(np.abs(o1),3)
+    
+    
+        interpolate2dStructuredFastIDW(o0,np.isnan(o0))#getMask(o0))
+        interpolate2dStructuredFastIDW(o1,np.isnan(o1))#getMask(o1))  
+
+#         o0 = median_filter(o0,3)
+#         o1 = median_filter(o1,3)    
+        o0 = gaussian_filter(o0,1)
+        o1 = gaussian_filter(o1,1)
     offset[...,0]=o0
     offset[...,1]=o1
-    
+#     import pylab as plt
+#     plt.figure(1)
+#     plt.imshow(offset[...,0], interpolation='none')
+#     plt.colorbar()
+#     plt.figure(2)
+#     plt.imshow(offset[...,1], interpolation='none')
+#     plt.colorbar()
+#     plt.show()
+
+
     return offset 
     
 

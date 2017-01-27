@@ -34,23 +34,41 @@ class FitHistogramPeaks(object):
         from scipy.optimize import curve_fit
         
         self.fitFunction = fitFunction
+        self.fitParams = []
+        ind = None
         self.img = imread(img, 'gray')
         if self.img.size > 25000:
             #img is big enough: dot need to analyse full img
             self.img = self.img[::10,::10]
+        try:
+            self.yvals, bin_edges = np.histogram(self.img, bins=200)
+        except:
+            ind = np.isfinite(self.img)
+            self.yvals, bin_edges = np.histogram(self.img[ind], 
+                                                 bins=200)
 
-        self.yvals, bin_edges = np.histogram(self.img, bins=200)
+
         self.yvals = self.yvals.astype(np.float32)
         #move histogram range to representative area: 
         cdf = np.cumsum(self.yvals) / self.yvals.sum()
+#         import pylab as plt
+# 
+#         plt.plot(bin_edges[:-1],cdf)
+#         plt.show()
+        
         i0 = np.argmax(cdf>0.02)
         i1 = np.argmax(cdf>0.98)
         mnImg = bin_edges[i0]
         mxImg = bin_edges[i1]
+#         print(mnImg, mxImg)
         #one bin for every  N pixelvalues
-        nBins = np.clip(int( ( mxImg - mnImg) / binEveryNPxVals ),25,50)
-        self.yvals, bin_edges = np.histogram(self.img, bins=nBins, 
+        nBins = 50#np.clip(int( ( mxImg - mnImg) / binEveryNPxVals ),25,100)
+        if ind is not None:
+            img = self.img[ind]
+
+        self.yvals, bin_edges = np.histogram(img, bins=nBins, 
                                                  range=(mnImg, mxImg))
+       
         #bin edges give start and end of an area-> move that to the middle:
         self.xvals = bin_edges[:-1]+np.diff(bin_edges)*0.5
         
@@ -60,8 +78,8 @@ class FitHistogramPeaks(object):
         self.yvals = self.yvals[valid]
         self.xvals = self.xvals[valid]
         
-        
-        self.fitParams = []
+ 
+    
         
         yvals = self.yvals.copy()
         xvals = self.xvals
@@ -70,6 +88,7 @@ class FitHistogramPeaks(object):
         mindist = 5
         
         peaks = self._findPeaks(yvals,mindist, maxNPeaks, minY)
+
         valleys = self._findValleys(yvals, peaks)
         positions = self._sortPositions(peaks,valleys)
 
@@ -122,6 +141,13 @@ class FitHistogramPeaks(object):
             
         #sort for increasing x positions
         self.fitParams = sorted(self.fitParams, key=lambda p: p[1])
+
+#         print(self.fitParams)
+#         import pylab as plt
+#         plt.plot(self.xvals,self.yvals)
+#         for f in self.fitValues():
+#             plt.plot(self.xvals, f)
+#         plt.show()
 
     
     @staticmethod

@@ -3,6 +3,7 @@ various image input/output routines
 '''
 import numpy as np
 import cv2
+import os
 from six import string_types
 from imgProcessor import ARRAYS_ORDER_IS_XY
 
@@ -25,6 +26,20 @@ def _changeArrayDType(img, dtype, **kwargs):
     if issubclass(np.dtype(dtype).type, np.integer):
         return toUIntArray(img, dtype, **kwargs)
     return img.astype(dtype)
+
+
+# def bitDepth(path, img=None):
+#     '''
+#     there are no python filetypes between 8bit and 16 bit
+#     so, to find out whether an image is 12 or 14 bit resolved
+#     we need to check actual file size and image shape
+#     '''
+#     if img is None:
+#         img = imread(img)
+#     size = os.path.getsize(path)*8
+#     print (size, img.size,8888888,img.shape,  size/img.size)
+#     kh
+#     return size/img.size
 
 
 def imread(img, color=None, dtype=None, ignore_order=False):

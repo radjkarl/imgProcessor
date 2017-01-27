@@ -94,7 +94,7 @@ def gridLinesFromVertices(edges, nCells, subgrid=None, dtype=float):
                 spts2 = cv2.perspectiveTransform(spts, homography)[0]
                 subh[n::len(sh)] = spts2.reshape(ny,nx+1,2)
         if sv:
-            subh = np.empty(shape=(ny+1,nx*len(sv),2), dtype=np.float32)
+            subv = np.empty(shape=(ny+1,nx*len(sv),2), dtype=np.float32)
             last_si = 0
             sspts = pts.reshape(1,ny+1,nx+1,2)
             sspts = sspts[:,:,:-1]
@@ -104,9 +104,8 @@ def gridLinesFromVertices(edges, nCells, subgrid=None, dtype=float):
                 sspts[...,0]+=si-last_si
                 last_si = si
                 spts2 = cv2.perspectiveTransform(sspts, homography)[0]
-                subh[:,n::len(sv)] = spts2.reshape(ny+1,nx,2)
-            subh = np.swapaxes(subh,0,1)
-    
+                subv[:,n::len(sv)] = spts2.reshape(ny+1,nx,2)
+            subv = np.swapaxes(subv,0,1)
     return [horiz, vert, subh,subv]
     
 

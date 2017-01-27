@@ -31,7 +31,7 @@ class LensDistortion(object):
         self.mapx, self.mapy = None, None
 
     # TODO: does not match overriden method
-    def calibrate(self, board_size, method='Chessboard', images=[],
+    def calibrate(self, board_size=(8,6), method='Chessboard', images=[],
                   max_images=100, sensorSize_mm=None,
                   detect_sensible=True):
         '''
@@ -337,13 +337,13 @@ class LensDistortion(object):
         d = self.coeffs['distortionCoeffs']
 
         (newCameraMatrix, self.roi) = cv2.getOptimalNewCameraMatrix(cam,
-                                                                    d, (imgWidth,
-                                                                        imgHeight), 1,
-                                                                    (imgWidth, imgHeight))
+                                        d, (imgWidth,
+                                            imgHeight), 1,
+                                        (imgWidth, imgHeight))
 
         self.mapx, self.mapy = cv2.initUndistortRectifyMap(cam,
-                                                           d, None, newCameraMatrix,
-                                                           (imgWidth, imgHeight), cv2.CV_32FC1)
+                                       d, None, newCameraMatrix,
+                                       (imgWidth, imgHeight), cv2.CV_32FC1)
         return self.mapx, self.mapy
 
     def getCameraParams(self):
@@ -376,6 +376,12 @@ class LensDistortion(object):
         posx += dx
         posy += dy
         return posx, posy
+
+    def getShift(self, width, height):
+        mapx, mapy = self.getUndistortRectifyMap(width, height)
+        posy, posx = np.mgrid[0:height, 0:width].astype(np.float32)
+        return ((mapx-posx)**2+(mapy-posy)**2)**0.5
+
 
     def getDeflection(self, width, height):
         mapx, mapy = self.getUndistortRectifyMap(width, height)

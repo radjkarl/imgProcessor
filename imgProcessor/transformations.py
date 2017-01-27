@@ -181,7 +181,7 @@ def applyColorMap(gray, cmap='flame'):
     lut = np.empty(shape=(256,3))
     cmap = (
         #taken from pyqtgraph GradientEditorItem
-        (0.0, (0, 0, 0)),
+        (0, (0, 0, 0)),
         (0.2, (7, 0, 220)),
         (0.5, (236, 0, 134)), 
         (0.8, (246, 246, 0)), 

@@ -14,6 +14,21 @@ from imgProcessor.features.SingleTimeEffectDetection import SingleTimeEffectDete
 # from imgProcessor.utils.baseClasses import Iteratives
 
 
+
+
+
+def simpleFlatFieldFromCalibration(imgs, bg_imgs):
+    img = np.mean([imread(i, dtype=np.float32) for i in imgs], axis=0)
+    bg = np.mean([imread(i, dtype=np.float32) for i in bg_imgs], axis=0)
+    img-=bg
+    mx = median_filter(img[::10,::10], 3).max()
+    img/=mx
+    return img
+
+
+
+
+
 def flatFieldFromCalibration(images, bgImages=None, calcStd=False, nlf=None, nstd=10):
     '''
     returns a flat-field correction map

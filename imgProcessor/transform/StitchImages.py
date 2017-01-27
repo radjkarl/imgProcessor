@@ -20,7 +20,7 @@ class StitchImages(object):
         self.base_img_rgb = imread(img)
 
     def addImg(self, img, side='bottom', overlap=50, overlapDeviation=0,
-               rotation=0, rotationDeviation=0, backgroundColor=None):
+               rotation=0, rotationDeviation=0, backgroundColor=None, params=None):
         '''
         @param side: 'left', 'right', 'top', 'bottom', default side is 'bottom'
         @param overlap: overlap guess in pixels of both images
@@ -49,12 +49,16 @@ class StitchImages(object):
         assert img_rgb.shape[1] == self.base_img_rgb.shape[
             1], 'image size must be identical in stitch-direction'
 
-        # find overlap
-        offsx, offsy, rot = self._findOverlap(
-            img_rgb, overlap, overlapDeviation, rotation, rotationDeviation)
+
+        if params is None:
+            # find overlap
+            params = (offsx, offsy, rot) = self._findOverlap(
+                img_rgb, overlap, overlapDeviation, rotation, rotationDeviation)
+        else:
+            offsx, offsy, rot = params
         img_rgb = self._rotate(img_rgb, rot)
 
-        self._lastParams = (offsx, offsy, rot)
+        self._lastParams = params
 
         # move values in x axis:
         img_rgb = np.roll(img_rgb, offsx)
@@ -107,7 +111,7 @@ class StitchImages(object):
             angles = np.linspace(
                 rotation - rotationDeviation,
                 rotation + rotationDeviation,
-                int(rotationDeviation) * 5)
+                max(int(rotationDeviation * 5),5) )
 
         results = []
         locations = []

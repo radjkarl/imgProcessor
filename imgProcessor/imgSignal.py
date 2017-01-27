@@ -4,9 +4,52 @@ from __future__ import print_function
 import numpy as np
 from imgProcessor.imgIO import imread
 from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
+from fancytools.math.findXAt import findXAt
+from scipy.optimize.minpack import curve_fit
 
 
+def scaleSignalCut(img, ratio, nbins=100):
+    '''
+    scaling img cutting x percent of top and bottom part of histogram
+    '''
+    start, stop = scaleSignalCutParams(img, ratio, nbins)
+    img = img-start
+    img/=(stop-start)
+    return img
 
+
+def scaleSignalCutParams(img, ratio, nbins=500):
+    try:
+        h,bins = np.histogram(img, nbins)
+    except ValueError:
+        #is has nan
+        h,bins = np.histogram(img[np.isfinite(img)], nbins)
+        
+    h = np.cumsum(h).astype(float)
+    h/=h[-1]
+
+    
+    b0 = bins[0]
+    bins = bins[1:]
+    bins+=0.5*(bins[0]-b0)
+
+#     import pylab as plt
+#     plt.plot(bins, h)
+#     plt.show()
+#     h/=h[-1]
+
+    try:
+        start = findXAt(bins, h, ratio)
+    except IndexError:
+        start = b0
+    try:
+        stop = findXAt(bins, h, 1-ratio)
+    except IndexError:
+        stop = bins[-1]
+#         print(88)
+#     print(start, stop)
+    return start, stop 
+    
 def scaleSignal(img, fitParams=None, backgroundToZero=False, reference=None):
     '''
     scale the image between...
@@ -21,6 +64,10 @@ def scaleSignal(img, fitParams=None, backgroundToZero=False, reference=None):
     '''
     img = imread(img)
     if reference is not None: 
+#         def fn(ii, m,n):
+#             return ii*m+n
+#         curve_fit(fn, img[::10,::10], ref[::10,::10])
+        
         low, high = signalRange(img, fitParams)
         low2, high2 = signalRange(reference)
         img = np.asfarray(img)
@@ -73,11 +120,23 @@ def hasBackground(fitParams):
     return r < 100
 
 
+def  signalMinimum2(img):
+    f = FitHistogramPeaks(img)
+    spos = getSignalPeak(f.fitParams)[1]
+    bpos = getBackgroundPeak(f.fitParams)[1]
+    ind = np.logical_and(f.xvals>bpos, f.xvals<spos)
+#     print(bpos,spos, f.xvals[ind])
+    
+    i = np.argmin(f.yvals[ind])
+    return f.xvals[ind][i]
+    
+    
+
 def  signalMinimum(img, fitParams=None, n_std=3):
 
     if fitParams is None:
         fitParams = FitHistogramPeaks(img).fitParams
-
+    print(fitParams)
     assert len(fitParams) > 1, 'need 2 peaks so get minimum signal'
 
     i= signalPeakIndex(fitParams)
@@ -101,7 +160,7 @@ def  signalMinimum(img, fitParams=None, n_std=3):
         return i[np.logical_and(i>bg[1], i<signal[1])][0]
     except IndexError:
         #this error shouldn't occur... well
-        return min(smn,bmx)
+        return max(smn,bmx)
 
 
 def getSignalMinimum(fitParams, n_std=3):
@@ -155,7 +214,7 @@ def signalStd(img):
     return signal[2]
 
 
-def backgroundMean(img, fitParams=None,):
+def backgroundMean(img, fitParams=None):
     try:
         if fitParams is None:
             fitParams = FitHistogramPeaks(img).fitParams

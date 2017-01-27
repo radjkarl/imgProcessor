@@ -39,6 +39,7 @@ class PerspectiveCorrection(object):
                  px_per_phys_unit=None,
                  new_size=(None,None),
                  in_plane=False,
+                 border=0,
                  cv2_opts={} ):
         '''
         correction(warp+intensity factor) + uncertainty due to perspective distortion
@@ -66,6 +67,7 @@ class PerspectiveCorrection(object):
                      'new_size':new_size,
                      'in_plane':in_plane,
                      'cv2_opts':cv2_opts,
+                     'border':border,
                      'shape':img_shape[:2]}
         if cameraMatrix is None:
             cameraMatrix = genericCameraMatrix(img_shape)
@@ -134,11 +136,19 @@ class PerspectiveCorrection(object):
                 else:
 #                     dst = np.array(self.obj_points[:,:2],np.float32)
                     sx,sy = self._newBorders
+#                     dst = np.float32([
+#                         [0,  0],
+#                         [sx, 0],
+#                         [sx, sy],
+#                         [0,  sy]])
+
+                    b = self.opts['border']
+
                     dst = np.float32([
-                        [0,  0],
-                        [sx, 0],
-                        [sx, sy],
-                        [0,  sy]])
+                        [b,  b],
+                        [sx-b, b],
+                        [sx-b, sy-b],
+                        [b,  sy-b]])
                     
                 self._homography = cv2.getPerspectiveTransform(src, dst)
     
@@ -284,7 +294,9 @@ class PerspectiveCorrection(object):
         
         snew = self._newBorders
 
-        sx,sy = snew[0]//n0, snew[1]//n1
+        b = self.opts['border']
+        assert b==0,'border not implemented'
+        sx,sy = (snew[0]-2*b)//n0, (snew[1]-2*b)//n1
         
 #         out = np.empty(snew[::-1], dtype=self.img.dtype)        
         out = np.empty((sy*n1,sx*n0), dtype=self.img.dtype)        
@@ -299,7 +311,8 @@ class PerspectiveCorrection(object):
         # warp every cell in grid:
         for ix in range(n0):
             for iy in range(n1):
-                quad = grid[ix:ix+2,iy:iy+2].reshape(4,2)[np.array([0,2,3,1])]
+                quad = grid[ix:ix+2,iy:iy+2].reshape(
+                                    4,2)[np.array([0,2,3,1])]
                 hcell = cv2.getPerspectiveTransform(
                                 quad.astype(np.float32), objP)
 
@@ -330,6 +343,7 @@ class PerspectiveCorrection(object):
         if not self._homography_is_fixed:
             self._homography = None
         h = self.homography
+
         if self.opts['do_correctIntensity']:
             #TODO: replace with new tilt factor
             self.img = self.img / self._getTiltFactor(self.img.shape)
@@ -338,6 +352,9 @@ class PerspectiveCorrection(object):
                                      self._newBorders,
                                      flags=cv2.INTER_LANCZOS4,
                                      **self.opts['cv2_opts'])
+        #TODO: embedd properly
+#         if hasattr(self, '_nrot')
+#             return np.rot90(warped, self._nrot)
         return warped
 
 
@@ -731,7 +748,21 @@ class PerspectiveCorrection(object):
         return normEmissivity#, vf, normEmissivity, beta2, s
         
         
-        
+    @property
+    def areaRatio(self):
+        #AREA RATIO AFTER/BEFORE:
+            #AREA OF QUADRILATERAL:
+        if self.quad is None:
+            q = self.quadFromH()[0]
+        else:
+            q = self.quad
+#         print(q,88888888888)
+        quad_size = 0.5* abs( (q[2,0]-q[0,0])*(q[3,1]-q[1,1]) + 
+                               (q[3,0]-q[1,0])*(q[0,1]-q[2,1]))
+        sx,sy = self._newBorders
+#         print(sx,sy, quad_size,(sx*sy)/quad_size )
+#         jh
+        return (sx*sy)/quad_size
 
 
     def standardUncertainties(self, focal_Length_mm, f_number, 
@@ -786,13 +817,7 @@ class PerspectiveCorrection(object):
 
         self.maps['depthMap'] = depthMap
 
-        #AREA RATIO AFTER/BEFORE:
-            #AREA OF QUADRILATERAL:
-        q = self.quad
-        quad_size = 0.5* abs( (q[2,0]-q[0,0])*(q[3,1]-q[1,1]) + 
-                               (q[3,0]-q[1,0])*(q[0,1]-q[2,1]))
-        sx,sy = self._newBorders
-        self.areaRatio = (sx*sy)/quad_size
+
 
         #WARP ALL FIELD TO NEW PERSPECTIVE AND MULTIPLY WITH PXSIZE FACTOR:  
         f = (pxSizeFactorX**2+pxSizeFactorY**2)**0.5
@@ -864,6 +889,11 @@ class PerspectiveCorrection(object):
 
 
     def _poseFromHomography(self):
+        quad = self.quadFromH()
+        return self._poseFromQuad(quad)
+      
+        
+    def quadFromH(self):
         sy,sx = self.img.shape[:2]
         #image edges:
         objP = np.array([[
@@ -872,9 +902,8 @@ class PerspectiveCorrection(object):
                     [sx, sy],
                     [0, sy],
                     ]],dtype=np.float32)
-        quad = cv2.perspectiveTransform(objP, self._Hinv)
-        return self._poseFromQuad(quad)
-        
+        return cv2.perspectiveTransform(objP, self._Hinv)   
+
 
     def objCenter(self):
         if self.quad is None:

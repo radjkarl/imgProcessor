@@ -75,6 +75,7 @@ class CameraCalibration(object):
             'shape':None,
             'balance':{} #factor sharpness/smoothness of image used for wiener deconvolution
             }
+        self.temp = {}
 
     #TODO: rename
     def _getC(self, typ, light):
@@ -268,7 +269,7 @@ class CameraCalibration(object):
                                            [date, info, arr, error])
 
 
-    def addLens(self, lens, date, info='', light_spectrum='visible'):
+    def addLens(self, lens, date=None, info='', light_spectrum='visible'):
         '''
         lens -> instance of LensDistortion or saved file
         '''
@@ -510,10 +511,10 @@ class CameraCalibration(object):
                     else:
                         bg = imread(bgImages[0])
                 else:
-                    bg = imread(bgImages)
-                    
+                    bg = imread(bgImages)    
             else:
                 bg = self.calcDarkCurrent(exposuretime, date)
+            self.temp['bg']=bg
             image-=bg
 
 

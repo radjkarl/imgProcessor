@@ -28,7 +28,7 @@ def SNRaverage(snr, method='average', excludeBackground=True,
                         excludeBackground = False
                 if excludeBackground:
                     backgroundLevel = getSignalMinimum(f)
-            except ValueError:
+            except (ValueError, AssertionError):
                 backgroundLevel = snr.min()
         if excludeBackground:
             snr = snr[snr >= backgroundLevel]

@@ -7,13 +7,15 @@ import cv2
 import numpy as np
 from skimage.transform import resize
 
-from imgProcessor.imgSignal import signalRange
+from imgProcessor.imgSignal import scaleSignalCutParams
+from imgProcessor.transformations import toUIntArray
 
 
 
 class PatternRecognition(object):
 
-    def __init__(self, image, fineKernelSize=3, maxImageSize=1000, minInlierRatio=0.15,
+    def __init__(self, image, fineKernelSize=3, maxImageSize=1000, 
+                 minInlierRatio=0.15, minInliers=25,
                  fast=False):
         '''
         maxImageSize -> limit image size to speed up process, set to False to deactivate
@@ -25,6 +27,7 @@ class PatternRecognition(object):
         self.signal_ranges = []
         self.maxImageSize = maxImageSize
         self.minInlierRatio = minInlierRatio
+        self.minInliers = minInliers
         self._fH = None  # homography factor, if image was resized
 
         self.base8bit = self._prepareImage(image)
@@ -90,16 +93,17 @@ class PatternRecognition(object):
         The pattern comparator need images to be 8 bit
         -> find the range of the signal and scale the image
         '''
-        r = signalRange(img, nSigma=3)
-        self.signal_ranges.append(r)
 
-        if img.dtype == np.uint8:
-            return img
-        img = 255 * ((np.asfarray(img) - r[0]) / (r[1] - r[0]))
-        img[img < 0] = 0
-        img[img > 255] = 255
-        img = img.astype(np.uint8)
-        return img
+        r = scaleSignalCutParams(img,0.02)#, nSigma=3)
+        self.signal_ranges.append(r)
+        return toUIntArray(img, dtype=np.uint8, range=r)
+#         if img.dtype == np.uint8:
+#             return img
+#         img = 255 * ((np.asfarray(img) - r[0]) / (r[1] - r[0]))
+#         img[img < 0] = 0
+#         img[img > 255] = 255
+#         img = img.astype(np.uint8)
+#         return img
 
     def _filterMatches(self, matches, ratio=0.75):
         filtered_matches = []
@@ -108,10 +112,8 @@ class PatternRecognition(object):
                 filtered_matches.append(m[0])
         return filtered_matches
 
+
     def invertHomography(self, H):
-        # normalize
-        #         H /= H[2,2]
-        # invert homography
         return np.linalg.inv(H)
 
 
@@ -185,7 +187,7 @@ class PatternRecognition(object):
             inliers = np.sum(status)
             print('%d / %d  inliers/matched' %(inliers, len(status)))
             inlierRatio = inliers/ len(status)
-            if self.minInlierRatio>inlierRatio:
+            if self.minInlierRatio>inlierRatio or inliers<self.minInliers:
                 raise Exception('bad fit!')
 
         # scale with _fH, if image was resized

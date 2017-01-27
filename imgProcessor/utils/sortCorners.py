@@ -18,7 +18,7 @@ def sortCorners(corners):
     corners = np.asarray(corners)
     # bring edges in order:
     corners2 = corners[ConvexHull(corners).vertices]
-
+   
     if len(corners2) == 3:
         # sometimes ConvexHull one point is missing because it is
         # within the hull triangle

@@ -3,10 +3,12 @@ from __future__ import division
 import numpy as np
 from numba import njit
 import cv2
+from scipy.ndimage.filters import gaussian_filter
 
 
 def fastFilter(arr, ksize=30, every=None, resize=True, fn='median',
                   interpolation=cv2.INTER_LANCZOS4,
+                  smoothksize=0,
                   borderMode=cv2.BORDER_REFLECT):
     '''
     fn['nanmean', 'mean', 'nanmedian', 'median']
@@ -35,6 +37,11 @@ def fastFilter(arr, ksize=30, every=None, resize=True, fn='median',
          }[fn]
     ss0,ss1 = c(arr, out, ksize, every)
     out = out[:ss0,:ss1]
+    
+    if smoothksize:
+        out = gaussian_filter(out, smoothksize)
+        
+    
     if not resize:
         return out
     return cv2.resize(out, arr.shape[:2][::-1],
