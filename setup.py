@@ -60,4 +60,6 @@ setup(
         read('CHANGES.rst') + '\n\n' +
         read('AUTHORS.rst')
     ),
+    zip_safe=False,
+    
 )
