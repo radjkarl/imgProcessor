@@ -1,4 +1,3 @@
-# coding=utf-8================================================
 imgProcessor - A python image processing library
 ================================================
 
