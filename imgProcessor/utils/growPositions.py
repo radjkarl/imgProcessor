@@ -31,9 +31,26 @@ def growPositions(ksize):
     return pos-ksize, dist[pos0, pos1]
 
 if __name__ == '__main__':
-    ksize=3
-    positions, _ = growPositions(ksize)
-    print(positions)
+    import pylab as plt
+    import sys
+    
+    ksize=5
+    positions, dist = growPositions(ksize)
+    
+    if 'no_window' not in sys.argv:
+        px,py = positions[:,0], positions[:,1]
+        
+        plt.figure('positions')
+        plt.plot(px,py)
+        for n,(x, y) in enumerate(zip(px,py)):
+            #number every marker:
+            plt.text(x, y, str(n), color="red", fontsize=12)
+        
+        plt.figure('distances')
+        plt.plot(dist)
+
+        plt.show()
+
     
     
     

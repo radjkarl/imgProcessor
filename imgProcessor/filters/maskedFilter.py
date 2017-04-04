@@ -20,13 +20,7 @@ def maskedFilter(arr, mask, ksize=30, fill_mask=True,
     fill_mask=False:
     masked areas are ignored
     '''
-    if fn == 'median':
-        raise Exception('[median] doesnt work at the moment')
-    c = {#'median':_calcMedian,
-         'mean':_calcMean,
-         }[fn]
-    
-    
+
     if fill_mask:
         mask1 = mask 
         out = arr
@@ -34,7 +28,12 @@ def maskedFilter(arr, mask, ksize=30, fill_mask=True,
         mask1 = ~mask
         out = np.full_like(arr, fill_value=np.nan)
     mask2 = ~mask 
-    c(arr, mask1, mask2, out, ksize)
+    
+    if fn == 'mean':
+        _calcMean(arr, mask1, mask2, out, ksize//2)
+    else:
+        buff = np.empty(shape=(ksize*ksize), dtype=arr.dtype)
+        _calcMedian(arr, mask1, mask2, out, ksize//2, buff)
     return out
     
 #TODO: only filter method differs
@@ -73,30 +72,35 @@ def _calcMean(arr, mask1, mask2, out, ksize):
                     out[i,j] = val/n
 
 
+@njit
+def _calcMedian(arr, mask1, mask2, out, ksize, buff):
+    gx = arr.shape[0]
+    gy = arr.shape[1]
+    for i in range(gx):
+        for j in range(gy):   
+            if mask1[i,j]:
+                xmn = i-ksize
+                if xmn < 0:
+                    xmn = 0
+                xmx = i+ksize
+                if xmx > gx:
+                    xmx = gx 
+                ymn = j-ksize
+                if ymn < 0:
+                    ymn = 0
+                ymx = j+ksize
+                if ymx > gy:
+                    ymx = gy
+                n=0
+                for ii in range(xmn,xmx):
+                    for jj in range(ymn,ymx):
+                        if mask2[ii,jj]:
+                            buff[n]=arr[ii,jj]
+                            n += 1
+                if n>0:
+                    out[i,j] = np.median(buff[:n])
 
-#TODO
-# @njit
-# def _calcMedian(arr, mask, ksize):
-#     gx = arr.shape[0]
-#     gy = arr.shape[1]
-#     for i in range(gx):
-#         for j in range(gy):   
-#             if mask[i,j]:
-#                 xmn = i-ksize
-#                 if xmn < 0:
-#                     xmn = 0
-#                 xmx = i+ksize
-#                 if xmx > gx:
-#                     xmx = gx 
-#                 ymn = j-ksize
-#                 if ymn < 0:
-#                     ymn = 0
-#                 ymx = j+ksize
-#                 if ymx > gy:
-#                     ymx = gy
-#                 arr[i,i]=np.mean(arr[xmn:xmx, ymn:ymx])
-
-   
+             
 
 if __name__ == '__main__':
     import sys
@@ -115,9 +119,8 @@ if __name__ == '__main__':
     img[:,110:130]=np.nan
 
     mask = np.isnan(img)
-    print (mask.sum())
-    bg1 = maskedFilter(img,mask, 40, fn='mean')
-    bg2 = maskedFilter(img,mask, 40, fn='mean')
+    bg1 = maskedFilter(img.copy(),mask, 80, fn='mean')
+    bg2 = maskedFilter(img.copy(),mask, 80, fn='median')
     
     if 'no_window' not in sys.argv:
         plt.figure('image')
@@ -129,8 +132,8 @@ if __name__ == '__main__':
         plt.figure('mean')
         plt.imshow(bg2, interpolation='none')
         plt.colorbar()
-        plt.figure('difference (median)')
-        plt.imshow(img-bg1, interpolation='none')
+        plt.figure('difference (mean-median)')
+        plt.imshow(bg1-bg2, interpolation='none')
         plt.colorbar()
         
         plt.show()

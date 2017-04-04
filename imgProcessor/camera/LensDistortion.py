@@ -29,9 +29,10 @@ class LensDistortion(object):
         # SAVED CALIBRATION SETTINGS
         self.opts = {}
         self.mapx, self.mapy = None, None
+        self.findCount = 0
 
     # TODO: does not match overriden method
-    def calibrate(self, board_size=(8,6), method='Chessboard', images=[],
+    def calibrate(self, board_size=(8, 6), method='Chessboard', images=[],
                   max_images=100, sensorSize_mm=None,
                   detect_sensible=True):
         '''
@@ -104,10 +105,10 @@ class LensDistortion(object):
         this method must be called before .coeffs are obtained
         '''
         self.img = type('Dummy', (object,), {})
-        if imgProcessor.ARRAYS_ORDER_IS_XY:
-            self.img.shape = shape[::-1]
-        else:
-            self.img.shape = shape
+#         if imgProcessor.ARRAYS_ORDER_IS_XY:
+#             self.img.shape = shape[::-1]
+#         else:
+        self.img.shape = shape
 
     def addImgStream(self, img):
         '''
@@ -271,7 +272,11 @@ class LensDistortion(object):
         read the distortion coeffs from file
         '''
         s = dict(np.load(filename))
-        self.coeffs = s['coeffs'][()]
+        try:
+            self.coeffs = s['coeffs'][()]
+        except KeyError:
+            #LEGENCY - remove
+            self.coeffs = s
         try:
             self.opts = s['opts'][()]
         except KeyError:
@@ -291,27 +296,26 @@ class LensDistortion(object):
             pts = np.expand_dims(pts, axis=0)
 
         (newCameraMatrix, roi) = cv2.getOptimalNewCameraMatrix(cam,
-                                                             d, s[::-1], 1,
-                                                                s[::-1])
+                                                               d, s[::-1], 1,
+                                                               s[::-1])
         if not keepSize:
             xx, yy = roi[:2]
-            pts[0,0]-=xx
-            pts[0,1]-=yy
-            
-        return cv2.undistortPoints(pts, 
+            pts[0, 0] -= xx
+            pts[0, 1] -= yy
+
+        return cv2.undistortPoints(pts,
                                    cam, d, P=newCameraMatrix)
 
-    def correct(self, image, keepSize=False):
+    def correct(self, image, keepSize=False, borderValue=np.nan):
         '''
         remove lens distortion from given image
         '''
         image = imread(image)
         (h, w) = image.shape[:2]
         mapx, mapy = self.getUndistortRectifyMap(w, h)
-
         self.img = cv2.remap(image, mapx, mapy, cv2.INTER_LINEAR,
-                             borderMode=cv2.BORDER_TRANSPARENT
-                             # borderValue=np.nan
+                             borderMode=cv2.BORDER_CONSTANT,
+                             borderValue=borderValue
                              )
         if not keepSize:
             xx, yy, ww, hh = self.roi
@@ -337,13 +341,13 @@ class LensDistortion(object):
         d = self.coeffs['distortionCoeffs']
 
         (newCameraMatrix, self.roi) = cv2.getOptimalNewCameraMatrix(cam,
-                                        d, (imgWidth,
-                                            imgHeight), 1,
-                                        (imgWidth, imgHeight))
+                                                                    d, (imgWidth,
+                                                                        imgHeight), 1,
+                                                                    (imgWidth, imgHeight))
 
         self.mapx, self.mapy = cv2.initUndistortRectifyMap(cam,
-                                       d, None, newCameraMatrix,
-                                       (imgWidth, imgHeight), cv2.CV_32FC1)
+                                                           d, None, newCameraMatrix,
+                                                           (imgWidth, imgHeight), cv2.CV_32FC1)
         return self.mapx, self.mapy
 
     def getCameraParams(self):
@@ -380,33 +384,31 @@ class LensDistortion(object):
     def getShift(self, width, height):
         mapx, mapy = self.getUndistortRectifyMap(width, height)
         posy, posx = np.mgrid[0:height, 0:width].astype(np.float32)
-        return ((mapx-posx)**2+(mapy-posy)**2)**0.5
-
+        return ((mapx - posx)**2 + (mapy - posy)**2)**0.5
 
     def getDeflection(self, width, height):
         mapx, mapy = self.getUndistortRectifyMap(width, height)
-        ux = (1 / np.abs(np.gradient(mapx)[1])) - 1
-        uy = (1 / np.abs(np.gradient(mapy)[0])) - 1
-        ux[ux < 0] = 0
-        uy[uy < 0] = 0
+        ux = (1 / np.abs(np.gradient(mapx)[1]))
+        uy = (1 / np.abs(np.gradient(mapy)[0]))
+#         ux[ux < 0] = 0
+#         uy[uy < 0] = 0
         return ux, uy
 
-    def standardUncertainties(self):
+    def standardUncertainties(self, sharpness=0.5):
         '''
+        sharpness -> image sharpness // std of Gaussian PSF [px]
+
         returns a list of standard uncertainties for the x and y component:
         (1x,2x), (1y, 2y), (intensity:None)
         1. px-size-changes(due to deflection)
         2. reprojection error
         '''
         height, width = self.coeffs['shape']
-        ux, uy = self.getDeflection(width, height)
+        fx, fy = self.getDeflection(width, height)
         # is RMSE of imgPoint-projectedPoints
         r = self.coeffs['reprojectionError']
-        # transform to standard uncertainty
-        # we assume rectangular distribution:
-        ux /= 2 * 3 ** 0.5
-        uy /= 2 * 3 ** 0.5
-        return (ux, r), (uy, r), ()
+        t = (sharpness**2 + r**2)**0.5
+        return fx * t, fy * t
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@ import numpy as np
 from imgProcessor.features.PatternRecognition import PatternRecognition
 
 
-class PerspectiveTransformation(object):
+class PerspectiveImageStitching(object):
     '''
     fit or add an image to the first image of this display
     using perspective transformations
@@ -36,7 +36,8 @@ class PerspectiveTransformation(object):
     def addImg(self, img, overlap=None, direction='bottom'):
         '''
         '''
-        assert direction == 'bottom', 'only direction=bottom implemented by now'
+        assert direction == 'bottom', \
+            'only direction=bottom implemented by now'
 
         # CUT IMAGE TO ONLY COMPARE POINTS AT OVERLAP:
         if overlap is not None:
@@ -152,16 +153,24 @@ class PerspectiveTransformation(object):
 
             next_img_rgb = cv2.imread(next_img_path)
 
-            (H, inlierRatio, averagePointDistance,
+            (H, inlierRatio,
+             averagePointDistance,
              next_img, next_features,
-             next_descs, matches_subset) = self.pattern.findHomography(next_img_rgb)
+             next_descs,
+             matches_subset) = self.pattern.findHomography(next_img_rgb)
 
             # if ( closestImage == None or averagePointDistance <
             # closestImage['dist'] ):
             if (closestImage is None or inlierRatio > closestImage['inliers']):
-                closestImage = {'h':     H, 'inliers': inlierRatio, 'dist': averagePointDistance, 'path': next_img_path,
-                                'rgb':   next_img_rgb, 'img': next_img, 'feat': next_features, 'desc': next_descs,
-                                'match': matches_subset}
+                closestImage = {'h':       H,
+                                'inliers': inlierRatio,
+                                'dist':    averagePointDistance,
+                                'path':    next_img_path,
+                                'rgb':     next_img_rgb,
+                                'img':     next_img,
+                                'feat':    next_features,
+                                'desc':    next_descs,
+                                'match':   matches_subset}
 
         print("Closest Image: ", closestImage['path'])
         print("Closest Image Ratio: ", closestImage['inliers'])
@@ -271,7 +280,8 @@ class PerspectiveTransformation(object):
                 thresh = np.sum(thresh, axis=0)
 
             contours, _, _ = cv2.findContours(thresh.astype(np.uint8),
-                                              cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+                                              cv2.RETR_EXTERNAL,
+                                              cv2.CHAIN_APPROX_NONE)
             print("Found %d contours..." % (len(contours)))
 
             max_area = 0
@@ -294,8 +304,10 @@ class PerspectiveTransformation(object):
                 print("Maximum Contour: ", max_area)
                 print("Best Rectangle: ", best_rect)
 
-                final_img_crop = final_img[best_rect[1]:best_rect[1] + best_rect[3],
-                                           best_rect[0]:best_rect[0] + best_rect[2]]
+                final_img_crop = final_img[best_rect[1]:best_rect[1] +
+                                           best_rect[3],
+                                           best_rect[0]:best_rect[0] +
+                                           best_rect[2]]
 
                 final_img = final_img_crop
 
@@ -317,7 +329,7 @@ if __name__ == '__main__':
 
     def fn(overlap=None):
         # stitch 2 images taken in 2 different perspectives together:
-        p = PerspectiveTransformation(i1)
+        p = PerspectiveImageStitching(i1)
         fn.result = p.addImg(i2, overlap=overlap)
 
     # lets find out which method is faster:

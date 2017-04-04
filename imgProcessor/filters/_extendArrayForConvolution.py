@@ -17,12 +17,24 @@ def extendArrayForConvolution(arr, kernelXY,
     (kx, ky) = kernelXY
     kx//=2
     ky//=2
+    
+    #indexing 0:-0 leads to empty arrays and not the whole thing
+    #make it easy with assuming ksize=1 and removing extra size later:
+    nokx = kx == 0 
+    noky = ky == 0 
+    if nokx:
+        kx = 1
+    if noky:
+        ky = 1        
+    
     s0,s1 = arr.shape
     
     assert ky < s0
     assert kx < s1
     
     arr2 = np.zeros((s0+2*ky, s1+2*kx), dtype=arr.dtype)
+    if kx == 0:
+        kx = None
     arr2[ky:-ky,kx:-kx]=arr
     
     #original array:
@@ -68,7 +80,6 @@ def extendArrayForConvolution(arr, kernelXY,
     else:
         raise Exception('modey not supported')
     
-    
     if modex == 'wrap':
         arr2[ky:-ky,kx-1::-1] = rr
         arr2[ky:-ky,-kx:] = l     
@@ -78,6 +89,11 @@ def extendArrayForConvolution(arr, kernelXY,
     else:
         raise Exception('modex not supported')
 
+    if nokx:
+        arr2 = arr2[:,1:-1]
+    if noky:
+        arr2 = arr2[1:-1]    
+            
     return arr2
 
 

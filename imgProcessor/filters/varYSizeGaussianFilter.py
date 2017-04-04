@@ -56,13 +56,13 @@ def _2dConvolutionYdependentKernel(arr, out, kernels):
     k0,k1 = kernels.shape[1:]
     hk0 = k0//2
     hk1 = k1//2
-    for i in range(k0,s0-k0):
-        for j in  range(k1,s1-k1):
-            #2d convolution:
+    for i in range(hk0,s0+1):
+        for j in  range(hk1,s1+1):
+            #nan-aware 2d convolution:
             v = 0
             for ii in range(k0):
                 for jj in  range(k1):
-                    a = arr[i+ii-hk0, j+jj-hk1]
+                    a = arr[i+ii-k0, j+jj-k1]
                     if not np.isnan(a):
                         v += kernels[i-k0,ii,jj] * a
             out[i-k0,j-k1] = v
@@ -77,17 +77,19 @@ if __name__ == '__main__':
     res = (50,50)
     rad = 20
     stdy = (0,10)
+    stdx = 1
 
     arr = np.zeros(res)
     cv2.circle(arr, (res[1]//2, rad), rad, 1, -1)
 
-    arr2 = varYSizeGaussianFilter(arr, stdy,0)
+    arr2 = varYSizeGaussianFilter(arr, stdy,stdx)
     
     if 'no_window' not in sys.argv:
         f, (arr0,arr1) = plt.subplots(2)
         arr0.set_title('input')
         arr0.imshow(arr, interpolation='none')
-        arr1.set_title('output with ksize in y from %s to %s' %(stdy[0], stdy[1]))
+        arr1.set_title('output with ksize in y from %s to %s and stdx=%s' %(
+                                                        stdy[0], stdy[1], stdx))
         arr1.imshow(arr2, interpolation='none')
         plt.show()
     

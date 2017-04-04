@@ -4,8 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 
-from scipy.ndimage.filters import gaussian_filter, maximum_filter, \
-    minimum_filter
+from scipy.ndimage.filters import gaussian_filter
 from skimage.transform import rescale
 
 from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
@@ -20,7 +19,6 @@ from imgProcessor.utils.getBackground import getBackground
 class FlatFieldFromImgFit(object):
 
     def __init__(self, images=None, bg_images=None,
-                 #nstd=3, 
                  ksize=None, scale_factor=None):
         '''
         calculate flat field from multiple non-calibration images
@@ -47,9 +45,6 @@ class FlatFieldFromImgFit(object):
                 print('%s/%s' % (n + 1, len(images)))
                 self.addImg(i)
 
-
-
-
     def _firstImg(self, img):
 
         if self.scale_factor is None:
@@ -63,22 +58,20 @@ class FlatFieldFromImgFit(object):
         self._first = False
         return img
 
-
     def _read(self, img):
         img = imread(img, 'gray', dtype=float)
         img -= self.bg
         return img
 
-
     @property
     def result(self):
         return self._m.avg
 #         return minimum_filter(self._m.avg,self.ksize)
+
     @property
     def mask(self):
-        return self._m.n>0
+        return self._m.n > 0
 #         return minimum_filter(self._m.n>0,self.ksize)
-
 
     def addImg(self, i):
         img = self._read(i)
@@ -94,9 +87,9 @@ class FlatFieldFromImgFit(object):
         #sp = getSignalPeak(f.fitParams)
         mn = getSignalMinimum(f.fitParams)
         # non-backround indices:
-        ind = img > mn#sp[1] - self.nstd * sp[2]
+        ind = img > mn  # sp[1] - self.nstd * sp[2]
         # blur:
-        #blurred = minimum_filter(img, 3)#remove artefacts
+        # blurred = minimum_filter(img, 3)#remove artefacts
         #blurred = maximum_filter(blurred, self.ksize)
         blurred = img
         gblurred = gaussian_filter(blurred, self.ksize)
@@ -111,7 +104,7 @@ class FlatFieldFromImgFit(object):
         gblurred /= (mx - mn)
         blurred -= mn
         blurred /= (mx - mn)
-        
+
         ind = np.logical_and(ind, blurred > self._m.avg)
 
         self._m.update(gblurred, ind)
@@ -120,11 +113,20 @@ class FlatFieldFromImgFit(object):
 
         self._n += 1
 
-        if self._n == 1:
-            np.save('aaaaa', self.result)
-
-
 
 def vignettingFromDifferentObjects(imgs, bg):
+    '''
+    Extract vignetting from a set of images
+    containing different devices
+    The devices spatial inhomogeneities are averaged
+
+    This method is referred as 'Method C' in 
+    ---
+    K.Bedrich, M.Bokalic et al.:
+    ELECTROLUMINESCENCE IMAGING OF PV DEVICES:
+    ADVANCED FLAT FIELD CALIBRATION,2017
+    ---
+    '''
+
     f = FlatFieldFromImgFit(imgs, bg)
     return f.result, f._n

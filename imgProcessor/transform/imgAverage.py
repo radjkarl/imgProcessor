@@ -12,16 +12,11 @@ def imgAverage(images, copy=True):
     minimises RAM usage
     '''
     i0 = images[0]
-    out = imread(i0, dtype='noUint')
-
+    out = imread(i0, dtype='float')
     if copy and id(i0) == id(out):
         out = out.copy()
 
-    # moving average:
-    c = 2
     for i in images[1:]:
-        i = imread(i, dtype='noUint')
-        out += (i - out) / c
-        c += 1
-
+        out += imread(i, dtype='float')
+    out /= len(images)
     return out

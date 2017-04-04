@@ -3,11 +3,11 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import warnings
 
 import cv2
 
-from scipy.ndimage.filters import maximum_filter, minimum_filter  # , median_filter
-#from scipy.ndimage import gaussian_filter
+from scipy.ndimage.filters import minimum_filter, maximum_filter
 
 
 from fancytools.math.boundingBox import boundingBox
@@ -22,9 +22,10 @@ from imgProcessor.filters.fastFilter import fastFilter
 from imgProcessor.utils.getBackground import getBackground
 from imgProcessor.camera.LensDistortion import LensDistortion
 from fancytools.os.PathStr import PathStr
+from imgProcessor.array.subCell2D import subCell2DFnArray
 
 
-# START VEREINFACHEN
+# STARK VEREINFACHEN
 # FlatFieldFromImgFit rename into SubImgFlatField
 # FlatFieldFromImgFit rename into FullImgFlatField
 # NEIN: dieses von FFbase class erben lassen welche flatFieldFromFit hat
@@ -54,8 +55,8 @@ class ObjectVignettingSeparation(PatternRecognition):
     """
 
     def __init__(self, img, bg=None, maxDev=1e-4, maxIter=10, remove_border_size=0,
-                 feature_size=5,
-                 cameraMatrix=None, distortionCoeffs=None):#20
+                 # feature_size=5,
+                 cameraMatrix=None, distortionCoeffs=None):  # 20
         """
         Args:
             img (path or array): Reference image
@@ -67,14 +68,14 @@ class ObjectVignettingSeparation(PatternRecognition):
         """
         self.lens = None
         if cameraMatrix is not None:
-            self.lens =  LensDistortion()  
+            self.lens = LensDistortion()
             self.lens._coeffs['distortionCoeffs'] = distortionCoeffs
             self.lens._coeffs['cameraMatrix'] = cameraMatrix
 
         self.maxDev = maxDev
         self.maxIter = maxIter
         self.remove_border_size = remove_border_size
-        self.feature_size = feature_size
+        #self.feature_size = feature_size
         img = imread(img, 'gray')
 
         self.bg = bg
@@ -86,7 +87,7 @@ class ObjectVignettingSeparation(PatternRecognition):
                 self.bg = self.bg.astype(np.uint16)
 
             img = cv2.subtract(img, self.bg)
-            
+
         if self.lens is not None:
             img = self.lens.correct(img, keepSize=True)
         # CREATE TEMPLATE FOR PATTERN COMPARISON:
@@ -103,6 +104,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         self.Hs = []    # Homography matrices of all fitted images
         self.Hinvs = []  # same, but inverse
         self.fits = []  # all imaged, fitted to reference
+        self._fit_masks = []
 
         self._refined = False
 
@@ -116,7 +118,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         self._ff_mma.avg = arr
 
     def addImg(self, img, maxShear=0.015, maxRot=100, minMatches=12,
-               borderWidth=3):#borderWidth=100
+               borderWidth=3):  # borderWidth=100
         """
         Args:
             img (path or array): image containing the same object as in the reference image
@@ -148,25 +150,88 @@ class ObjectVignettingSeparation(PatternRecognition):
             self.fits.append(fit)
             # ADD IMAGE TO THE INITIAL flatField ARRAY:
             i = img > self.signal_ranges[-1][0]
-            
+
             # remove borders (that might have erroneous light):
             i = minimum_filter(i, borderWidth)
+
             self._ff_mma.update(img, i)
+
+            # create fit img mask:
+            mask = fit < self.signal_ranges[-1][0]
+            mask = maximum_filter(mask, borderWidth)
+            # IGNORE BORDER
+            r = self.remove_border_size
+            if r:
+                mask[:r, :] = 1
+                mask[-r:, :] = 1
+                mask[:, -r:] = 1
+                mask[:, :r] = 1
+            self._fit_masks.append(mask)
 
             # image added
             return fit
         return False
 
+    def error(self, nCells=15):
+        '''
+        calculate the standard deviation of all fitted images, 
+        averaged to a grid
+        '''
+        s0, s1 = self.fits[0].shape
+        aR = s0 / s1
+        if aR > 1:
+            ss0 = int(nCells)
+            ss1 = int(ss0 / aR)
+        else:
+            ss1 = int(nCells)
+            ss0 = int(ss1 * aR)
+        L = len(self.fits)
+
+        arr = np.array(self.fits)
+        arr[np.array(self._fit_masks)] = np.nan
+#         arr = np.ma.array(self.fits, mask=self._fit_masks)
+        avg = np.tile(np.nanmean(arr, axis=0), (L, 1, 1))
+        arr = (arr - avg) / avg
+#         for a in arr:
+#             a-=avg
+#             a/=avg
+#         arr/=avg
+#         np.save('aaaaaaabbc3', np.array(avg))
+#
+#         np.save('aaaaaaabbc1', self.fits)
+#         np.save('aaaaaaabbc2', np.array(arr))
+
+        out = np.empty(shape=(L, ss0, ss1))
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+
+            for n, f in enumerate(arr):
+                #                 dev = np.ma.array((f-avg)/avg, mask=mask)
+                #                 dev[mask]=np.nan
+                out[n] = subCell2DFnArray(f, np.nanmean, (ss0, ss1))
+
+#         np.save('aaaaaaabbc5', out)
+#         lk
+
+        return np.nanmean(out**2)**0.5  # np.nanstd(out)#/np.nanmean(out)
+
+#         std = np.nanstd(out, axis=0)
+#         return std/np.nanmean(out, axis=0)
+#         avg = np.tile(np.nanmean(out, axis=0), (L,1,1))
+#         out/=avg
+#         return np.nanmean(out**2,axis=0)**0.5
+
     def separate(self):
         self.flatField = self._createInitialflatField()
-        
-        #todo: remove follwing
+
+        # todo: remove follwing
 #         self.init_ff = self.flatField.copy()
-        
+
         for step in self:
             print('iteration step %s/%s' % (step, self.maxIter))
 
-        #TODO: remove smooth from here - is better be done in post proc.
+        # TODO: remove smooth from here - is better be done in post proc.
         smoothed_ff, mask = self.smooth()
 
         if self.lens is not None:
@@ -186,6 +251,23 @@ class ObjectVignettingSeparation(PatternRecognition):
 
         return ff.astype(float) / ff.max(), mask
 
+#
+#     def _mkFitMasks(self):
+#         # CREATE IMAGE FIT MASK:
+#         for i, f in enumerate(self.fits):
+#                 # INDEX FOREGROUND:
+#             mask = f < self.signal_ranges[i][0]
+#             mask = maximum_filter(mask, self.feature_size)
+#
+#             # IGNORE BORDER
+#             r = self.remove_border_size
+#             if r:
+#                 mask[:r, :] = 1
+#                 mask[-r:, :] = 1
+#                 mask[:, -r:] = 1
+#                 mask[:, :r] = 1
+#             self._fit_masks.append(mask)
+
     def __iter__(self):
         # use iteration to refine the flatField array
 
@@ -194,27 +276,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         self._last_dev = None
         self.n = 0  # iteration number
 
-        # CREATE IMAGE FIT MASK:
-        self._fit_masks = []
-        for i, f in enumerate(self.fits):
-                # INDEX FOREGROUND:
-            mask = f < self.signal_ranges[i][0]
-            mask = maximum_filter(mask, self.feature_size)
-#             import pylab as plt
-#             plt.imshow(self.flatField)
-# #             plt.figure(2)
-# #             plt.imshow(f)
-# #             from imgProcessor.signal import signalRange
-# #             print self.signal_ranges[i], signalRange(f)
-#             plt.show()
-            # IGNORE BORDER
-            r = self.remove_border_size
-            if r:
-                mask[:r, :] = 1
-                mask[-r:, :] = 1
-                mask[:, -r:] = 1
-                mask[:, :r] = 1
-            self._fit_masks.append(mask)
+#         self._mkFitMasks()
 
         return self
 
@@ -222,13 +284,13 @@ class ObjectVignettingSeparation(PatternRecognition):
         # THE IMAGED OBJECT WILL BE AVERAGED FROM ALL
         # INDIVITUAL IMAGES SHOWING THIS OBJECT FROM DIFFERENT POSITIONS:
         obj = MaskedMovingAverage(shape=self.obj_shape)
-        
+
         with np.errstate(divide='ignore', invalid='ignore'):
             for f, h in zip(self.fits, self.Hinvs):
                 warpedflatField = cv2.warpPerspective(self.flatField,
                                                       h, (f.shape[1], f.shape[0]))
                 obj.update(f / warpedflatField, warpedflatField != 0)
-        
+
         self.object = obj.avg
 
         # THE NEW flatField WILL BE OBTAINED FROM THE WARPED DIVIDENT
@@ -244,7 +306,7 @@ class ObjectVignettingSeparation(PatternRecognition):
                                       )
             div = np.nan_to_num(div)
             s.update(div, div != 0)
-            
+
         new_flatField = s.avg
 
         # STOP ITERATION?
@@ -345,8 +407,8 @@ class ObjectVignettingSeparation(PatternRecognition):
         return boundingBox(i)
 
 
-def vignettingFromSameObject(imgs, bg, inPlane_scale_factor=None,debugFolder=None,
-                            **kwargs):
+def vignettingFromRandomSteps(imgs, bg, inPlane_scale_factor=None,
+                              debugFolder=None, **kwargs):
     '''
     important: first image should shown most iof the device
     because it is used as reference
@@ -358,23 +420,21 @@ def vignettingFromSameObject(imgs, bg, inPlane_scale_factor=None,debugFolder=Non
     s = ObjectVignettingSeparation(imgs[0], bg,  **kwargs)
     for img in imgs[1:]:
         fit = s.addImg(img)
-        
+
         if debugFolder and fit is not False:
-            imwrite(debugFolder.join('fit_%s.tiff' %len(s.fits)), fit)
+            imwrite(debugFolder.join('fit_%s.tiff' % len(s.fits)), fit)
 
     if debugFolder:
-            imwrite(debugFolder.join('init.tiff'), s.flatField)
-
-
+        imwrite(debugFolder.join('init.tiff'), s.flatField)
 
     smoothed_ff, mask, flatField, object = s.separate()
 
-
     if debugFolder:
-            imwrite(debugFolder.join('object.tiff'), object)
-            imwrite(debugFolder.join('flatfield.tiff'), flatField, dtype=float)
-            imwrite(debugFolder.join('flatfield_smoothed.tiff'), smoothed_ff, dtype=float)
-            
+        imwrite(debugFolder.join('object.tiff'), object)
+        imwrite(debugFolder.join('flatfield.tiff'), flatField, dtype=float)
+        imwrite(debugFolder.join('flatfield_smoothed.tiff'), smoothed_ff,
+                dtype=float)
+
     return smoothed_ff, mask
 
 

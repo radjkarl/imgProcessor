@@ -4,9 +4,12 @@ from __future__ import division
 import cv2
 import numpy as np
 
-import imgProcessor as iP
+# import imgProcessor as iP
 from imgProcessor.transform.linearBlend import linearBlend
 from imgProcessor.imgIO import imread
+from scipy.optimize.optimize import brent
+# from skimage.filters.edges import roberts
+# from imgProcessor.filters.fastFilter import fastFilter
 
 
 class StitchImages(object):
@@ -16,7 +19,11 @@ class StitchImages(object):
         Find the Overlap between image parts and stitch them at a given edge together.
         There is no perspective correction.
         @param img: the base image
+        @param gradient: whether to use image gradient for fitting
+
+
         '''
+        # TODO: does not work with nan in img. so far
         self.base_img_rgb = imread(img)
 
     def addImg(self, img, side='bottom', overlap=50, overlapDeviation=0,
@@ -25,17 +32,17 @@ class StitchImages(object):
         @param side: 'left', 'right', 'top', 'bottom', default side is 'bottom'
         @param overlap: overlap guess in pixels of both images
         @param overLapDeviation uncertainty of overlap -> overlap in range(ov-deviation, ov+deviation)
-        @param rotation: max. rotational error between images
-        @param rotationDeviation: same as overLapDeviation, but for rotation
+        @param rotation: max. rotational error between images [DEG]
+        @param rotationDeviation: same as overLapDeviation, but for rotation [DEG]
         @param backgroundColor: if not None, treat this value as transparent within the stitching area
         '''
         img_rgb = imread(img)
 
-        if iP.ARRAYS_ORDER_IS_XY:
-            side = {'left': 'top',
-                    'right': 'bottom',
-                    'top': 'left',
-                    'bottom': 'right'}[side]
+#         if iP.ARRAYS_ORDER_IS_XY:
+#             side = {'left': 'top',
+#                     'right': 'bottom',
+#                     'top': 'left',
+#                     'bottom': 'right'}[side]
 
         # the following algorithm is based on side = 'bottom', so
         if side in ('top', 'left'):
@@ -48,7 +55,6 @@ class StitchImages(object):
         # check image shape
         assert img_rgb.shape[1] == self.base_img_rgb.shape[
             1], 'image size must be identical in stitch-direction'
-
 
         if params is None:
             # find overlap
@@ -77,6 +83,9 @@ class StitchImages(object):
 
     @staticmethod
     def _rotate(img, angle):
+        '''
+        angle [DEG]
+        '''
         s = img.shape
         if angle == 0:
             return img
@@ -105,33 +114,28 @@ class StitchImages(object):
         imgcut = self.base_img_rgb[s[0] - overlapDeviation - overlap:, :]
         template = img_rgb[:overlap, ho:s[1] - ho]
 
-        if rotationDeviation == 0:
-            angles = [rotation]
-        else:
-            angles = np.linspace(
-                rotation - rotationDeviation,
-                rotation + rotationDeviation,
-                max(int(rotationDeviation * 5),5) )
-
-        results = []
-        locations = []
-        for a in angles:
-            rotTempl = self._rotate(template, a)
-
+        def fn(angle):
+            rotTempl = self._rotate(template, angle)
             # Apply template Matching
-            res = cv2.matchTemplate(rotTempl.astype(np.float32),
-                                    imgcut.astype(np.float32),
-                                    cv2.TM_CCORR_NORMED)
-            results.append(res.mean())
-            locations.append(cv2.minMaxLoc(res)[-1])
+            fn.res = cv2.matchTemplate(rotTempl.astype(np.float32),
+                                       imgcut.astype(np.float32),
+                                       cv2.TM_CCORR_NORMED)
+            return 1 / fn.res.mean()
 
-        i = np.argmax(results)
-        loc = locations[i]
+        if rotationDeviation == 0:
+            angle = rotation
+            fn(rotation)
+
+        else:
+            # find best rotation angle:
+            angle = brent(fn, brack=(rotation - rotationDeviation,
+                                     rotation + rotationDeviation))
+
+        loc = cv2.minMaxLoc(fn.res)[-1]
 
         offsx = int(round(loc[0] - ho))
         offsy = overlapDeviation + overlap - loc[1]
-        # print 'offset x:%s, y:%s, rotation:%s' %(offsx, offsy, angles[i])
-        return offsx, offsy, angles[i]
+        return offsx, offsy, angle
 
 
 if __name__ == '__main__':
@@ -166,20 +170,21 @@ if __name__ == '__main__':
 
     # STITCH LEFT
     s = StitchImages(i3)
-    stitched4 = s.addImg(i2, side='left', overlap=50, overlapDeviation=20)
+    stitched4 = s.addImg(i2, side='left', overlap=50, overlapDeviation=20,
+                         rotationDeviation=10)
     stitched4 = s.addImg(i1, side='left', overlap=50, overlapDeviation=20)
 
     if 'no_window' not in sys.argv:
-        cv2.namedWindow("bottom", cv2.cv.CV_WINDOW_NORMAL)
+        cv2.namedWindow("bottom", cv2.WINDOW_NORMAL)
         cv2.imshow('bottom', stitched1)
 
-        cv2.namedWindow("top", cv2.cv.CV_WINDOW_NORMAL)
+        cv2.namedWindow("top", cv2.WINDOW_NORMAL)
         cv2.imshow('top', stitched2)
 
-        cv2.namedWindow("right", cv2.cv.CV_WINDOW_NORMAL)
+        cv2.namedWindow("right", cv2.WINDOW_NORMAL)
         cv2.imshow('right', stitched3)
 
-        cv2.namedWindow("left", cv2.cv.CV_WINDOW_NORMAL)
+        cv2.namedWindow("left", cv2.WINDOW_NORMAL)
         cv2.imshow('left', stitched4)
 
         cv2.waitKey()

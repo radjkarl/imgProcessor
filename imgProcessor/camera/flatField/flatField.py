@@ -6,20 +6,27 @@ from scipy.ndimage.filters import gaussian_filter, median_filter
 from skimage.transform import resize
 
 
+# TODO:
+# review - include new ones - better remove this method and call every
+# method individually?
+
+
 from imgProcessor.camera.flatField.flatFieldFromCalibration import flatFieldFromCalibration
-from imgProcessor.camera.flatField.vignettingFromMultipleSpots import vignettingFromMultipleSpots
+from imgProcessor.camera.flatField.vignettingFromSpotAverage import vignettingFromSpotAverage
 from imgProcessor.camera.flatField.vignettingFromDifferentObjects import vignettingFromDifferentObjects
-from imgProcessor.camera.flatField.ObjectVignettingSeparation import vignettingFromSameObject
+from imgProcessor.camera.flatField.vignettingFromRandomSteps import vignettingFromRandomSteps
 
 from imgProcessor.camera.flatField import interpolationMethods
 
 
-VIGNETTING_MODELS = {'multiple_spots': vignettingFromMultipleSpots,
+VIGNETTING_MODELS = {'multiple_spots': vignettingFromSpotAverage,
                      'different_objects': vignettingFromDifferentObjects,
-                     'same_object': vignettingFromSameObject}
+                     'same_object': vignettingFromRandomSteps}
 
 INTERPOLATION_METHODS = {'kangWeiss': interpolationMethods.function,
                          'polynomial': interpolationMethods.polynomial}
+
+# REMOVE??
 
 
 def flatField(closeDist_img=None, inPlane_img=None,

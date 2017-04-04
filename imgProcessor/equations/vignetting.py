@@ -2,8 +2,8 @@ from __future__ import division
 import numpy as np
 
 
-def guessVignettingParam(arr):
-    return (arr.shape[0]*0.7, 0, 0, 0,arr.shape[0]/2,arr.shape[1]/2)
+def guessVignettingParam(shape):
+    return (shape[0]*0.7, 0, 0, 0,shape[0]/2,shape[1]/2)
 
 
 def vignetting(xy, f=100, alpha=0, rot=0, tilt=0, cx=50, cy=50):
@@ -34,7 +34,6 @@ def vignetting(xy, f=100, alpha=0, rot=0, tilt=0, cx=50, cy=50):
         T = tiltFactor((x,y), f, tilt, rot, (cy,cx))
     else:
         T = 1
-
     return A*G*T
 
 
@@ -51,15 +50,15 @@ def tiltFactor(xy, f, tilt, rot, center=None):
     '''
     x,y = xy
     arr = np.cos(tilt) * (1+(np.tan(tilt)/f) * (x*np.sin(rot)-y*np.cos(rot)) )**3
-    s = arr.shape
-    if center is None:
-        center = s[0]//2,s[1]//2 
-    c0,c1 = center
-    try:
-        arr/= arr[c0,c1]
-    except IndexError:
-        #array is 1d
-        arr/= arr[len(arr)//2]
+#     s = arr.shape
+#     if center is None:
+#         center = s[0]//2,s[1]//2 
+#     c0,c1 = center
+#     try:
+#         arr/= arr[c0,c1]
+#     except IndexError:
+#         #array is 1d
+#         arr/= arr[len(arr)//2]
     return arr
 
 
