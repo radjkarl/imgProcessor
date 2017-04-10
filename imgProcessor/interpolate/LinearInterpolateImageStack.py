@@ -10,8 +10,8 @@ class LinearInterpolateImageStack(object):
         if z is None and not dynamic:
             self.z = np.arange(len(imgs))
         else:
-            self.z = z#np.asfarray(z)
-        self.imgs = imgs#np.asfarray(imgs)
+            self.z = z
+        self.imgs = imgs
         
         if dynamic:
             self._call = self._call_dynamic
