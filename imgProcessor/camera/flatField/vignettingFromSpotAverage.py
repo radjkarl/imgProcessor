@@ -63,17 +63,16 @@ def vignettingFromSpotAverage(
         spot_sizes = [(spots == i).sum() for i in range(1, n + 1)]
 
         try:
-            spot = spots == np.argmax(spot_sizes) + 1
+            spot = (spots == np.argmax(spot_sizes) + 1)
         except ValueError:
             print("couldn't find spot in image")
             continue
 
         if averageSpot:
-            spot = center_of_mass(spot)
+            spot = np.rint(center_of_mass(spot)).astype(int)
             mx2 = img[spot].max()
         else:
             mx2 = img[spot].mean()
-
         fitimg[spot] = img[spot]
         mask[spot] = 1
 

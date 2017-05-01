@@ -129,4 +129,4 @@ def vignettingFromDifferentObjects(imgs, bg):
     '''
 
     f = FlatFieldFromImgFit(imgs, bg)
-    return f.result, f._n
+    return f.result  # , f._n

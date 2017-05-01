@@ -3,12 +3,19 @@ import numpy as np
 
 
 def subCell2DGenerator(arr, shape, d01=None, p01=None):
-    '''
-    generator to access evenly sized sub-cells in a 2d array
-    returns indices and sub arrays as (i,j,sub)
+    '''Generator to access evenly sized sub-cells in a 2d array
 
-    d01(tuple) - cell size in y and x
+    Args:
+       shape (tuple): number of sub-cells in y,x e.g. (10,15)
+       d01 (tuple, optional): cell size in y and x
+       p01 (tuple, optional): position of top left edge
 
+    Returns:
+        int: 1st index
+        int: 2nd index
+        array: sub array
+
+    Example:
 
     >>> a = np.array([[[0,1],[1,2]],[[2,3],[3,4]]])
     >>> gen = subCell2DGenerator(a,(2,2))
@@ -22,14 +29,19 @@ def subCell2DGenerator(arr, shape, d01=None, p01=None):
         yield i, j, arr[s0, s1]
 
 
-def rint(x):
-    return int(round(x))
-
-
 def subCell2DSlices(arr, shape, d01=None, p01=None):
-    '''
-    d01 --> cell size
-    p01 --> position of top left edge
+    '''Generator to access evenly sized sub-cells in a 2d array
+
+    Args:
+       shape (tuple): number of sub-cells in y,x e.g. (10,15)
+       d01 (tuple, optional): cell size in y and x
+       p01 (tuple, optional): position of top left edge
+
+    Returns:
+        int: 1st index
+        int: 2nd index
+        slice: first dimension
+        slice: 1st dimension
     '''
     if p01 is not None:
         yinit, xinit = p01
@@ -49,10 +61,10 @@ def subCell2DSlices(arr, shape, d01=None, p01=None):
     for i in range(g0):
         for j in range(g1):
             x1 = x + d1
-            yield (i, j, slice(max(0, rint(y)),
-                               max(0, rint(y1))),
-                   slice(max(0, rint(x)),
-                         max(0, rint(x1))))
+            yield (i, j, slice(max(0, _rint(y)),
+                               max(0, _rint(y1))),
+                   slice(max(0, _rint(x)),
+                         max(0, _rint(x1))))
             x = x1
         y = y1
         y1 = y + d0
@@ -60,23 +72,43 @@ def subCell2DSlices(arr, shape, d01=None, p01=None):
 
 
 def subCell2DCoords(*args, **kwargs):
+    '''Same as subCell2DSlices but returning coordinates
+
+    Example:
+        g = subCell2DCoords(arr, shape)
+        for x, y in g:
+                plt.plot(x, y)
+    '''
     for _, _, s0, s1 in subCell2DSlices(*args, **kwargs):
         yield ((s1.start, s1.start, s1.stop),
-               (s0.start, s0.stop, s0.stop))
+               (s0.start, s0.stop,  s0.stop))
 
 
 def subCell2DFnArray(arr, fn, shape, dtype=None, **kwargs):
     '''
     Return array where every cell is the output of a given cell function
-    mx = subCell2DFnArray(myArray, np.max, (10,6) )
-    --> here mx is a 2d array containing all cell maxima
+
+    Args:
+       fn (function): ...to be executed on all sub-arrays
+
+    Returns:
+        array: value of every cell equals result of fn(sub-array)
+
+    Example:    
+        mx = subCell2DFnArray(myArray, np.max, (10,6) )
+        - -> here mx is a 2d array containing all cell maxima
     '''
+
     sh = list(arr.shape)
     sh[:2] = shape
     out = np.empty(sh, dtype=dtype)
     for i, j, c in subCell2DGenerator(arr, shape, **kwargs):
         out[i, j] = fn(c)
     return out
+
+
+def _rint(x):
+    return int(round(x))
 
 
 if __name__ == '__main__':

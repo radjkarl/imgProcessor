@@ -25,11 +25,6 @@ from fancytools.os.PathStr import PathStr
 from imgProcessor.array.subCell2D import subCell2DFnArray
 
 
-# STARK VEREINFACHEN
-# FlatFieldFromImgFit rename into SubImgFlatField
-# FlatFieldFromImgFit rename into FullImgFlatField
-# NEIN: dieses von FFbase class erben lassen welche flatFieldFromFit hat
-
 class ObjectVignettingSeparation(PatternRecognition):
     """
     If an imaged object is superimposed by a flat field map
@@ -82,10 +77,9 @@ class ObjectVignettingSeparation(PatternRecognition):
         if bg is not None:
             self.bg = getBackground(bg)
             if not isinstance(self.bg, np.ndarray):
-                self.bg = np.full_like(img, self.bg, dtype=np.uint16)
+                self.bg = np.full_like(img, self.bg, dtype=img.dtype)
             else:
-                self.bg = self.bg.astype(np.uint16)
-
+                self.bg = self.bg.astype(img.dtype)
             img = cv2.subtract(img, self.bg)
 
         if self.lens is not None:
@@ -189,17 +183,8 @@ class ObjectVignettingSeparation(PatternRecognition):
 
         arr = np.array(self.fits)
         arr[np.array(self._fit_masks)] = np.nan
-#         arr = np.ma.array(self.fits, mask=self._fit_masks)
         avg = np.tile(np.nanmean(arr, axis=0), (L, 1, 1))
         arr = (arr - avg) / avg
-#         for a in arr:
-#             a-=avg
-#             a/=avg
-#         arr/=avg
-#         np.save('aaaaaaabbc3', np.array(avg))
-#
-#         np.save('aaaaaaabbc1', self.fits)
-#         np.save('aaaaaaabbc2', np.array(arr))
 
         out = np.empty(shape=(L, ss0, ss1))
 
@@ -207,20 +192,9 @@ class ObjectVignettingSeparation(PatternRecognition):
             warnings.simplefilter("ignore", category=RuntimeWarning)
 
             for n, f in enumerate(arr):
-                #                 dev = np.ma.array((f-avg)/avg, mask=mask)
-                #                 dev[mask]=np.nan
                 out[n] = subCell2DFnArray(f, np.nanmean, (ss0, ss1))
 
-#         np.save('aaaaaaabbc5', out)
-#         lk
-
-        return np.nanmean(out**2)**0.5  # np.nanstd(out)#/np.nanmean(out)
-
-#         std = np.nanstd(out, axis=0)
-#         return std/np.nanmean(out, axis=0)
-#         avg = np.tile(np.nanmean(out, axis=0), (L,1,1))
-#         out/=avg
-#         return np.nanmean(out**2,axis=0)**0.5
+        return np.nanmean(out**2)**0.5
 
     def separate(self):
         self.flatField = self._createInitialflatField()
@@ -251,23 +225,6 @@ class ObjectVignettingSeparation(PatternRecognition):
 
         return ff.astype(float) / ff.max(), mask
 
-#
-#     def _mkFitMasks(self):
-#         # CREATE IMAGE FIT MASK:
-#         for i, f in enumerate(self.fits):
-#                 # INDEX FOREGROUND:
-#             mask = f < self.signal_ranges[i][0]
-#             mask = maximum_filter(mask, self.feature_size)
-#
-#             # IGNORE BORDER
-#             r = self.remove_border_size
-#             if r:
-#                 mask[:r, :] = 1
-#                 mask[-r:, :] = 1
-#                 mask[:, -r:] = 1
-#                 mask[:, :r] = 1
-#             self._fit_masks.append(mask)
-
     def __iter__(self):
         # use iteration to refine the flatField array
 
@@ -275,8 +232,6 @@ class ObjectVignettingSeparation(PatternRecognition):
         # for break criterion:
         self._last_dev = None
         self.n = 0  # iteration number
-
-#         self._mkFitMasks()
 
         return self
 
@@ -297,7 +252,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         # BETWEEN ALL IMAGES THE THE ESTIMATED IMAGE OOBJECT
         sh = self.flatField.shape
         s = MaskedMovingAverage(shape=sh)
-        #mx = 0
+
         for f, mask, h in zip(self.fits, self._fit_masks, self.Hs):
             div = f / self.object
             # ->do not interpolate between background and image border
@@ -311,12 +266,12 @@ class ObjectVignettingSeparation(PatternRecognition):
 
         # STOP ITERATION?
         # RMSE excluding NaNs:
-        dev = np.nanmean((new_flatField[::10, ::10]
-                          - self.flatField[::10, ::10])**2)**0.5
+        dev = np.nanmean((new_flatField[::10, ::10] -
+                          self.flatField[::10, ::10])**2)**0.5
         print('residuum: %s' % dev)
-        if self.n > self.maxIter or (self._last_dev and (
-            (self.n > 4 and dev > self._last_dev)
-                or dev < self.maxDev)):
+        if self.n >= self.maxIter or (self._last_dev and (
+                (self.n > 4 and dev > self._last_dev) or
+                dev < self.maxDev)):
             raise StopIteration
 
         # remove erroneous values:
@@ -326,49 +281,14 @@ class ObjectVignettingSeparation(PatternRecognition):
         self._last_dev = dev
         return self.n
 
-    def _createInitialflatField(self, downscale_size=9
-                                # gausian_filter_size=None
-                                ):
-
-        #         if gausian_filter_size is None:
-        #             gausian_filter_size = min(self.flatField.shape)/5
-
-        # initial array
+    def _createInitialflatField(self, downscale_size=9):
         s0, s1 = self.flatField.shape
-#         sa = downscale_size
-#         sb = int(round(sa * float(min(s0,s1))/max(s0,s1)))
-#         if s0>s1:
-#             ss0,ss1 = sa,sb
-#         else:
-#             ss0,ss1 = sb,sa
-
-#         coarse = coarseMaximum(median_filter(self.flatField,3), (ss0,ss1))
-#
-#         s = self.flatField = resize( coarse,#resize(self.flatField, (ss0,ss1)),
-#                                     (s0,s1), order=3 )
-
         f = int(max(s0, s1) / downscale_size)
         every = int(f / 3.5)
 
         s = fastFilter(self.flatField, f, every)
-
-#         plt.imshow(self.flatField)
-#         plt.colorbar()
-#         plt.show()
-
-#         s = self.flatField = gaussian_filter(
-#                                 maximum_filter(self.flatField,
-#                                     size=gausian_filter_size),
-#                                     sigma=gausian_filter_size)
         # make relative
-#         s = self.flatField
         s /= s.max()
-
-#         import pylab as plt
-#         plt.imshow(self.flatField)
-#         plt.colorbar()
-#         plt.show()
-
         return s
 
     def _fitImg(self, img):
@@ -386,13 +306,7 @@ class ObjectVignettingSeparation(PatternRecognition):
         H_inv = self.invertHomography(H)
 
         s = self.obj_shape
-        fit = cv2.warpPerspective(img, H_inv, (s[1], s[0])
-
-                                  # (int( s[1]/self._fH),
-                                  # int( s[0]/self._fH) )
-                                  )
-#         plt.imshow(fit)
-#         plt.show()
+        fit = cv2.warpPerspective(img, H_inv, (s[1], s[0]))
         return fit, img, H, H_inv, n_matches
 
     def _findObject(self, img):
@@ -427,10 +341,10 @@ def vignettingFromRandomSteps(imgs, bg, inPlane_scale_factor=None,
     if debugFolder:
         imwrite(debugFolder.join('init.tiff'), s.flatField)
 
-    smoothed_ff, mask, flatField, object = s.separate()
+    smoothed_ff, mask, flatField, obj = s.separate()
 
     if debugFolder:
-        imwrite(debugFolder.join('object.tiff'), object)
+        imwrite(debugFolder.join('object.tiff'), obj)
         imwrite(debugFolder.join('flatfield.tiff'), flatField, dtype=float)
         imwrite(debugFolder.join('flatfield_smoothed.tiff'), smoothed_ff,
                 dtype=float)
@@ -440,6 +354,4 @@ def vignettingFromRandomSteps(imgs, bg, inPlane_scale_factor=None,
 
 if __name__ == '__main__':
     pass
-#     from fancytools.os.PathStr import PathStr
-#     from matplotlib import pyplot
     # TODO: generic example
