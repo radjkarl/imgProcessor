@@ -22,29 +22,27 @@ def weightedConvolution(img, out, weights, psf):
     for i in range(c0, s0 - c0):
         for j in range(c1, s1 - c1):
 
-                val = img[i,j]
-                for ii in range(a0):
-                    for jj in range(a1):
-                        n_px = img[i - ii + c0, j - jj + c1]
-                        w = weights[i - ii + c0, j - jj + c1]
-                        val += w*psf[ii, jj] * n_px         
-                out[i,j]=val
-        
+            val = img[i, j]
+            for ii in range(a0):
+                for jj in range(a1):
+                    n_px = img[i - ii + c0, j - jj + c1]
+                    w = weights[i - ii + c0, j - jj + c1]
+                    val += w * psf[ii, jj] * n_px
+            out[i, j] = val
 
 
 def interpolate2dDiffusion(arr1, arr2, steps=10, diffusivity=0.2):
 
-    
-    psf = np.zeros((5,5))
-    numbaGaussian2d(psf, 1,1)
+    psf = np.zeros((5, 5))
+    numbaGaussian2d(psf, 1, 1)
 #     plt.imshow(psf)
 #     plt.show()
     last = arr1
-    
+
     out = []
     for s in range(steps):
         next = np.zeros_like(arr1)
-        diff = diffusivity*(last-arr2)
+        diff = diffusivity * (last - arr2)
 #         plt.imshow(diff)
 #         plt.show()
         weightedConvolution(last, next, diff, psf)
@@ -55,23 +53,24 @@ def interpolate2dDiffusion(arr1, arr2, steps=10, diffusivity=0.2):
 
 if __name__ == '__main__':
     import pylab as plt
+    import sys
     from scipy.ndimage.filters import gaussian_filter
 
-    arr1 = np.zeros((100,100))
-    arr1[20:40,20:40]=1
+    arr1 = np.zeros((100, 100))
+    arr1[20:40, 20:40] = 1
 
-    arr2 = np.zeros((100,100))
-    arr2[30:50,30:50]=1
-    
+    arr2 = np.zeros((100, 100))
+    arr2[30:50, 30:50] = 1
+
     arr1 = gaussian_filter(arr1, 3)
     arr2 = gaussian_filter(arr2, 3)
-    plt.imshow(arr1-arr2)
-    plt.show()
-    out = interpolate2dDiffusion(arr1, arr2)
-    
-    for n, o in enumerate(out):
-        plt.figure(n)
-        plt.imshow(o)
-    plt.show()
-    
-    
+
+    if 'no_window' not in sys.argv:
+        plt.imshow(arr1 - arr2)
+        plt.show()
+        out = interpolate2dDiffusion(arr1, arr2)
+
+        for n, o in enumerate(out):
+            plt.figure(n)
+            plt.imshow(o)
+        plt.show()

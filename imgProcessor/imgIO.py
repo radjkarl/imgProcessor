@@ -7,7 +7,8 @@ import cv2
 from six import string_types
 # from imgProcessor import ARRAYS_ORDER_IS_XY
 
-from imgProcessor.transformations import toNoUintArray, toUIntArray #,transpose
+# ,transpose
+from imgProcessor.transformations import toNoUintArray, toUIntArray
 from PIL import Image
 
 # from imgProcessor import reader
@@ -17,7 +18,7 @@ COLOR2CV = {'gray': cv2.IMREAD_GRAYSCALE,
             None: cv2.IMREAD_ANYCOLOR
             }
 
-#TODO:
+# TODO:
 # READERS = {'elbin':reader.elbin}
 
 
@@ -43,7 +44,7 @@ def _changeArrayDType(img, dtype, **kwargs):
 #     return size/img.size
 
 
-def imread(img, color=None, dtype=None#, ignore_order=False
+def imread(img, color=None, dtype=None  # , ignore_order=False
            ):
     '''
     dtype = 'noUint', uint8, float, 'float', ...
@@ -53,11 +54,11 @@ def imread(img, color=None, dtype=None#, ignore_order=False
     if callable(img):
         img = img()
     elif isinstance(img, string_types):
-#         from_file = True
-#         try:
-#             ftype = img[img.find('.'):]
-#             img = READERS[ftype](img)[0]
-#         except KeyError:
+        #         from_file = True
+        #         try:
+        #             ftype = img[img.find('.'):]
+        #             img = READERS[ftype](img)[0]
+        #         except KeyError:
         # open with openCV
         # grey - 8 bit
         if dtype in (None, "noUint") or np.dtype(dtype) != np.uint8:
@@ -86,13 +87,17 @@ def imwrite(name, arr, dtype=None, **kwargs):
     else:
         return cv2.imwrite(name, toUIntArray(arr, **kwargs))
 
-#TODO: check where used and remove
+# TODO: check where used and remove
+
+
 def out(img):
-#     if ARRAYS_ORDER_IS_XY:
-#         return transpose(img)
+    #     if ARRAYS_ORDER_IS_XY:
+    #         return transpose(img)
     return img
 
-#TODO: check where used and remove
+# TODO: check where used and remove
+
+
 def out3d(sf):
     '''
     for surface plots

@@ -1,10 +1,10 @@
 import numpy as np
 from numpy import isnan
-from numba import jit
+from numba import njit
 from imgProcessor.equations.numbaGaussian2d import numbaGaussian2d
 
 
-@jit(nopython=True)
+@njit
 def _calc_constPSF(image, sint, sx, sy, psf, ksize):
     ax = psf.shape[0]
     ay = psf.shape[1]
@@ -26,7 +26,7 @@ def _calc_constPSF(image, sint, sx, sy, psf, ksize):
                 sint[i, j] = (sdev)**0.5
 
 
-@jit(nopython=True)
+@njit
 def _calc_variPSF(image, sint, sx, sy, psf, ksize):
     ax = psf.shape[0]
     ay = psf.shape[1]

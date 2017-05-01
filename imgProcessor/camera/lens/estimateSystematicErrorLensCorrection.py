@@ -385,4 +385,6 @@ def simulateSytematicError(N_SAMPLES=5, N_IMAGES=10,
 
 
 if __name__ == '__main__':
-    simulateSytematicError()
+    import sys
+    if 'no_window' not in sys.argv:
+        simulateSytematicError()
