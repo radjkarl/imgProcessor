@@ -20,8 +20,6 @@ class StitchImages(object):
         There is no perspective correction.
         @param img: the base image
         @param gradient: whether to use image gradient for fitting
-
-
         '''
         # TODO: does not work with nan in img. so far
         self.base_img_rgb = imread(img)

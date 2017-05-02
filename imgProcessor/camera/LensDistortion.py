@@ -306,7 +306,7 @@ class LensDistortion(object):
         return cv2.undistortPoints(pts,
                                    cam, d, P=newCameraMatrix)
 
-    def correct(self, image, keepSize=False, borderValue=np.nan):
+    def correct(self, image, keepSize=False, borderValue=0):
         '''
         remove lens distortion from given image
         '''
