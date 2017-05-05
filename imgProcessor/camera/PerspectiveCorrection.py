@@ -9,20 +9,19 @@ from transforms3d.euler import mat2euler, euler2mat
 from inspect import getmembers, isfunction
 
 from fancytools.math.Point3D import Point3D
+from fancytools.math.vector3d import vectorAngle
 
 from imgProcessor.imgIO import imread
 from imgProcessor.utils.sortCorners import sortCorners
 from imgProcessor.utils.genericCameraMatrix import genericCameraMatrix
-# from imgProcessor.equations.vignetting import tiltFactor
 from imgProcessor.equations.defocusThroughDepth import defocusThroughDepth
 from imgProcessor.utils.imgPointToWorldCoord import imgPointToWorldCoord
 from imgProcessor.features.PatternRecognition import PatternRecognition
 from imgProcessor.utils.calcAspectRatioFromCorners import calcAspectRatioFromCorners
 from imgProcessor.physics import emissivity_vs_angle
-from fancytools.math.vector3d import vectorAngle
-from imgProcessor.transform.simplePerspectiveTransform import simplePerspectiveTransform
 
-
+# from imgProcessor.equations.vignetting import tiltFactor
+# from imgProcessor.transform.simplePerspectiveTransform import simplePerspectiveTransform
 # from imgProcessor.features.QuadDetection import QuadDetection
 # from imgProcessor.utils.decompHomography import decompHomography
 
@@ -363,7 +362,7 @@ class PerspectiveCorrection(object):
 
     def correct(self, img):
         '''
-        ...from perspective distortion: 
+        ...from perspective distortion:
          --> perspective transformation
          --> apply tilt factor (view factor) correction 
         '''

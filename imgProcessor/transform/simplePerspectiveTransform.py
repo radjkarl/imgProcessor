@@ -3,12 +3,12 @@ import cv2
 from imgProcessor.utils.sortCorners import sortCorners
 
 
-def simplePerspectiveTransform(img, quad, size=None,
+def simplePerspectiveTransform(img, quad, shape=None,
                                interpolation=cv2.INTER_LINEAR,
-                               **flags):
+                               inverse=False):
     p = sortCorners(quad).astype(np.float32)
-    if size is not None:
-        width, height = size
+    if shape is not None:
+        height, width = shape
     else:
         # get output image size from avg. quad edge length
         width = int(round(0.5 * (np.linalg.norm(p[0] - p[1]) +
@@ -21,10 +21,14 @@ def simplePerspectiveTransform(img, quad, size=None,
                       [width, height],
                       [0,     height]])
 
-    H = cv2.getPerspectiveTransform(p, dst)
-    return cv2.warpPerspective(img, H, (width, height),
-                               flags=interpolation,
-                               **flags)
+    if inverse:
+        s0, s1 = img.shape[:2]
+        dst /= ((width / s1), (height / s0))
+        H = cv2.getPerspectiveTransform(dst, p)
+    else:
+        H = cv2.getPerspectiveTransform(p, dst)
+
+    return cv2.warpPerspective(img, H, (width, height), flags=interpolation)
 
 
 if __name__ == '__main__':
@@ -46,6 +50,8 @@ if __name__ == '__main__':
     #######
     img = imread(path)
     img2 = simplePerspectiveTransform(img, points)
+    img3 = simplePerspectiveTransform(img2, points,
+                                      inverse=True, shape=img.shape)
     #######
     if 'no_window' not in sys.argv:
         p = np.array(points)
@@ -53,7 +59,8 @@ if __name__ == '__main__':
         plt.figure('input')
         plt.imshow(img)
         plt.scatter(p[:, 0], p[:, 1], color='r')
-
         plt.figure('output')
         plt.imshow(img2)
+        plt.figure('inverse')
+        plt.imshow(img3)
         plt.show()
