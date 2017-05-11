@@ -487,6 +487,7 @@ class PerspectiveCorrection(object):
         return beta2
 
     def foreground(self, quad=None):
+        '''return foreground (quad) mask'''
         fg = np.zeros(shape=self._newBorders[::-1], dtype=np.uint8)
         if quad is None:
             quad = self.quad

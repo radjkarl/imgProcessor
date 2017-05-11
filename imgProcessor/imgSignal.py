@@ -2,10 +2,13 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import cv2
 from imgProcessor.imgIO import imread
 from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
 from fancytools.math.findXAt import findXAt
 # from scipy.optimize.minpack import curve_fit
+
+MAX_SIZE = 700
 
 
 def scaleSignalCut(img, ratio, nbins=100):
@@ -18,11 +21,25 @@ def scaleSignalCut(img, ratio, nbins=100):
     return img
 
 
+def _toSize(img):
+    fac = MAX_SIZE / max(img.shape)
+    if fac < 1:
+        try:
+            return cv2.resize(img, (0, 0), fx=fac, fy=fac,
+                              interpolation=cv2.INTER_AREA)
+        except cv2.error:
+            # cv2.error: ..\..\..\modules\imgproc\src\imgwarp.cpp:3235: error:
+            # (-215) dsize.area() > 0 in function cv::resize
+            return cv2.resize(img.T, (0, 0), fx=fac, fy=fac,
+                              interpolation=cv2.INTER_AREA).T
+    return img
+
+
 def scaleSignalCutParams(img, ratio, nbins=100):
+    img = _toSize(img)
     try:
         h, bins = np.histogram(img, nbins)
-    except ValueError:
-        # is has nan
+    except ValueError:  # img contains NaN
         h, bins = np.histogram(img[np.isfinite(img)], nbins)
 
     h = np.cumsum(h).astype(float)
@@ -121,9 +138,11 @@ def signalMinimum2(img, bins=None):
     minimum position between signal and background peak
     '''
     f = FitHistogramPeaks(img, bins=bins)
-    spos = getSignalPeak(f.fitParams)[1]
-    bpos = getBackgroundPeak(f.fitParams)[1]
-
+    i = signalPeakIndex(f.fitParams)
+    spos = f.fitParams[i][1]
+#     spos = getSignalPeak(f.fitParams)[1]
+#     bpos = getBackgroundPeak(f.fitParams)[1]
+    bpos = f.fitParams[i - 1][1]
     ind = np.logical_and(f.xvals > bpos, f.xvals < spos)
     try:
         i = np.argmin(f.yvals[ind])

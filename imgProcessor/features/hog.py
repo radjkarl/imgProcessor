@@ -41,13 +41,13 @@ def hog(image, orientations=8, ksize=(5, 5)):
     '''
     returns the Histogram of Oriented Gradients
 
-    :param ksize: convolution kernel size as (y,x) - needs to be odd 
+    :param ksize: convolution kernel size as (y,x) - needs to be odd
     :param orientations: number of orientations in between rad=0 and rad=pi
 
     similar to http://scikit-image.org/docs/dev/auto_examples/plot_hog.html
     but faster and with less options
     '''
-    s0, s1 = image.shape
+    s0, s1 = image.shape[:2]
 
     # speed up the process through saving generated kernels:
     try:
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         plt.imshow(dimg, clim=(0, 1), cmap='gray')
         m = np.asfarray(m)
         m[m == 0] = np.nan
-        plt.imshow(m,  cmap=plt.cm.viridis,
+        plt.imshow(m,  cmap='viridis',
                    alpha=.8,
                    interpolation='none')
 

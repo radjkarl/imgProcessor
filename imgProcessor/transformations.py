@@ -7,6 +7,7 @@ from __future__ import division
 import numpy as np
 import cv2
 
+
 def toUIntArray(img, dtype=None, cutNegative=True, cutHigh=True,
                 range=None, copy=True):
     '''
@@ -133,6 +134,39 @@ def toGray(img):
                                              0.114))  # blue
 
 
+def rgChromaticity(img):
+    '''
+    returns the normalized RGB space (RGB/intensity)
+    see https://en.wikipedia.org/wiki/Rg_chromaticity
+    '''
+    out = _calc(img)
+    if img.dtype == np.uint8:
+        out = (255 * out).astype(np.uint8)
+    return out
+
+
+def _calc(img):
+    out = np.empty_like(img, dtype=float)
+    f = img.sum(axis=2)
+    for n in range(3):
+        out[..., n] = img[..., n] / f
+    return out
+
+
+def monochromaticWavelength(img):
+    '''
+    TODO##########
+    '''
+    # peak wave lengths: https://en.wikipedia.org/wiki/RGB_color_model
+    out = _calc(img)
+
+    peakWavelengths = (570, 540, 440)  # (r,g,b)
+#     s = sum(peakWavelengths)
+    for n, p in enumerate(peakWavelengths):
+        out[..., n] *= p
+    return out.sum(axis=2)
+
+
 def transpose(img):
     if type(img) in (tuple, list) or img.ndim == 3:
         if img.shape[2] == 3:  # is color
@@ -168,39 +202,38 @@ def rot90(img):
     return out
 
 
-
 def applyColorMap(gray, cmap='flame'):
     '''
     like cv2.applyColorMap(im_gray, cv2.COLORMAP_*) but with different color maps
     '''
-    #TODO:implement more cmaps
+    # TODO:implement more cmaps
     if cmap != 'flame':
         raise NotImplemented
-    #TODO: make better
-    mx = 256# if gray.dtype==np.uint8 else 65535
-    lut = np.empty(shape=(256,3))
+    # TODO: make better
+    mx = 256  # if gray.dtype==np.uint8 else 65535
+    lut = np.empty(shape=(256, 3))
     cmap = (
-        #taken from pyqtgraph GradientEditorItem
+        # taken from pyqtgraph GradientEditorItem
         (0, (0, 0, 0)),
         (0.2, (7, 0, 220)),
-        (0.5, (236, 0, 134)), 
-        (0.8, (246, 246, 0)), 
+        (0.5, (236, 0, 134)),
+        (0.8, (246, 246, 0)),
         (1.0, (255, 255, 255))
-        )
-    #build lookup table:
+    )
+    # build lookup table:
     lastval, lastcol = cmap[0]
     for step, col in cmap[1:]:
-        val = int(step*mx)
+        val = int(step * mx)
         for i in range(3):
-            lut[lastval:val, i] = np.linspace(lastcol[i],col[i], val-lastval)
-        
+            lut[lastval:val, i] = np.linspace(
+                lastcol[i], col[i], val - lastval)
+
         lastcol = col
         lastval = val
 
-    s0,s1 = gray.shape
-    out = np.empty(shape=(s0,s1,3), dtype=np.uint8)
+    s0, s1 = gray.shape
+    out = np.empty(shape=(s0, s1, 3), dtype=np.uint8)
 
     for i in range(3):
-        out[...,i] = cv2.LUT(gray, lut[:,i])
+        out[..., i] = cv2.LUT(gray, lut[:, i])
     return out
-
