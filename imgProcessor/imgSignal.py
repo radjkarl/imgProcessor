@@ -35,7 +35,7 @@ def _toSize(img):
     return img
 
 
-def scaleSignalCutParams(img, ratio, nbins=100):
+def scaleSignalCutParams(img, ratio=0.01, nbins=100):
     img = _toSize(img)
     try:
         h, bins = np.histogram(img, nbins)

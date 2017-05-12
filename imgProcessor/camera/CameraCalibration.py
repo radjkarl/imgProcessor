@@ -243,9 +243,9 @@ class CameraCalibration(object):
         s = self.coeffs['shape']
         if s is None:
             self.coeffs['shape'] = array.shape
-        elif s != array.shape:
+        elif s[:2] != array.shape[:2]:
             raise Exception("""array shapes are different: stored(%s), given(%s)
-            if shapes are transposed, execute self.transpose() once """ % (s, array.shape))
+if shapes are transposed, execute self.transpose() once """ % (s, array.shape))
 
     def addFlatField(self, arr, date=None, info='', error=None,
                      light_spectrum='visible'):
@@ -384,7 +384,10 @@ class CameraCalibration(object):
 
         # do we have multiple images?
         if (type(images) in (list, tuple) or
-                (isinstance(images, np.ndarray) and images.ndim == 3)):
+                (isinstance(images, np.ndarray) and
+                 images.ndim == 3 and
+                 images.shape[-1] not in (3, 4)  # is color
+                 )):
             if len(images) > 1:
                 print('... remove single-time-effects from images ')
             # 1. STE REMOVAL ONLY IF >=2 IMAGES ARE GIVEN:

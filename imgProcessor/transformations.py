@@ -176,6 +176,12 @@ def transpose(img):
         return img.transpose()
 
 
+def isRot90(shape1, shape2):
+    s00, s01 = shape1[:2]
+    s10, s11 = shape2[:2]
+    return s00 == s11 and s01 == s10
+
+
 def rot90(img):
     '''
     rotate one or multiple grayscale or color images 90 degrees

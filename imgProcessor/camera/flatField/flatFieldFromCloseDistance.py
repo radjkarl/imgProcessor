@@ -8,6 +8,7 @@ from imgProcessor.imgIO import imread
 from imgProcessor.camera.NoiseLevelFunction import oneImageNLF
 from imgProcessor.utils.getBackground2 import getBackground2
 from imgProcessor.transform.imgAverage import imgAverage
+from imgProcessor.transformations import toGray
 from imgProcessor.features.SingleTimeEffectDetection \
     import SingleTimeEffectDetection
 
@@ -31,6 +32,7 @@ def flatFieldFromCloseDistance(imgs, bg_imgs=None):
     img = imgAverage(imgs)
     bg = getBackground2(bg_imgs, img)
     img -= bg
+    img = toGray(img)
     mx = median_filter(img[::10, ::10], 3).max()
     img /= mx
     return img
