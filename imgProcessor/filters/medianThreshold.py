@@ -1,7 +1,6 @@
 # coding=utf-8
 from __future__ import division
 
-from scipy.ndimage import median_filter
 import numpy as np
 
 
@@ -12,6 +11,8 @@ def medianThreshold(img, threshold=0.1, size=3, condition='>', copy=True):
     in case the relative [threshold] is exeeded
     condition = '>' OR '<'
     '''
+    from scipy.ndimage import median_filter
+
     indices = None
     if threshold > 0:
         blur = np.asfarray(median_filter(img, size=size))
