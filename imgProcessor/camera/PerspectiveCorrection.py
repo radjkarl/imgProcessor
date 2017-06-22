@@ -20,6 +20,11 @@ from imgProcessor.features.PatternRecognition import PatternRecognition
 from imgProcessor.utils.calcAspectRatioFromCorners import calcAspectRatioFromCorners
 from imgProcessor.physics import emissivity_vs_angle
 
+try:
+    from PROimgProcessor.features.perspCorrectionViaQuad import perspCorrectionViaQuad
+except ImportError:
+    perspCorrectionViaQuad = None
+
 # from imgProcessor.equations.vignetting import tiltFactor
 # from imgProcessor.transform.simplePerspectiveTransform import simplePerspectiveTransform
 # from imgProcessor.features.QuadDetection import QuadDetection
@@ -38,8 +43,8 @@ class PerspectiveCorrection(object):
 
     def __init__(self,
                  img_shape,
-                 obj_height_mm=None,
-                 obj_width_mm=None,
+                 # obj_height_mm=None,
+                 # obj_width_mm=None,
                  cameraMatrix=None,
                  distCoeffs=np.zeros((5, 1)),
                  do_correctIntensity=False,
@@ -69,17 +74,17 @@ class PerspectiveCorrection(object):
         # since img needs to be lens corrected anyway
 
         # TODO: insert aspect ratio and remove obj_width, height
-        self.opts = {'obj_height_mm': obj_height_mm,
-                     'obj_width_mm': obj_width_mm,
-                     'distCoeffs': distCoeffs.astype(np.float32),
-                     'do_correctIntensity': do_correctIntensity,
-                     'new_size': new_size,
-                     'in_plane': in_plane,
-                     'cv2_opts': cv2_opts,
-                     'border': border,
-                     'material': material,
-                     'maxShear': maxShear,
-                     'shape': img_shape[:2]}
+        self.opts = {  # 'obj_height_mm': obj_height_mm,
+            #'obj_width_mm': obj_width_mm,
+            'distCoeffs': distCoeffs.astype(np.float32),
+            'do_correctIntensity': do_correctIntensity,
+            'new_size': new_size,
+            'in_plane': in_plane,
+            'cv2_opts': cv2_opts,
+            'border': border,
+            'material': material,
+            'maxShear': maxShear,
+            'shape': img_shape[:2]}
         if cameraMatrix is None:
             cameraMatrix = genericCameraMatrix(img_shape)
 
@@ -139,7 +144,7 @@ class PerspectiveCorrection(object):
                 if self.refQuad is not None:
                     dst = self.refQuad.astype(np.float32)
                 else:
-                    sx, sy = self._newBorders
+                    sy, sx = self._newBorders
                     dst = np.float32([
                         [b,  b],
                         [sx - b, b],
@@ -148,14 +153,30 @@ class PerspectiveCorrection(object):
 
                 self._homography = cv2.getPerspectiveTransform(
                     self.quad.astype(np.float32), dst)
-
             else:
-                # GET HOMOGRAPHY FROM REFERENCE IMAGE USING PATTERN RECOGNITION
-                self._Hinv = h = self.pattern.findHomography(self.img)[0]
-                H = self.pattern.invertHomography(h)
+                try:
+                    # GET HOMOGRAPHY FROM REFERENCE IMAGE USING PATTERN
+                    # RECOGNITION
+                    self._Hinv = h = self.pattern.findHomography(self.img)[0]
+                    H = self.pattern.invertHomography(h)
+                except Exception as e:
+                    print(e)
+                    if perspCorrectionViaQuad:
+                        # PROPRIETARY FALLBACK METHOD
+                        quad = perspCorrectionViaQuad(
+                            self.img, self.ref, border=b)
+                        sy, sx = self.ref.shape
+                        dst = np.float32([
+                            [b,  b],
+                            [sx - b, b],
+                            [sx - b, sy - b],
+                            [b,  sy - b]])
 
-              # TODO: find solution for what to do when patternrecogn. doesnt work
-              # QuadDetection now proprietary
+                        H = cv2.getPerspectiveTransform(
+                            quad.astype(np.float32), dst)
+
+                    else:
+                        raise e
 
 # #                 #test fit quality:
 #                 if abs(decompHomography(H)[-1]) > self.opts['maxShear']:
@@ -164,13 +185,13 @@ class PerspectiveCorrection(object):
 
                 self._homography = H
 
-                sx, sy = self.opts['new_size']
+                sy, sx = self.opts['new_size']
                 ssy, ssx = self.ref.shape[:2]
                 if sx is None:
                     sx = ssx
                 if sy is None:
                     sy = ssy
-                self._newBorders = (sx, sy)
+                self._newBorders = (sy, sx)
 
         return self._homography
 
@@ -183,6 +204,7 @@ class PerspectiveCorrection(object):
         self.img = imread(img)
         # fit old image to self.quad:
         corr = self.correct(self.img)
+
         s = self.img.shape
         if quad is None:
             wquad = (self.quad - self.quad.mean(axis=0)).astype(float)
@@ -366,6 +388,7 @@ class PerspectiveCorrection(object):
          --> perspective transformation
          --> apply tilt factor (view factor) correction 
         '''
+        print("CORRECT PERSPECTIVE ...")
         self.img = imread(img)
 
         if not self._homography_is_fixed:
@@ -380,10 +403,9 @@ class PerspectiveCorrection(object):
                     self.img[..., col] /= tf
             else:
                 self.img = self.img / tf
-
         warped = cv2.warpPerspective(self.img,
                                      h,
-                                     self._newBorders,
+                                     self._newBorders[::-1],
                                      flags=cv2.INTER_LANCZOS4,
                                      **self.opts['cv2_opts'])
         return warped
@@ -472,13 +494,13 @@ class PerspectiveCorrection(object):
         '''
         calculate view factor between one small and one finite surface
         vf =1/pi * integral(cos(beta1)*cos(beta2)/s**2) * dA
-        accorduing to VDI heatatlas 2010 p961
+        according to VDI heatatlas 2010 p961
         '''
         v0 = self.cam2PlaneVectorField(**kwargs)
         # obj cannot be behind camera
         v0[2][v0[2] < 0] = np.nan
 
-        t, r = self.pose()
+        _t, r = self.pose()
         n = self.planeSfN(r)
         # because of different x,y orientation:
         n[2] *= -1
@@ -504,7 +526,6 @@ class PerspectiveCorrection(object):
         '''
         # TODO: can also be only def. with FOV, rot, tilt
         beta2 = self.viewAngle(midpointdepth=midpointdepth)
-
         try:
             angles, vals = getattr(
                 emissivity_vs_angle, self.opts['material'])()
@@ -690,7 +711,6 @@ class PerspectiveCorrection(object):
                                       dtype=np.float32).reshape((4, 1, 2))
 
         obj_pn = self.obj_points - self.obj_points.mean(axis=0)
-
         retval, rvec, tvec = cv2.solvePnP(
             obj_pn,
             img_pn,
@@ -698,7 +718,7 @@ class PerspectiveCorrection(object):
             self.opts['distCoeffs'],
             flags=cv2.SOLVEPNP_P3P  # because exactly four points are given
         )
-        if retval is None:
+        if not retval:
             print("Couln't estimate pose")
         return tvec, rvec
 
@@ -713,8 +733,8 @@ class PerspectiveCorrection(object):
 
             try:
                 # estimate size
-                sx = self.opts['obj_width_mm']
-                sy = self.opts['obj_height_mm']
+                sy, sx = self.opts['new_size']
+#                 sy = self.opts['obj_height_mm']
                 aspectRatio = sx / sy
             except TypeError:
                 aspectRatio = calcAspectRatioFromCorners(quad,
@@ -772,7 +792,8 @@ class PerspectiveCorrection(object):
         else:
             img = imread(img)
         # project 3D points to image plane:
-        w, h = self.opts['obj_width_mm'], self.opts['obj_height_mm']
+        # self.opts['obj_width_mm'], self.opts['obj_height_mm']
+        w, h = self.opts['new_size']
         axis = np.float32([[0.5 * w, 0.5 * h, 0],
                            [w, 0.5 * h, 0],
                            [0.5 * w, h, 0],
@@ -854,12 +875,13 @@ if __name__ == '__main__':
     # LOAD CLASS:
     pc = PerspectiveCorrection(img.shape,
                                do_correctIntensity=True,
-                               obj_height_mm=sy,
-                               obj_width_mm=sx)
+                               new_size=(sy, sx)
+                               #                                obj_height_mm=sy,
+                               #                                obj_width_mm=sx
+                               )
     pc.setReference(obj_corners)
     img2 = img.copy()
     pc.drawQuad(img2, thickness=2)
-
     # 2. DISTORT THE IMAGE:
     # dist = img2.copy()#pc.distort(img2, rotX=10, rotY=20)
     dist = pc.distort(img2, rotX=10, rotY=20)
@@ -871,10 +893,6 @@ if __name__ == '__main__':
 
     bg = dist[:, :, 0] < 10
 
-#     import pylab as plt
-#     print(dist.shape)
-#     plt.imshow(dist[:,:,0]<10)
-#     plt.show()
     depth[bg] = depth.mean()
     print('depth min:%s, max:%s' % (depth.min(), depth.max()))
 

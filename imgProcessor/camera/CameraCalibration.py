@@ -184,7 +184,7 @@ class CameraCalibration(object):
         self.coeffs['name'] = camera_name
         self.coeffs['depth'] = bit_depth
 
-    def addDarkCurrent(self, slope, intercept, date=None, info='', error=None):
+    def addDarkCurrent(self, slope, intercept=None, date=None, info='', error=None):
         '''
         Args:
             slope (np.array)
@@ -200,8 +200,11 @@ class CameraCalibration(object):
         self._checkShape(intercept)
 
         d = self.coeffs['dark current']
-        d.insert(
-            _insertDateIndex(date, d), [date, info, (slope, intercept), error])
+        if intercept is None:
+            data = slope
+        else:
+            data = (slope, intercept)
+        d.insert(_insertDateIndex(date, d), [date, info, data, error])
 
     def addNoise(self, nlf_coeff, date=None, info='', error=None):
         '''
@@ -240,6 +243,8 @@ class CameraCalibration(object):
                                  [date, info, psf])
 
     def _checkShape(self, array):
+        if not isinstance(array, np.ndarray):
+            return
         s = self.coeffs['shape']
         if s is None:
             self.coeffs['shape'] = array.shape
@@ -361,6 +366,7 @@ if shapes are transposed, execute self.transpose() once """ % (s, array.shape))
                  'lens':'14. Nov 15',
                  'noise':'01. Nov 15'}
         '''
+        print('CORRECT CAMERA ...')
 
         if isinstance(date, string_types) or date is None:
             date = {'dark current': date,
@@ -375,13 +381,6 @@ if shapes are transposed, execute self.transpose() once """ % (s, array.shape))
             except IndexError:
                 pass
 
-        # 0.NOISE
-        n = self.coeffs['noise']
-        if self.noise_level_function is None and len(n):
-            n = _getFromDate(n, date['noise'])[2]
-            self.noise_level_function = lambda x: NoiseLevelFunction.boundedFunction(
-                x, *n)
-
         # do we have multiple images?
         if (type(images) in (list, tuple) or
                 (isinstance(images, np.ndarray) and
@@ -389,8 +388,16 @@ if shapes are transposed, execute self.transpose() once """ % (s, array.shape))
                  images.shape[-1] not in (3, 4)  # is color
                  )):
             if len(images) > 1:
+
+                # 0.NOISE
+                n = self.coeffs['noise']
+                if self.noise_level_function is None and len(n):
+                    n = _getFromDate(n, date['noise'])[2]
+                    self.noise_level_function = lambda x: NoiseLevelFunction.boundedFunction(
+                        x, *n)
+
                 print('... remove single-time-effects from images ')
-            # 1. STE REMOVAL ONLY IF >=2 IMAGES ARE GIVEN:
+                # 1. STE REMOVAL ONLY IF >=2 IMAGES ARE GIVEN:
                 ste = SingleTimeEffectDetection(images, nStd=4,
                                                 noise_level_function=self.noise_level_function)
                 image = ste.noSTE
@@ -403,21 +410,6 @@ if shapes are transposed, execute self.transpose() once """ % (s, array.shape))
             image = np.asfarray(imread(images, dtype=np.float))
 
         self._checkShape(image)
-
-#         if image2 is None:
-#             image = image1
-#             if id(image1orig) == id(image):
-#                 image = image.copy()
-#         else:
-#             image2 = np.asfarray(imread(image2))
-#             self._checkShape(image2)
-#             print('... remove single-time-effects')
-#             ste = SingleTimeEffectDetection((image1,image2), nStd=4,
-#                             noise_level_function=self.noise_level_function)
-#             image = ste.noSTE
-#
-#             if self.noise_level_function is None:
-#                 self.noise_level_function = ste.noise_level_function
 
         self.last_light_spectrum = light_spectrum
         self.last_img = image
@@ -437,7 +429,7 @@ if shapes are transposed, execute self.transpose() once """ % (s, array.shape))
             print('Error: %s' % errm)
 
         # 4. REPLACE DECECTIVE PX WITH MEDIAN FILTERED FALUE
-        if threshold:
+        if threshold > 0:
             print('... remove artefacts')
             try:
                 image = self._correctArtefacts(image, threshold)
@@ -486,38 +478,43 @@ if shapes are transposed, execute self.transpose() once """ % (s, array.shape))
         open OR calculate a background image: f(t)=m*t+n
         '''
         # either exposureTime or bgImages has to be given
-        if exposuretime is not None or bgImages is not None:
-            print('... remove dark current')
+#         if exposuretime is not None or bgImages is not None:
+        print('... remove dark current')
 
-            if bgImages is not None:
+        if bgImages is not None:
 
-                if (type(bgImages) in (list, tuple) or
-                        (isinstance(bgImages, np.ndarray) and
-                         bgImages.ndim == 3)):
-                    if len(bgImages) > 1:
-                        # if multiple images are given: do STE removal:
-                        nlf = self.noise_level_function
-                        bg = SingleTimeEffectDetection(
-                            bgImages, nStd=4,
-                            noise_level_function=nlf).noSTE
-                    else:
-                        bg = imread(bgImages[0])
+            if (type(bgImages) in (list, tuple) or
+                    (isinstance(bgImages, np.ndarray) and
+                     bgImages.ndim == 3)):
+                if len(bgImages) > 1:
+                    # if multiple images are given: do STE removal:
+                    nlf = self.noise_level_function
+                    bg = SingleTimeEffectDetection(
+                        bgImages, nStd=4,
+                        noise_level_function=nlf).noSTE
                 else:
-                    bg = imread(bgImages)
+                    bg = imread(bgImages[0])
             else:
-                bg = self.calcDarkCurrent(exposuretime, date)
-            self.temp['bg'] = bg
-            image -= bg
+                bg = imread(bgImages)
+        else:
+            bg = self.calcDarkCurrent(exposuretime, date)
+        self.temp['bg'] = bg
+        image -= bg
 
     def calcDarkCurrent(self, exposuretime, date=None):
         d = self.coeffs['dark current']
         d = _getFromDate(d, date)
-        # calculate bg image:
-        offs, ascent = d[2]
-        bg = offs + ascent * exposuretime
-        mx = 2**self.coeffs['depth'] - 1  # maximum value
-        with np.errstate(invalid='ignore'):
-            bg[bg > mx] = mx
+        if type(d) == tuple:
+            # calculate bg image:
+            offs, ascent = d[2]
+            bg = offs + ascent * exposuretime
+            mx = 2**self.coeffs['depth'] - 1  # maximum value
+            with np.errstate(invalid='ignore'):
+                bg[bg > mx] = mx
+        else:
+            # only constant bg value of array given
+            bg = d[2]
+
         return bg
 
     def _correctVignetting(self, image, light_spectrum, date):
@@ -527,11 +524,9 @@ if shapes are transposed, execute self.transpose() once """ % (s, array.shape))
             d = d[2]
             i = d != 0
             image[i] /= d[i]
-
 #         with np.errstate(divide='ignore'):
 #             out = image / d
 #         #set
-#
 #         out[i]=image[i]
         # return image
 

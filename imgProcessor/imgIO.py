@@ -1,24 +1,16 @@
 '''
 various image input/output routines
 '''
-import numpy as np
 import cv2
-# import os
+import numpy as np
 from six import string_types
-# from imgProcessor import ARRAYS_ORDER_IS_XY
 
-# ,transpose
-from imgProcessor.transformations import toNoUintArray, toUIntArray
-from PIL import Image
+from imgProcessor.transformations import toNoUintArray, toUIntArray, toGray
+from PIL import Image  # todo: save 32float TIFF without needing PIL
 
-# from imgProcessor import reader
-
-COLOR2CV = {'gray': cv2.IMREAD_GRAYSCALE,
-            'all': cv2.IMREAD_COLOR,
-            None: cv2.IMREAD_ANYCOLOR
-            }
 
 # TODO:
+# from imgProcessor import reader
 # READERS = {'elbin':reader.elbin}
 
 
@@ -44,13 +36,15 @@ def _changeArrayDType(img, dtype, **kwargs):
 #     return size/img.size
 
 
-def imread(img, color=None, dtype=None  # , ignore_order=False
-           ):
+def imread(img, color=None, dtype=None):
     '''
     dtype = 'noUint', uint8, float, 'float', ...
     '''
+    COLOR2CV = {'gray': cv2.IMREAD_GRAYSCALE,
+                'all': cv2.IMREAD_COLOR,
+                None: cv2.IMREAD_ANYCOLOR
+                }
     c = COLOR2CV[color]
-#     from_file = False
     if callable(img):
         img = img()
     elif isinstance(img, string_types):
@@ -69,14 +63,13 @@ def imread(img, color=None, dtype=None  # , ignore_order=False
         img = img2
 
     elif color == 'gray' and img.ndim == 3:  # multi channel img like rgb
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #cannot handle float64
+        img = toGray(img)
     # transform array to uint8 array due to openCV restriction
     if dtype is not None:
         if isinstance(img, np.ndarray):
             img = _changeArrayDType(img, dtype, cutHigh=False)
-#     if from_file and ARRAYS_ORDER_IS_XY:
-#         # if not from_file and not ignore_order and ip.ARRAYS_ORDER_IS_XY:
-#         img = cv2.transpose(img)
+
     return img
 
 
@@ -85,27 +78,4 @@ def imwrite(name, arr, dtype=None, **kwargs):
         # save as 32bit float tiff
         Image.fromarray(np.asfarray(arr)).save(name)
     else:
-        return cv2.imwrite(name, toUIntArray(arr, **kwargs))
-
-# TODO: check where used and remove
-
-
-def out(img):
-    #     if ARRAYS_ORDER_IS_XY:
-    #         return transpose(img)
-    return img
-
-# TODO: check where used and remove
-
-
-def out3d(sf):
-    '''
-    for surface plots
-    sf = 3darray[i,j,x,y,z]
-    '''
-#     if ARRAYS_ORDER_IS_XY:
-#         # transpose values
-#         sf[:, :, :2] = sf[:, :, 1::-1]
-#         # transpose shape
-#         return np.transpose(sf, axes=(1, 0, 2))
-    return sf
+        return cv2.imwrite(name, toUIntArray(arr, dtype=dtype, **kwargs))

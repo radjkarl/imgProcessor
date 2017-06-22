@@ -133,6 +133,24 @@ def hasBackground(fitParams):
     return r < 100
 
 
+def backgroundPeakValue(img, bins=500):
+    f = FitHistogramPeaks(img, bins=bins, bins2=300)
+
+    bgp = getBackgroundPeak(f.fitParams)
+    ind = int(bgp[1])
+    if ind < 0:
+        ind = 0
+#     y = f.yvals[ind:]
+#     i = np.argmax(np.diff(y) > 0)
+#     bgmaxpos = ind  # + i
+#     print(f.xvals[bgmaxpos], bgmaxpos)
+#     import pylab as plt
+#     plt.plot(f.xvals, f.yvals)
+#     plt.show()
+
+    return f.xvals[ind]
+
+
 def signalMinimum2(img, bins=None):
     '''
     minimum position between signal and background peak

@@ -18,6 +18,7 @@ class FitHistogramPeaks(object):
                  #                  binEveryNPxVals=10,
                  fitFunction=gaussian,
                  bins=None,
+                 bins2=None,
                  minNPeaks=2,
                  maxNPeaks=4,
                  debug=False):
@@ -58,19 +59,19 @@ class FitHistogramPeaks(object):
         i1 = np.argmax(cdf > 0.99)
         mnImg = bin_edges[i0]
         mxImg = bin_edges[i1]
-
-        nBins = 50
-        if self.img.dtype.kind != 'f':
+        if bins2 is None:
+            bins2 = 50
+        if self.img.dtype.kind != 'f' or abs(mxImg - mnImg) > 10:
             binEveryNPxVals = 5
             # one bin for every  N pixelvalues
-            nBins = np.clip(int((mxImg - mnImg) /
+            bins2 = np.clip(int((mxImg - mnImg) /
                                 binEveryNPxVals), 25, 100)
         if ind is not None:
             img = self.img[ind]
         else:
             img = self.img
 
-        self.yvals, bin_edges = np.histogram(img, bins=nBins,
+        self.yvals, bin_edges = np.histogram(img, bins=bins2,
                                              range=(mnImg, mxImg))
 
         # bin edges give start and end of an area-> move that to the middle:
@@ -86,7 +87,7 @@ class FitHistogramPeaks(object):
         yvals = self.yvals.copy()
         xvals = self.xvals
         s0, s1 = self.img.shape
-        minY = max(10, float(s0 * s1) / nBins / 50)
+        minY = max(10, float(s0 * s1) / bins2 / 50)
         mindist = 5
 
         peaks = self._findPeaks(yvals, mindist, maxNPeaks, minY)
@@ -146,7 +147,7 @@ class FitHistogramPeaks(object):
 
         # sort for increasing x positions
         self.fitParams = sorted(self.fitParams, key=lambda p: p[1])
-
+        # plot:
 #         from imgProcessor.scripts._FitHistogramPeaks import plotFitResult
 #         plotFitResult(self)
 

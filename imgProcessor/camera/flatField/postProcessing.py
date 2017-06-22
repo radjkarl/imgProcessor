@@ -5,12 +5,12 @@ from imgProcessor.equations.angleOfView import angleOfView
 from scipy.ndimage.filters import median_filter, gaussian_filter
 
 
-ppMETHODS = ['KW replace + Gauss', 'KW replace + Median',
+ppMETHODS = ['KW repair + Gauss', 'KW repair + Median',
              'KW replace', 'AoV replace', 'POLY replace',
              'POLY repair', 'KW repair', 'AoV repair']
 
 
-def postProcessing(arr, method='KW replace + Mean', mask=None):
+def postProcessing(arr, method='KW replace + Gauss', mask=None):
     '''
     Post process measured flat field [arr].
     Depending on the measurement, different
@@ -31,15 +31,15 @@ def postProcessing(arr, method='KW replace + Mean', mask=None):
         'KW repair'       areas of smoothing out high gradient
         'AoV repair'      variations (POLY only)
 
-        'KW replace + Gauss'  --> same as 'KW replace' with additional 
-        'KW replace + Median'     Gaussian or Median filter
+        'KW repair + Gauss'  --> same as 'KW replace' with additional 
+        'KW repair + Median'     Gaussian or Median filter
 
     mask:
-        None/2darray(bool) --> array of same shape ar [arr] indicating 
+        None/2darray(bool) --> array of same shape ar [arr] indicating
                                invalid or empty positions
     '''
-    assert method in ppMETHODS, 'post processing method (%s) must be one of %s'\
-        % (method, ppMETHODS)
+    assert method in ppMETHODS, \
+        'post processing method (%s) must be one of %s' % (method, ppMETHODS)
 
     if method == 'POLY replace':
         return polyfit2dGrid(arr, mask, order=2, replace_all=True)
@@ -53,10 +53,10 @@ def postProcessing(arr, method='KW replace + Mean', mask=None):
     elif method == 'KW repair':
         return function(arr, mask, replace_all=False)
 
-    elif method == 'KW replace + Median':
+    elif method == 'KW repair + Median':
         return median_filter(function(arr, mask, replace_all=False),
                              min(method.shape) // 20)
-    elif method == 'KW replace + Gauss':
+    elif method == 'KW repair + Gauss':
         return gaussian_filter(function(arr, mask, replace_all=False),
                                min(arr.shape) // 20)
 

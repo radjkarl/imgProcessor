@@ -60,11 +60,7 @@ class LensDistortion(object):
         self.findCount = 0
         self.apertureSize = sensorSize_mm
 
-        s0, s1 = board_size
-        # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-        self.objp = np.zeros((s0 * s1, 3), np.float32)
-        # reshape 3-D matrix as 2-D
-        self.objp[:, :2] = np.mgrid[0:s0, 0:s1].T.reshape(-1, 2)
+        self.objp = self._mkObjPoints(board_size)
 
         if method == 'Asymmetric circles':
             # this pattern have its points (every 2. row) displaced, so:
@@ -77,13 +73,22 @@ class LensDistortion(object):
         # self.imgpoints = [] # 2d points in image plane.
         self.mapx, self.mapy = None, None
 
-        #from matplotlib import pyplot as plt
+        # from matplotlib import pyplot as plt
         for n, i in enumerate(images):
             print('working on image %s' % n)
             if self.addImg(i):
                 print('OK')
 
-    def addPoints(self, points):
+    @staticmethod
+    def _mkObjPoints(board_size):
+        s0, s1 = board_size
+        # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
+        o = np.zeros((s0 * s1, 3), np.float32)
+        # reshape 3-D matrix as 2-D
+        o[:, :2] = np.mgrid[0:s0, 0:s1].T.reshape(-1, 2)
+        return o
+
+    def addPoints(self, points, board_size=None):
         '''
         add corner points directly instead of extracting them from
         image
@@ -91,12 +96,14 @@ class LensDistortion(object):
         '''
         self.opts['foundPattern'].append(True)
         self.findCount += 1
-        self.objpoints.append(self.objp)
+        if board_size is not None:
+            self.objpoints.append(self._mkObjPoints(board_size))
+        else:
+            self.objpoints.append(self.objp)
         s0 = points.shape[0]
 
-        self.opts['imgPoints'].append(np.asarray(points
-                                                 ).reshape(s0, 1, 2
-                                                           ).astype(np.float32))
+        self.opts['imgPoints'].append(np.asarray(points).reshape(
+            s0, 1, 2).astype(np.float32))
 
     def setImgShape(self, shape):
         '''

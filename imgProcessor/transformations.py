@@ -131,7 +131,8 @@ def toGray(img):
     '''
     return np.average(img, axis=-1, weights=(0.299,  # red
                                              0.587,  # green
-                                             0.114))  # blue
+                                             0.114)  # blue
+                      ).astype(img.dtype)
 
 
 def rgChromaticity(img):

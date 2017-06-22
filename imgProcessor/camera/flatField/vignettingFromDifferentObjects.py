@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage.filters import gaussian_filter, minimum_filter
 from skimage.transform import rescale
 
 from fancytools.math.MaskedMovingAverage import MaskedMovingAverage
@@ -14,6 +14,7 @@ from imgProcessor.measure.FitHistogramPeaks import FitHistogramPeaks
 from imgProcessor.imgSignal import getSignalMinimum
 
 from imgProcessor.utils.getBackground import getBackground
+from imgProcessor.filters.maskedFilter import maskedFilter
 
 
 class FlatFieldFromImgFit(object):
@@ -31,7 +32,7 @@ class FlatFieldFromImgFit(object):
         self.ksize = ksize
         self.scale_factor = scale_factor
 
-        self.bglevel = 0  # average background level
+        self.bglevel = []  # average background level
         self._mx = 0
         self._n = 0
         self._m = None
@@ -91,27 +92,38 @@ class FlatFieldFromImgFit(object):
         # blur:
         # blurred = minimum_filter(img, 3)#remove artefacts
         #blurred = maximum_filter(blurred, self.ksize)
-        blurred = img
-        gblurred = gaussian_filter(blurred, self.ksize)
-        #blurred[ind] = gblurred[ind]
+#         blurred = img
+#         gblurred = gaussian_filter(img, self.ksize)
+#         ind = minimum_filter(ind, self.ksize)
+        nind = np.logical_not(ind)
+        gblurred = maskedFilter(img, nind, ksize=2 * self.ksize,
+                                fill_mask=False,
+                                fn="mean")
 
+        #blurred[ind] = gblurred[ind]
         # scale [0-1]:
-        mn = img[~ind].mean()
+        mn = img[nind].mean()
         if np.isnan(mn):
             mn = 0
-        mx = gblurred.max()
+        mx = gblurred[ind].max()
         gblurred -= mn
         gblurred /= (mx - mn)
-        blurred -= mn
-        blurred /= (mx - mn)
-
-        ind = np.logical_and(ind, blurred > self._m.avg)
+#         img -= mn
+#         img /= (mx - mn)
+#         ind = np.logical_and(ind, img > self._m.avg)
 
         self._m.update(gblurred, ind)
-        self.bglevel += mn
+        self.bglevel.append(mn)
         self._mx += mx
 
         self._n += 1
+
+#         import pylab as plt
+#         plt.imshow(self._m.avg)
+#         plt.show()
+
+    def background(self):
+        return np.median(self.bglevel)
 
 
 def vignettingFromDifferentObjects(imgs, bg):

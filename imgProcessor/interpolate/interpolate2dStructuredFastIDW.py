@@ -12,22 +12,22 @@ def interpolate2dStructuredFastIDW(grid, mask, kernel=15, power=2,
     FASTER IMPLEMENTATION OF interpolate2dStructuredIDW
 
     replace all values in [grid] indicated by [mask]
-    with the inverse distance weighted interpolation of all values within 
+    with the inverse distance weighted interpolation of all values within
     px+-kernel
     [power] -> distance weighting factor: 1/distance**[power]
 
-    [minvals] -> minimum number of neighbour values to find until 
+    [minvals] -> minimum number of neighbour values to find until
                  interpolation stops
 
     '''
     indices, dist = growPositions(kernel)
     weights = 1 / dist**(0.5 * power)
 
-    return _calc(grid, mask, kernel, indices, weights, minnvals - 1)
+    return _calc(grid, mask, indices, weights, minnvals - 1)
 
 
 @jit(nopython=True)
-def _calc(grid, mask, kernel, indices, weights, minnvals):
+def _calc(grid, mask, indices, weights, minnvals):
     s0 = grid.shape[0]
     s1 = grid.shape[1]
 
@@ -36,11 +36,9 @@ def _calc(grid, mask, kernel, indices, weights, minnvals):
         for j in range(s1):
 
             if mask[i, j]:
-
                 sumWi = 0.0
                 value = 0.0
                 c = 0
-                #iii,jjj = 0,0
                 # FOR EVERY NEIGHBOUR IN KERNEL
                 for n in range(len(indices)):
                     iii = i + indices[n, 0]
@@ -55,7 +53,9 @@ def _calc(grid, mask, kernel, indices, weights, minnvals):
                                 break
                             c += 1
                     # too far out of the image:
-                    elif c > 0 and (iii < -1 or iii > s0 + 1) and(jjj < -1 or jjj > s1 + 1):
+                    elif (c > 0 and
+                          (iii < -1 or iii > s0 + 1) and
+                          (jjj < -1 or jjj > s1 + 1)):
                         break
                 if sumWi:
                     grid[i, j] = value / sumWi
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     arr2 = interpolate2dStructuredFastIDW(arr.copy(), mask, kernel=20, power=2)
     arr3 = interpolate2dStructuredFastIDW(arr.copy(), mask, kernel=20, power=3)
     arr5 = interpolate2dStructuredFastIDW(arr.copy(), mask, kernel=20, power=5)
-    print ('time=%f' % (time() - t0))
+    print('time=%f' % (time() - t0))
 
     if 'no_window' not in sys.argv:
         plt.figure('power=1')
