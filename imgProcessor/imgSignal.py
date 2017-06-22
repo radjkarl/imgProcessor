@@ -35,20 +35,25 @@ def _toSize(img):
     return img
 
 
-def scaleSignalCutParams(img, ratio=0.01, nbins=100):
-    img = _toSize(img)
+def _histogramAndCorrBinPos(img, nbins=100):
     try:
         h, bins = np.histogram(img, nbins)
     except ValueError:  # img contains NaN
         h, bins = np.histogram(img[np.isfinite(img)], nbins)
 
-    h = np.cumsum(h).astype(float)
-    h -= h.min()
-    h /= h[-1]
-
     b0 = bins[0]
     bins = bins[1:]
     bins += 0.5 * (bins[0] - b0)
+    return h, bins
+
+
+def scaleSignalCutParams(img, ratio=0.01, nbins=100, return_img=False):
+    img = _toSize(img)
+    h, bins = _histogramAndCorrBinPos(img, nbins)
+
+    h = np.cumsum(h).astype(float)
+    h -= h.min()
+    h /= h[-1]
 
     try:
         start = findXAt(bins, h, ratio)
@@ -58,6 +63,8 @@ def scaleSignalCutParams(img, ratio=0.01, nbins=100):
         stop = findXAt(bins, h, 1 - ratio)
     except IndexError:
         stop = bins[-1]
+    if return_img:
+        return start, stop, img
 
     return start, stop
 

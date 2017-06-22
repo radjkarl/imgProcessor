@@ -35,7 +35,7 @@ class FlatFieldFromImgFit(object):
         self.bglevel = []  # average background level
         self._mx = 0
         self._n = 0
-        self._m = None
+#         self._m = None
         self._small_shape = None
         self._first = True
 

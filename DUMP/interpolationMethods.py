@@ -12,13 +12,6 @@ from imgProcessor.interpolate.polyfit2d import polyfit2dGrid
 from imgProcessor.equations.vignetting import vignetting, guessVignettingParam
 
 
-def _highGrad(arr):
-    # mask high gradient areas in given array
-    s = min(arr.shape)
-    return maximum_filter(np.abs(laplace(arr, mode='reflect')) > 0.01,  # 0.02
-                          min(max(s // 5, 3), 15))
-
-
 def function(img, mask=None, replace_all=False, outgrid=None, fn=vignetting,
              guess=None, orthogonal=True, **kwargs):
     if outgrid is not None:
@@ -34,9 +27,9 @@ def function(img, mask=None, replace_all=False, outgrid=None, fn=vignetting,
         guess = guessVignettingParam(
             (s0 * down_scale_factor, s1 * down_scale_factor))
         if orthogonal:
-            fn = lambda xy, f, alpha, cx, cy: vignetting(xy, f=f,
-                                                         alpha=alpha,
-                                                         cx=cx, cy=cy)
+            def fn(xy, f, alpha, cx, cy): return vignetting(xy, f=f,
+                                                            alpha=alpha,
+                                                            cx=cx, cy=cy)
             f, alpha, rot, tilt, cx, cy = guess
             guess = (f, alpha, cx, cy)
 
@@ -50,6 +43,13 @@ def function(img, mask=None, replace_all=False, outgrid=None, fn=vignetting,
         img2 = img
     img2 /= img2.max()
     return img2
+
+
+def _highGrad(arr):
+    # mask high gradient areas in given array
+    s = min(arr.shape)
+    return maximum_filter(np.abs(laplace(arr, mode='reflect')) > 0.01,  # 0.02
+                          min(max(s // 5, 3), 15))
 
 
 def polynomial(img, mask, inplace=False, replace_all=False,

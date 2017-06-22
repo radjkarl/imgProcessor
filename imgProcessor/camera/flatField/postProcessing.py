@@ -1,6 +1,9 @@
 from imgProcessor.interpolate.polyfit2d import polyfit2dGrid
-from imgProcessor.camera.flatField.interpolationMethods import function,\
-    polynomial
+
+
+from imgProcessor.camera.flatField.postprocessing.function import function
+from imgProcessor.camera.flatField.postprocessing.polynomial import polynomial
+
 from imgProcessor.equations.angleOfView import angleOfView
 from scipy.ndimage.filters import median_filter, gaussian_filter
 

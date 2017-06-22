@@ -25,11 +25,6 @@ try:
 except ImportError:
     perspCorrectionViaQuad = None
 
-# from imgProcessor.equations.vignetting import tiltFactor
-# from imgProcessor.transform.simplePerspectiveTransform import simplePerspectiveTransform
-# from imgProcessor.features.QuadDetection import QuadDetection
-# from imgProcessor.utils.decompHomography import decompHomography
-
 
 def rvec2euler(rvec):
     return mat2euler(cv2.Rodrigues(rvec)[0], axes='rzxy')

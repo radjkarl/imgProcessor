@@ -18,7 +18,6 @@ class FitHistogramPeaks(object):
                  #                  binEveryNPxVals=10,
                  fitFunction=gaussian,
                  bins=None,
-                 bins2=None,
                  minNPeaks=2,
                  maxNPeaks=4,
                  debug=False):
@@ -59,19 +58,19 @@ class FitHistogramPeaks(object):
         i1 = np.argmax(cdf > 0.99)
         mnImg = bin_edges[i0]
         mxImg = bin_edges[i1]
-        if bins2 is None:
-            bins2 = 50
-        if self.img.dtype.kind != 'f' or abs(mxImg - mnImg) > 10:
+
+        nBins = 50
+        if self.img.dtype.kind != 'f':
             binEveryNPxVals = 5
             # one bin for every  N pixelvalues
-            bins2 = np.clip(int((mxImg - mnImg) /
+            nBins = np.clip(int((mxImg - mnImg) /
                                 binEveryNPxVals), 25, 100)
         if ind is not None:
             img = self.img[ind]
         else:
             img = self.img
 
-        self.yvals, bin_edges = np.histogram(img, bins=bins2,
+        self.yvals, bin_edges = np.histogram(img, bins=nBins,
                                              range=(mnImg, mxImg))
 
         # bin edges give start and end of an area-> move that to the middle:
@@ -87,15 +86,17 @@ class FitHistogramPeaks(object):
         yvals = self.yvals.copy()
         xvals = self.xvals
         s0, s1 = self.img.shape
-        minY = max(10, float(s0 * s1) / bins2 / 50)
-        mindist = int(5 * 100 / bins2)
+        minY = max(10, float(s0 * s1) / nBins / 50)
+        mindist = 5
 
         peaks = self._findPeaks(yvals, mindist, maxNPeaks, minY)
+
         valleys = self._findValleys(yvals, peaks)
         positions = self._sortPositions(peaks, valleys)
         d = minNPeaks - len(positions)
         if d > 0:
             positions.extend([(0, None, -1)] * d)
+
         # FIT FUNCTION TO EACH PEAK:
         for il, i, ir in positions:
             # peak position/value:
@@ -106,6 +107,7 @@ class FitHistogramPeaks(object):
 
             xcut = xvals[il:ir]
             ycut = yvals[il:ir]
+
             # approximate standard deviation from FHWM:
             #ymean = 0.5* (yp + ycut[-1])
             #sigma = abs(xp - findXAt(xcut,ycut,ymean) )
@@ -144,7 +146,7 @@ class FitHistogramPeaks(object):
 
         # sort for increasing x positions
         self.fitParams = sorted(self.fitParams, key=lambda p: p[1])
-        # plot:
+
 #         from imgProcessor.scripts._FitHistogramPeaks import plotFitResult
 #         plotFitResult(self)
 
@@ -183,7 +185,6 @@ class FitHistogramPeaks(object):
         # within a minimum distance
         l = len(vals)
         peaks = argrelextrema(vals, np.greater, mode='wrap')[0]
-        print(peaks, 877777)
         valid = np.ones(len(peaks), dtype=bool)
         if len(peaks) > 1:
             # try 4 times to filter peaks:
